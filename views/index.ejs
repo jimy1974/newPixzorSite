@@ -2,105 +2,1005 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text-to-Image Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pixzor</title>
+  <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Custom styles for the fixed prompt box */
+    .fixed-prompt {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 1200px;
+      z-index: 10;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+      background-color: #1a1a1a; /* Dark background for prompt box */
+      border-radius: 12px 12px 0 0;
+      padding: 20px;
+    }
+
+    /* Add padding to the main content to prevent overlap with the fixed prompt box */
+    .content-padding {
+      padding-bottom: 300px; /* Adjust based on the prompt box height */
+      padding-top: 60px; /* Adjust based on the height of your navbar */
+    }
+
+    /* Button styles */
+    .custom-button {
+      background-color: #4b5563; /* Gray color */
+      color: white;
+      transition: background-color 0.3s;
+    }
+
+    .custom-button:hover {
+      background-color: #10b981; /* Green color on hover */
+    }
+
+    /* Modal backdrop */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+    }
+
+    /* Logo Placeholder */
+    .logo {
+      width: 40px;
+      height: 40px;
+      background-color: #4b5563; /* Gray background */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    /* Fixed Generated Images Container */
+    .generated-images-container {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* Selected Toggle Button Style */
+    .selected-toggle {
+      background-color: #a1a1aa; /* Light Gray */
+      color: white;
+    }
+
+    /* Make images take full width of the container */
+    #image-list img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+
+    /* Adjust padding or margin as needed */
+    .image-card {
+      padding: 0;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    /* Spinner Styles */
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1); /* Light border */
+      border-top: 4px solid #ffffff; /* White top for visibility */
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Badges */
+    .badge-public {
+      display: inline-block;
+      background-color: green;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    .badge-private {
+      display: inline-block;
+      background-color: red;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    /* Error Message Styling */
+    #error-message {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.875rem;
+      color: #f87171; /* Tailwind's red-400 */
+    }
+
+    /* Toast Notification Container */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+    }
+
+    /* Toast Styles */
+    .toast {
+      background-color: #1f2937; /* Dark background */
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 10px;
+      opacity: 0.95;
+      transition: opacity 0.3s ease;
+    }
+
+    .toast-success {
+      background-color: #10b981; /* Green */
+    }
+
+    .toast-error {
+      background-color: #ef4444; /* Red */
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-  <div class="container mx-auto py-8">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-center">Text-to-Image Generator</h1>
-    </header>
+<body class="bg-gray-900 text-white">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 shadow-md">
+    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+      <!-- Logo -->
+      <div class="flex items-center space-x-2">
+        <img src="/images/logo.png" alt="Pixzor Logo" class="w-8 h-7">
+        <span class="text-xl font-bold">Pixzor</span>
+      </div>
 
-    <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-3">
-        <div class="bg-white p-4 rounded-lg shadow-md">
-          <h2 class="text-lg font-bold mb-2">Options</h2>
+      <div class="flex items-center space-x-4">
+        <!-- Token Display and Purchase Button -->
+        <button id="tokens-button" class="flex items-center bg-gray-700 hover:bg-yellow-600 px-4 py-2 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd" />
+          </svg>
+          <span id="token-count" class="text-yellow-400">Tokens: 0</span>
+        </button>
+          
+        <!-- Google Auth Button -->
+        <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-4 py-2 rounded-lg">
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/google-logo.png" alt="Google" class="mr-2" />
+          <span>Login / Register</span>
+        </button>
+      </div>
+    </div>
+  </nav>
 
-          <div class="mb-4">
-            <label for="face-upload" class="block font-medium mb-1">Upload Face</label>
-            <input type="file" id="face-upload" class="w-full bg-gray-200 rounded-lg py-2 px-3">
-          </div>
+  <!-- Main Container -->
+  <div class="container mx-auto py-8 content-padding">
+    <!-- Public/Profile Toggle -->
+    <div class="mb-6 flex justify-center">
+      <button id="public-toggle" class="custom-button px-4 rounded-l-lg text-sm selected-toggle" style="height: 32px;">Public Posts</button>
+      <button id="profile-toggle" class="custom-button px-4 rounded-r-lg text-sm" style="height: 32px;">Profile Posts</button>
+    </div>
 
-          <div class="mb-4">
-            <label for="style-select" class="block font-medium mb-1">Select Style</label>
-            <select id="style-select" class="w-full bg-gray-200 rounded-lg py-2 px-3">
-              <option value="">Choose a style</option>
-              <option value="pixar">Pixar</option>
-              <option value="anime">Anime</option>
-              <option value="cartoon">Cartoon</option>
-            </select>
-          </div>
+    <!-- Error Message Display -->
+    <div id="error-message" class="text-red-500 text-center mb-4"></div>
+          
+    <!-- Main Content Container with Padding -->    
+    <div id="image-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+      <!-- Images will be dynamically added here -->
+    </div>
+  </div>
 
-         
-          <div class="mb-4">
-            <label for="variables-input" class="block font-medium mb-1">Set Variables</label>
-            
-             <!-- Aspect Ratio (if you want to make it variable) -->
-<input type="text" id="aspect-ratio" value="16:9" class="w-full bg-gray-200 rounded-lg py-2 px-3" placeholder="Aspect Ratio">
-
-<!-- Guidance Scale (optional input) -->
-<input type="number" id="guidance-scale" value="3.5" class="w-full bg-gray-200 rounded-lg py-2 px-3" placeholder="Guidance Scale">
-
-<!-- Number of Inference Steps (optional input) -->
-<input type="number" id="inference-steps" value="4" class="w-full bg-gray-200 rounded-lg py-2 px-3" placeholder="Inference Steps">
-
-              
-              
-          </div>
+  <!-- Fixed Prompt and Buttons at the Bottom -->
+  <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
+    <div class="container mx-auto">
+      <!-- Prompt Input -->
+      <div class="flex flex-col md:flex-row items-center md:space-x-4">
+        <!-- Prompt Input -->
+        <div class="mb-4 md:mb-0 flex-grow">
+          <textarea id="prompt-input" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" rows="2" placeholder="Enter your prompt"></textarea>
         </div>
       </div>
 
-      <div class="col-span-9">
-        <div class="bg-white p-4 rounded-lg shadow-md">
-          <div class="mb-4">
-            <label for="prompt-input" class="block font-medium mb-1">Enter Prompt</label>
-            <textarea id="prompt-input" class="w-full bg-gray-200 rounded-lg py-2 px-3" rows="3" placeholder="Enter your prompt"></textarea>
+      <!-- Prompt Options  -->
+      <div class="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0">
+        <div class="flex space-x-2">
+          <button id="enhance-prompt-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Enhance Prompt</button>
+          <button id="options-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Options</button>
+          <button id="setup-character-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Add Character</button>
+          
+          <!-- Select Character Dropdown -->
+          <div class="flex justify-center mb-4">
+            <select id="character-select" class="w-full max-w-xs bg-gray-700 rounded-lg py-1 px-0 text-white" aria-label="Select Character">
+              <option value="" disabled selected>Select Character</option>
+              <!-- Options populated dynamically via JavaScript -->
+            </select>
           </div>
-
-          <div class="flex justify-end">
-  
-            <button id="generate-button" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg">Generate Image</button>
-
+                
+          <!-- Post Visibility Toggle Button -->
+          <div class="relative flex items-center mb-4">
+            <button id="post-visibility-button" class="bg-gray-700 text-white px-3 py-2 rounded-full hover:bg-gray-600 focus:outline-none">
+              <svg id="post-visibility-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <!-- Initial "eye" icon -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+            <!-- Tooltip -->
+            <span id="post-visibility-tooltip" class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap hidden">
+              Create in public
+            </span>
           </div>
         </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-md mt-4">
-          <h2 class="text-lg font-bold mb-2">Generated Image</h2>
-          <div id="generated-image" class="w-full h-[400px] bg-gray-200 rounded-lg flex items-center justify-center">
-            <p class="text-gray-500">Your generated image will appear here.</p>
-          </div>
-        </div>
+        <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white font-medium px-4 rounded-lg text-sm" style="height: 32px;">Generate Image</button>
       </div>
     </div>
   </div>
 
-  <!-- Register Modal -->
-  <div id="register-modal" class="fixed z-10 inset-0 overflow-y-auto hidden">
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-lg font-bold mb-4">Register</h2>
-        <form>
+  <!-- Buy Tokens Modal -->
+  <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="buy-tokens-modal-title">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
+        <h2 id="buy-tokens-modal-title" class="text-xl font-bold mb-4">Buy Tokens</h2>
+        <form id="buy-tokens-form">
+          <!-- Token Packages -->
           <div class="mb-4">
-            <label for="username" class="block font-medium mb-1">Username</label>
-            <input type="text" id="username" class="w-full bg-gray-200 rounded-lg py-2 px-3">
-          </div>
-          <div class="mb-4">
-            <label for="email" class="block font-medium mb-1">Email</label>
-            <input type="email" id="email" class="w-full bg-gray-200 rounded-lg py-2 px-3">
-          </div>
-          <div class="mb-4">
-            <label for="password" class="block font-medium mb-1">Password</label>
-            <input type="password" id="password" class="w-full bg-gray-200 rounded-lg py-2 px-3">
-          </div>
-          <div class="flex justify-end">
-            <button class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg">Register</button>
+            <div class="flex flex-col space-y-4">
+              <!-- Free Package -->
+              <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2">Free</h3>
+                <p>0 Tokens</p>
+                <p>$0/month</p>
+                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="0" data-price="0">Select</button>
+              </div>
+              <!-- Starter Package -->
+              <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2">Starter</h3>
+                <p>100 Tokens</p>
+                <p>$5/month</p>
+                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="100" data-price="5">Select</button>
+              </div>
+              <!-- Hobbyist Package -->
+              <div class="bg-gray-700 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2">Hobbyist</h3>
+                <p>250 Tokens</p>
+                <p>$10/month</p>
+                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="250" data-price="10">Select</button>
+              </div>
+            </div>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <script src="/script.js"></script>
+  <!-- Options Modal -->
+  <div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="options-modal-title">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button id="close-options-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
+        <h2 id="options-modal-title" class="text-xl font-bold mb-4">Options</h2>
+        <form id="options-form">
+          <!-- Select Style -->
+          <div class="mb-4">
+            <label for="style-select-modal" class="block font-medium mb-1">Select Style</label>
+            <select id="style-select-modal" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
+              <option value="" disabled selected>Choose a style</option>
+              <option value="pixar">Pixar</option>
+              <option value="anime">Anime</option>
+              <option value="cartoon">Cartoon</option>
+              <!-- Add more styles as needed -->
+            </select>
+          </div>
+
+          <!-- Set Variables -->
+          <div class="mb-4">
+            <label for="width-modal" class="block font-medium mb-1">Width</label>
+            <input type="number" id="width-modal" value="800" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Width (e.g., 800)">
+            <label for="height-modal" class="block font-medium mb-1">Height</label>
+            <input type="number" id="height-modal" value="600" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Height (e.g., 600)">
+            <label for="guidance-scale-modal" class="block font-medium mb-1">Guidance Scale</label>
+            <input type="number" step="0.1" id="guidance-scale-modal" value="3.5" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Guidance Scale">
+            <label for="inference-steps-modal" class="block font-medium mb-1">Inference Steps</label>
+            <input type="number" id="inference-steps-modal" value="4" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" placeholder="Inference Steps">
+          </div>
+
+          <div class="flex justify-end">
+            <button type="submit" class="custom-button font-medium py-2 px-4 rounded-lg">Save Options</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Character Modal -->
+  <div id="setup-character-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="setup-character-modal-title">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button id="close-setup-character-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
+        <h2 id="setup-character-modal-title" class="text-xl font-bold mb-4">Setup Character</h2>
+        <form id="setup-character-form">
+          <!-- Character Name -->
+          <div class="mb-4">
+            <label for="character-name" class="block font-medium mb-1">Character Name</label>
+            <input type="text" id="character-name" name="character-name" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" required>
+          </div>
+          <!-- Character Description -->
+          <div class="mb-4">
+            <label for="character-description" class="block font-medium mb-1">Description</label>
+            <textarea id="character-description" name="character-description" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" rows="4" placeholder="Describe your character"></textarea>
+          </div>
+          <!-- Upload Face -->
+          <div class="mb-4">
+            <label for="face-upload-character" class="block font-medium mb-1">Upload Face</label>
+            <input type="file" id="face-upload-character" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="custom-button font-medium py-2 px-4 rounded-lg">Save Character</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-20 z-50"></div>
+
+  <!-- JavaScript -->
+  <script>
+    // script.js
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Fetch user data on page load
+      fetchUserData();
+
+      // Initialize character dropdown
+      populateCharacterDropdown();
+
+      // Load public posts by default
+      loadPublicPosts();
+
+      // Set up event listeners
+      setupEventListeners();
+    });
+
+    // Function to fetch user data
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/user-data');
+        const data = await response.json();
+
+        const tokenCountElement = document.getElementById('token-count');
+        const googleAuthButton = document.getElementById('google-auth-button');
+
+        if (data.loggedIn) {
+          // Update the token count
+          tokenCountElement.textContent = `Tokens: ${data.tokens}`;
+
+          // Update the Google Auth button to show user info
+          googleAuthButton.innerHTML = `
+            <img src="${data.photo}" alt="Profile" class="mr-2 w-6 h-6 rounded-full" />
+            <span>${data.username}</span>
+          `;
+          googleAuthButton.classList.remove('bg-gray-700');
+          googleAuthButton.classList.add('bg-green-600');
+
+          // Enable the generate button
+          document.getElementById('generate-button').disabled = false;
+        } else {
+          // User is not logged in
+          tokenCountElement.textContent = `Tokens: 0`;
+          googleAuthButton.innerHTML = 'Login with Google';
+          googleAuthButton.classList.remove('bg-green-600');
+          googleAuthButton.classList.add('bg-gray-700');
+
+          // Disable the generate button
+          document.getElementById('generate-button').disabled = true;
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        showToast('An error occurred while fetching user data.', 'error');
+      }
+    }
+
+    // Function to set up all event listeners
+    function setupEventListeners() {
+      // Handle Google Authentication Button Click
+      const googleAuthButton = document.getElementById('google-auth-button');
+      if (googleAuthButton) {
+        googleAuthButton.addEventListener('click', () => {
+          // Redirect to Google OAuth endpoint
+          window.location.href = '/auth/google';
+        });
+      }
+
+      // Modal Elements
+      const modals = {
+        'options-modal': document.getElementById('options-modal'),
+        'setup-character-modal': document.getElementById('setup-character-modal'),
+        'buy-tokens-modal': document.getElementById('buy-tokens-modal'),
+      };
+
+      // Function to open a modal
+      function openModal(modalId) {
+        if (modals[modalId]) {
+          modals[modalId].classList.remove('hidden');
+          document.body.classList.add('overflow-hidden'); // Prevent background scrolling
+        }
+      }
+
+      // Function to close a modal
+      function closeModal(modalId) {
+        if (modals[modalId]) {
+          modals[modalId].classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+        }
+      }
+
+      // Event Listeners for Opening Modals
+      document.getElementById('options-button').addEventListener('click', () => openModal('options-modal'));
+      document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
+      document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
+
+      // Event Listeners for Closing Modals
+      document.querySelectorAll('[id^="close-"]').forEach(button => {
+        button.addEventListener('click', () => {
+          const modalId = button.id.replace('close-', '');
+          closeModal(modalId);
+        });
+      });
+
+      // Close any open modals when clicking outside the modal content
+      Object.keys(modals).forEach(modalId => {
+        const modal = modals[modalId];
+        if (modal) {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              closeModal(modalId);
+            }
+          });
+        }
+      });
+
+      // Handle Options Form Submission
+      document.getElementById('options-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const style = document.getElementById('style-select-modal').value;
+        const width = document.getElementById('width-modal').value;
+        const height = document.getElementById('height-modal').value;
+        const guidanceScale = document.getElementById('guidance-scale-modal').value;
+        const inferenceSteps = document.getElementById('inference-steps-modal').value;
+
+        // Validate inputs
+        if (!width || !height || !guidanceScale || !inferenceSteps) {
+          showToast('Please fill in all option fields.', 'error');
+          return;
+        }
+
+        // Save options to LocalStorage
+        const options = {
+          style,
+          width,
+          height,
+          guidanceScale,
+          inferenceSteps,
+        };
+
+        localStorage.setItem('options', JSON.stringify(options));
+
+        // Close the Options Modal
+        closeModal('options-modal');
+
+        showToast('Options saved successfully!', 'success');
+      });
+
+      // Handle Setup Character Form Submission
+      document.getElementById('setup-character-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('character-name').value.trim();
+        const description = document.getElementById('character-description').value.trim();
+        const faceUpload = document.getElementById('face-upload-character').files[0];
+
+        if (name && description) {
+          // Save to LocalStorage
+          let characters = JSON.parse(localStorage.getItem('characters')) || [];
+          characters.push({ name, description, faceUpload: faceUpload ? faceUpload.name : null });
+          localStorage.setItem('characters', JSON.stringify(characters));
+
+          // Update Character Dropdown
+          populateCharacterDropdown();
+
+          // Clear the form
+          document.getElementById('setup-character-form').reset();
+
+          // Close Modal
+          closeModal('setup-character-modal');
+
+          showToast('Character added successfully!', 'success');
+        } else {
+          showToast('Please fill in all fields.', 'error');
+        }
+      });
+
+      // Handle Enhance Prompt Button Click
+      document.getElementById('enhance-prompt-button').addEventListener('click', async () => {
+        const prompt = document.getElementById('prompt-input').value.trim();
+        if (!prompt) {
+          showToast('Please enter a prompt to enhance.', 'error');
+          return;
+        }
+
+        try {
+          // Show loading state
+          const enhanceButton = document.getElementById('enhance-prompt-button');
+          enhanceButton.textContent = 'Enhancing...';
+          enhanceButton.disabled = true;
+
+          // Send prompt to backend for enhancement
+          const response = await fetch('/api/enhance-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+          });
+
+          const data = await response.json();
+          if (data.enhancedPrompt) {
+            document.getElementById('prompt-input').value = data.enhancedPrompt;
+            showToast('Prompt enhanced successfully!', 'success');
+          } else {
+            showToast('Failed to enhance the prompt.', 'error');
+          }
+        } catch (error) {
+          console.error('Error enhancing prompt:', error);
+          showToast('An error occurred while enhancing the prompt.', 'error');
+        } finally {
+          // Reset button state
+          const enhanceButton = document.getElementById('enhance-prompt-button');
+          enhanceButton.textContent = 'Enhance Prompt';
+          enhanceButton.disabled = false;
+        }
+      });
+
+      // Handle Generate Image Button Click
+      document.getElementById('generate-button').addEventListener('click', async () => {
+        const prompt = document.getElementById('prompt-input').value.trim();
+        const characterIndex = document.getElementById('character-select').value;
+        const options = JSON.parse(localStorage.getItem('options')) || {};
+        const dimensions = {
+          width: parseInt(options.width) || 800,
+          height: parseInt(options.height) || 600
+        };
+        const style = options.style || '';
+
+        // Clear previous error message
+        document.getElementById('error-message').textContent = '';
+
+        // Fetch user data to check authentication
+        let userData;
+        try {
+          const response = await fetch('/user-data');
+          userData = await response.json();
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          showToast('An error occurred. Please try again.', 'error');
+          return;
+        }
+
+        if (!userData.loggedIn) {
+          // Prompt user to log in
+          showToast('Please log in to generate images.', 'error');
+          return;
+        }
+
+        // Check Token Availability
+        let currentTokens = parseInt(userData.tokens) || 0;
+        if (currentTokens <= 0) {
+          showToast('You have no tokens left. Please buy more tokens to generate images.', 'error');
+          return;
+        }
+
+        if (!prompt) {
+          showToast('Please enter a prompt.', 'error');
+          return;
+        }
+
+        // Add Placeholder
+        const imageList = document.getElementById('image-list');
+        if (!imageList) {
+          console.error('Image List container not found in the DOM.');
+          showToast('An error occurred. Please try again.', 'error');
+          return;
+        }
+
+        // Create a container for both placeholder and image
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+        // Style the placeholder to be slightly lighter
+        imageContainer.style.backgroundColor = '#2d2d2d'; // Adjust as needed
+
+        // Use Flexbox to center the spinner
+        imageContainer.innerHTML = `
+          <div class="flex justify-center items-center h-full">
+            <div class="spinner"></div>
+          </div>
+        `;
+
+        imageList.prepend(imageContainer);          
+
+        let finalPrompt = prompt;
+
+        // Append character description if a character is selected
+        if (characterIndex !== "") {
+          const characters = JSON.parse(localStorage.getItem('characters')) || [];
+          const selectedCharacter = characters[characterIndex];
+          if (selectedCharacter) {
+            finalPrompt = `${selectedCharacter.description}. ${prompt}`;
+          }
+        }
+
+        // Append style if selected
+        if (style) {
+          finalPrompt = `${finalPrompt} Style: ${style}.`;
+        }
+
+        try {
+          // Show loading state
+          const generateButton = document.getElementById('generate-button');
+          generateButton.textContent = 'Generating...';
+          generateButton.disabled = true;
+
+          // Send data to backend for image generation
+          const response = await fetch('/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: finalPrompt,
+              width: dimensions.width,
+              height: dimensions.height,
+              guidanceScale: parseFloat(options.guidanceScale) || 3.5,
+              inferenceSteps: parseInt(options.inferenceSteps) || 4
+            })
+          });
+
+          const data = await response.json();
+          if (response.ok && data.imageUrl) {
+            // Create image element
+            const imgElement = document.createElement('img');
+            imgElement.src = data.imageUrl;
+            imgElement.alt = 'Generated Image';
+            imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
+
+            // Hide image initially until it's fully loaded
+            imgElement.style.display = 'none';
+            imageContainer.appendChild(imgElement);
+
+            // Listen for image load event
+            imgElement.addEventListener('load', () => {
+              imgElement.style.display = 'block'; // Show image
+              // Remove spinner
+              const spinner = imageContainer.querySelector('.spinner');
+              if (spinner) {
+                spinner.remove();
+              }
+
+              // Update Tokens Count in Navbar
+              updateTokenCount(-data.tokensUsed); // Subtract tokens
+
+              // Switch to Profile Posts after a short delay to ensure the image is visible
+              setTimeout(() => {
+                document.getElementById('profile-toggle').click();
+              }, 500);
+
+              showToast('Image generated successfully!', 'success');
+            });
+
+            // Handle image load error
+            imgElement.addEventListener('error', () => {
+              showToast('Failed to load image.', 'error');
+              imageList.removeChild(imageContainer); // Remove the placeholder on error
+            });
+          } else {
+            // Handle error message from backend
+            showToast(data.error || 'Failed to generate image.', 'error');
+            imageList.removeChild(imageContainer); // Remove the placeholder on failure
+          }
+        } catch (error) {
+          console.error('Error generating image:', error);
+          showToast('An error occurred while generating the image.', 'error');
+          imageList.removeChild(imageContainer); // Remove the placeholder on error
+        } finally {
+          // Reset button state
+          const generateButton = document.getElementById('generate-button');
+          generateButton.textContent = 'Generate Image';
+          generateButton.disabled = false;
+        }
+      });
+
+      // Function to update the token count in the navbar
+      function updateTokenCount(amount) {
+        const tokenCountElement = document.getElementById('token-count');
+        if (tokenCountElement) {
+          let currentTokens = parseInt(tokenCountElement.textContent.replace('Tokens: ', '')) || 0;
+          currentTokens += amount;
+          tokenCountElement.textContent = `Tokens: ${currentTokens}`;
+
+          // Optionally, update backend if needed
+          // Example: send updated token count to backend
+        }
+      }
+
+      // Handle Public/Profile Toggle Buttons
+      document.getElementById('public-toggle').addEventListener('click', () => {
+        // Toggle button styles
+        document.getElementById('public-toggle').classList.add('selected-toggle');
+        document.getElementById('profile-toggle').classList.remove('selected-toggle');
+
+        // Load public posts
+        loadPublicPosts();
+      });
+
+      document.getElementById('profile-toggle').addEventListener('click', async () => {
+        // Fetch user data to check authentication
+        let userData;
+        try {
+          const response = await fetch('/user-data');
+          userData = await response.json();
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          showToast('An error occurred. Please try again.', 'error');
+          return;
+        }
+
+        if (!userData.loggedIn) {
+          // Display a message prompting the user to log in
+          showToast('Please log in to view your posts.', 'error');
+          return;
+        }
+
+        // Toggle button styles
+        document.getElementById('profile-toggle').classList.add('selected-toggle');
+        document.getElementById('public-toggle').classList.remove('selected-toggle');
+
+        // Load private/profile posts
+        loadPrivatePosts();
+      });
+
+      // Handle Buy Tokens Selection
+      document.querySelectorAll('.select-token-button').forEach(button => {
+        button.addEventListener('click', async () => {
+          const tokens = parseInt(button.getAttribute('data-tokens'));
+          const price = parseFloat(button.getAttribute('data-price'));
+
+          try {
+            if (tokens === 0) {
+              showToast('The Free package offers 0 tokens.', 'error');
+              return;
+            }
+
+            // Initiate payment process via backend
+            const response = await fetch('/buy-tokens', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tokens, price }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              showToast(`Successfully purchased ${tokens} tokens!`, 'success');
+              // Update token count in navbar
+              updateTokenCount(tokens);
+              // Close the Buy Tokens Modal
+              closeModal('buy-tokens-modal');
+            } else {
+              showToast(data.error || 'Failed to purchase tokens.', 'error');
+            }
+          } catch (error) {
+            console.error('Error purchasing tokens:', error);
+            showToast('An error occurred while purchasing tokens.', 'error');
+          }
+        });
+      });
+
+      // Handle Post Visibility Toggle
+      const visibilityButton = document.getElementById('post-visibility-button');
+      const visibilityIcon = document.getElementById('post-visibility-icon');
+      const tooltip = document.getElementById('post-visibility-tooltip');
+
+      let isPublic = true; // Default state
+
+      // Function to update the icon and tooltip
+      function updateVisibility() {
+        if (isPublic) {
+          // Public state: show "eye" icon
+          visibilityIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+          `;
+          tooltip.textContent = 'Create in public';
+        } else {
+          // Private state: show "eye-off" icon
+          visibilityIcon.innerHTML = `
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+          `;
+          tooltip.textContent = 'Create privately';
+        }
+      }
+
+      // Toggle visibility state on button click
+      if (visibilityButton) {
+        visibilityButton.addEventListener('click', () => {
+          isPublic = !isPublic;
+          updateVisibility();
+        });
+
+        // Show tooltip on hover
+        visibilityButton.addEventListener('mouseover', () => {
+          tooltip.classList.remove('hidden');
+        });
+        visibilityButton.addEventListener('mouseout', () => {
+          tooltip.classList.add('hidden');
+        });
+
+        // Initialize the default state
+        updateVisibility();
+      }
+
+      // Accessibility: Close any open modals when focusing on the prompt input
+      const promptInput = document.getElementById('prompt-input');
+      if (promptInput) {
+        promptInput.addEventListener('focus', () => {
+          for (let modalId in modals) {
+            if (!modals[modalId].classList.contains('hidden')) {
+              closeModal(modalId);
+            }
+          }
+        });
+      }
+    }
+
+    // Function to populate the character dropdown
+    function populateCharacterDropdown() {
+      const characterSelect = document.getElementById('character-select');
+      if (!characterSelect) return;
+
+      characterSelect.innerHTML = '<option value="" disabled selected>Select Character</option>'; // Reset options
+
+      const characters = JSON.parse(localStorage.getItem('characters')) || [];
+      characters.forEach((char, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = char.name;
+        characterSelect.appendChild(option);
+      });
+    }
+
+    // Function to load public posts
+    async function loadPublicPosts() {
+      try {
+        const response = await fetch('/api/public-posts');
+        if (!response.ok) {
+          throw new Error('Failed to load public posts');
+        }
+        const images = await response.json();
+        const imageList = document.getElementById('image-list');
+        if (!imageList) {
+          console.error('Image List container not found in the DOM.');
+          return;
+        }
+        imageList.innerHTML = ''; // Clear current images
+
+        images.forEach(image => {
+          const imageCard = document.createElement('div');
+          imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+          // Add a badge to indicate if the image is public
+          const badge = '<span class="badge-public">Public</span>';
+
+          imageCard.innerHTML = `
+            ${badge}
+            <img src="${image.imageUrl}" alt="Public Image" class="w-full h-auto rounded-lg" />
+          `;
+          imageList.appendChild(imageCard);
+        });
+      } catch (error) {
+        console.error('Error loading public posts:', error);
+        showToast('An error occurred while loading public posts.', 'error');
+      }
+    }
+
+    // Function to load private/profile posts
+    async function loadPrivatePosts() {
+      try {
+        const response = await fetch('/api/private-posts');
+        if (!response.ok) {
+          throw new Error('Failed to load profile posts');
+        }
+        const images = await response.json();
+        const imageList = document.getElementById('image-list');
+        if (!imageList) {
+          console.error('Image List container not found in the DOM.');
+          return;
+        }
+        imageList.innerHTML = ''; // Clear current images
+
+        images.forEach(image => {
+          const imageCard = document.createElement('div');
+          imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+          // Add a badge to indicate if the image is private
+          const badge = '<span class="badge-private">Private</span>';
+
+          imageCard.innerHTML = `
+            ${badge}
+            <img src="${image.imageUrl}" alt="Private Image" class="w-full h-auto rounded-lg" />
+          `;
+          imageList.appendChild(imageCard);
+        });
+      } catch (error) {
+        console.error('Error loading private posts:', error);
+        showToast('An error occurred while loading your posts.', 'error');
+      }
+    }
+
+    // Function to show toast notifications
+    function showToast(message, type = 'error') {
+      const toastContainer = document.getElementById('toast-container');
+      if (!toastContainer) {
+        console.error('Toast container not found in the DOM.');
+        return;
+      }
+
+      const toast = document.createElement('div');
+      toast.classList.add('toast');
+
+      if (type === 'success') {
+        toast.classList.add('toast-success');
+      } else {
+        toast.classList.add('toast-error');
+      }
+
+      toast.textContent = message;
+      toastContainer.appendChild(toast);
+
+      // Remove the toast after 3 seconds with a fade-out animation
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.addEventListener('transitionend', () => {
+          toast.remove();
+        });
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
