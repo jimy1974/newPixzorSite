@@ -13,10 +13,12 @@ const Image = require('./models/Image');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
-
-
 const app = express();
 const PORT = 3000;
+
+// Set the base URL and redirect URI from .env variables
+const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `${appBaseUrl}/auth/google/callback`;
 
 // Set up the view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -113,7 +115,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'http://localhost:3000/auth/google/callback'
+  callbackURL: googleRedirectUri        
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ where: { googleId: profile.id } });
@@ -187,8 +189,12 @@ app.get('/public-images', async (req, res) => {
 
 
 
+app.get('/demo', (req, res) => {
+  res.render('index'); // This is your main application page
+});
+
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('splash'); // Render a splash or landing page
 });
 
 
@@ -382,8 +388,9 @@ app.get('/profile', ensureAuthenticated, (req, res) => {
 });
 
 
+// Adjust any routes or URL references to use `appBaseUrl` if needed
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on ${appBaseUrl}:${PORT}`);
 });
 
 app.get('/api/public-posts', async (req, res) => {

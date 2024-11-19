@@ -1,1 +1,19 @@
 .env
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment Variables
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Optional: Other files/folders to ignore
+dist/
+build/
