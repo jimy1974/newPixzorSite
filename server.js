@@ -157,6 +157,21 @@ app.get('/auth/google/callback',
 
 
 
+app.get('/demo/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/demo/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Redirect to the home page after successful login
+    res.redirect('/');
+  }
+);
+
+
+
+
 
 // Route to send user data to the client
 app.get('/user-data', (req, res) => {
