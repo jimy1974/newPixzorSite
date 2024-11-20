@@ -209,7 +209,8 @@ app.get('/demo', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.render('splash'); // Render a splash or landing page
+  res.render('index'); // This is your main application page    
+  //res.render('splash'); // Render a splash or landing page
 });
 
 
