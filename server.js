@@ -299,25 +299,22 @@ const PersonalImage = require('./models/PersonalImage'); // Adjust based on your
 
 app.post('/generate-image', ensureAuthenticated, async (req, res) => {
   try {
-    // Check if user has enough tokens
     if (req.user.tokens <= 0) {
       return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
     }
 
-    const { prompt, width, height, guidanceScale, inferenceSteps } = req.body;
+    const { prompt, width, height, guidanceScale, inferenceSteps, isPublic } = req.body;
 
-    // Validate prompt length (adjust limit based on API)
-    if (prompt.length > 2000) { // Example limit
+    if (prompt.length > 2000) {
       return res.status(400).json({ error: 'Prompt is too long. Please shorten it and try again.' });
     }
 
-    // Fetch image from the external API
     const response = await fetch('https://api.fireworks.ai/inference/v1/workflows/accounts/fireworks/models/flux-1-schnell-fp8/text_to_image', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'image/jpeg',
-        'Authorization': `Bearer ${process.env.FIREWORKS_API_KEY}` // Use environment variable for security
+        'Authorization': `Bearer ${process.env.FIREWORKS_API_KEY}`
       },
       body: JSON.stringify({
         prompt,
@@ -329,54 +326,92 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
     });
 
     if (!response.ok) {
-      // Attempt to parse error message from the API
       let errorMessage = 'Failed to fetch the image from the external API';
       try {
         const errorData = await response.json();
         if (errorData && errorData.error) {
           errorMessage = `External API Error: ${errorData.error}`;
         }
-      } catch (parseError) {
-        // If response is not JSON, retain the default error message
-      }
+      } catch (parseError) {}
       throw new Error(errorMessage);
     }
 
-
-    // Convert the response to a buffer
     const buffer = await response.arrayBuffer();
     const imageData = Buffer.from(buffer);
 
-    // Deduct one token from the user's balance
     req.user.tokens -= 1;
     await req.user.save();
 
-    // Create a folder for the user if it doesn't exist
     const userFolderPath = path.join(__dirname, 'public', 'personal-images', req.user.id.toString());
     if (!fs.existsSync(userFolderPath)) {
       fs.mkdirSync(userFolderPath, { recursive: true });
     }
 
-    // Save the image to the user's folder
     const imageName = `image_${Date.now()}.jpg`;
     const imagePath = path.join(userFolderPath, imageName);
 
     fs.writeFileSync(imagePath, imageData);
 
-    // Save image metadata to the database
-    await PersonalImage.create({
+    // Save image metadata to the PersonalImages database
+    const newPersonalImage = await PersonalImage.create({
       userId: req.user.id,
       imageUrl: `/personal-images/${req.user.id}/${imageName}`,
       prompt,
+      isPublic: isPublic || false // Use the value from the request or default to false
     });
 
-    // Send the image URL and tokens used back to the client
+    // If the image is marked as public, also add it to the PublicImages database
+    if (isPublic) {
+      await PublicImage.create({
+        imageUrl: `/personal-images/${req.user.id}/${imageName}`,
+        title: prompt.substring(0, 50), // Optional: Use a substring of the prompt as the title
+        description: prompt, // Optional: Use the full prompt as the description
+      });
+    }
+
     res.json({ imageUrl: `/personal-images/${req.user.id}/${imageName}`, tokensUsed: 1 });
   } catch (error) {
     console.error('Error generating image:', error);
     res.status(500).json({ error: error.message || 'Failed to generate image' });
   }
 });
+
+
+
+
+
+
+// Route to delete a private image
+// Route to delete a private image
+app.delete('/delete-private-image/:id', async (req, res) => {
+  try {
+    const imageId = req.params.id;
+
+    // Find the image by its ID in the PersonalImages table
+    const image = await PersonalImage.findByPk(imageId);
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Get the full path of the image file
+    const imagePath = path.join(__dirname, 'public', image.imageUrl);
+
+    // Delete the image record from the database
+    await image.destroy();
+
+    // Delete the image file from the filesystem
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    res.json({ message: 'Private image deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting private image:', error);
+    res.status(500).json({ error: 'Failed to delete private image' });
+  }
+});
+
+
 
 
 
@@ -410,14 +445,99 @@ app.listen(PORT, () => {
 
 app.get('/api/public-posts', async (req, res) => {
   try {
-    // Fetch public images from the database (you may need to create a PublicImage model if not already done)
-    const publicImages = await PublicImage.findAll(); // Adjust if your public image table/model is different
-    res.json(publicImages);
+    // Get page and limit from query parameters (default to page 1 and limit 10 if not provided)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Fetch public images with pagination
+    const publicImages = await PublicImage.findAll({
+      offset: offset,
+      limit: limit,
+      order: [['createdAt', 'DESC']] // Optional: Order by creation date or another relevant field
+    });
+
+    // Check if there are more images for the next page
+    const totalImages = await PublicImage.count();
+    const hasMore = offset + limit < totalImages;
+
+    res.json({
+      images: publicImages,
+      hasMore: hasMore
+    });
   } catch (error) {
     console.error('Error loading public posts:', error);
     res.status(500).json({ error: 'Failed to load public posts' });
   }
 });
+
+app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    const imageId = req.params.id;
+    console.log('Received request to update visibility for image ID:', imageId);
+
+    const image = await PersonalImage.findByPk(imageId);
+
+    if (!image) {
+      console.warn('Image not found in PersonalImage table:', imageId);
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Check if the logged-in user owns the image
+    if (image.userId !== req.user.id) {
+      console.warn('Unauthorized access attempt by user ID:', req.user.id);
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Toggle the isPublic field
+    image.isPublic = !image.isPublic;
+    await image.save();
+    console.log('Image visibility toggled. New visibility:', image.isPublic);
+
+    // If the image is made public, add it to the PublicImage table
+    if (image.isPublic) {
+      console.log('Image set to public. Checking if it exists in PublicImage table:', image.imageUrl);
+
+      const existingPublicImage = await PublicImage.findOne({ where: { imageUrl: image.imageUrl } });
+
+      if (!existingPublicImage) {
+        console.log('Image not found in PublicImage table. Adding new entry.');
+
+        try {
+          await PublicImage.create({
+            imageUrl: image.imageUrl,
+            title: image.title || 'Untitled',
+            description: image.description || '',
+          });
+          console.log('Image successfully added to PublicImage table.');
+        } catch (createError) {
+          console.error('Error creating entry in PublicImage table:', createError);
+        }
+      } else {
+        console.log('Image already exists in PublicImage table. Skipping creation.');
+      }
+    } else {
+      // If the image is made private, remove it from the PublicImage table
+      console.log('Image set to private. Removing from PublicImage table if it exists.');
+
+      const deletedCount = await PublicImage.destroy({ where: { imageUrl: image.imageUrl } });
+      if (deletedCount > 0) {
+        console.log('Image successfully removed from PublicImage table.');
+      } else {
+        console.log('Image not found in PublicImage table. No deletion performed.');
+      }
+    }
+
+    res.json({ message: 'Image visibility updated successfully', isPublic: image.isPublic });
+  } catch (error) {
+    console.error('Error updating image visibility:', error);
+    res.status(500).json({ error: 'Failed to update image visibility' });
+  }
+});
+
+
+
+
 
 app.get('/api/private-posts', ensureAuthenticated, async (req, res) => {
   try {

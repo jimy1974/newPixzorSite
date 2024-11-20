@@ -6,6 +6,8 @@
   <title>Pixzor</title>
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
   <style>
     /* Custom styles for the fixed prompt box */
     .fixed-prompt {
@@ -170,11 +172,56 @@
     .hidden {
       display: none;
     }
-  </style>
+      
+   
+    #post-visibility-toggle:checked + .block {
+      background-color: #10b981; 
+    }
+    #post-visibility-toggle:checked + .block + .dot {
+      transform: translateX(4px); 
+    }
+      
+   #post-visibility-button:hover + #post-visibility-tooltip {
+      display: block;
+    }
+      
+    .post-visibility-wrapper {
+      position: relative; 
+    }
+
+    .custom-button {
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    .custom-button:hover {
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .image-card {
+      position: relative;
+      overflow: hidden; /* Ensures image scaling doesn't affect layout */
+      border-radius: 12px; /* Matches other rounded elements */
+    }
+
+    .image-card img {
+      cursor: pointer; /* Change cursor to a hand */
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth hover effect */
+    }
+
+    .image-card:hover img {
+      transform: scale(1.05); /* Slight zoom on hover */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
+    }
+    .toggle-visibility-button {
+      margin-left: 4px; /* Add some space between buttons */
+      display: inline-block; /* Align with other buttons */
+   }
+
+</style>
 </head>
 <body class="bg-gray-900 text-white">
   <!-- Navbar -->
-  <nav class="bg-gray-800 shadow-md">
+  <nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
     <div class="container mx-auto px-4 py-2 flex justify-between items-center">
       <!-- Logo -->
       <div class="flex items-center space-x-2">
@@ -191,7 +238,7 @@
           </svg>
           <span id="token-count" class="text-yellow-400">Tokens: 0</span>
         </button>
-          
+
         <!-- Google Auth Button -->
         <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-4 py-2 rounded-lg">
           <img src="https://img.icons8.com/ios-filled/24/ffffff/google-logo.png" alt="Google" class="mr-2" />
@@ -201,148 +248,164 @@
     </div>
   </nav>
 
-  <!-- Main Container -->
-  <div class="container mx-auto py-8 content-padding">
-    <!-- Public/Profile Toggle -->
-    <div class="mb-6 flex justify-center">
-      <button id="public-toggle" class="custom-button px-4 rounded-l-lg text-sm selected-toggle" style="height: 32px;">Public Posts</button>
-      <button id="profile-toggle" class="custom-button px-4 rounded-r-lg text-sm" style="height: 32px;">Profile Posts</button>
-    </div>
+  
+  <!-- Fixed Container for Toggle Buttons -->
+<div class="fixed left-0 right-0 z-40" style="top: 56px;"> <!-- Adjust top value as needed -->
+  <div class="container mx-auto py-2 flex justify-center">
+    <!-- Buttons without a distinct background layer -->
+    <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">
+      Public Posts
+    </button>
+    <button id="profile-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">
+      Profile Posts
+    </button>
+  </div>
+</div>
 
-    <!-- Error Message Display -->
+  <!-- Main Container -->
+  <div class="container mx-auto py-20 content-padding">
+    <!-- Add padding to compensate for the fixed buttons -->
     <div id="error-message" class="text-red-500 text-center mb-4"></div>
-          
-    <!-- Main Content Container with Padding -->    
+
+    <!-- Main Content Container with Padding -->
     <div id="image-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
       <!-- Images will be dynamically added here -->
     </div>
   </div>
 
-  <!-- Fixed Prompt and Buttons at the Bottom -->
-  <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
-    <div class="container mx-auto">
+ 
+    
+    
+    
+    
+    
+    <!-- Fixed Prompt and Buttons at the Bottom -->
+<div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
+  <div class="container mx-auto">
+    <!-- Prompt Input -->
+    <div class="flex flex-col md:flex-row items-center md:space-x-4">
       <!-- Prompt Input -->
-      <div class="flex flex-col md:flex-row items-center md:space-x-4">
-        <!-- Prompt Input -->
-        <div class="mb-4 md:mb-0 flex-grow">
-          <textarea id="prompt-input" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" rows="2" placeholder="Enter your prompt"></textarea>
-        </div>
+      <div class="mb-4 md:mb-0 flex-grow">
+        <textarea id="prompt-input" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" rows="2" placeholder="Enter your prompt"></textarea>
       </div>
+    </div>
 
-      <!-- Prompt Options  -->
-      <div class="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0">
-        <div class="flex space-x-2">
-          <button id="enhance-prompt-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Enhance Prompt</button>
-          <button id="options-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Options</button>
-          <button id="setup-character-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Add Character</button>
+    <!-- Prompt Options and Generate Button -->
+    <div class="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0">
+      <div class="flex space-x-2">
           
-          <!-- Select Character Dropdown -->
-          <div class="flex justify-center mb-4">
-            <select id="character-select" class="w-full max-w-xs bg-gray-700 rounded-lg py-1 px-0 text-white" aria-label="Select Character">
-              <option value="" disabled selected>Select Character</option>
-              <!-- Options populated dynamically via JavaScript -->
-            </select>
-          </div>
-                
-          <!-- Post Visibility Toggle Button -->
-          <div class="relative flex items-center mb-4">
-            <button id="post-visibility-button" class="bg-gray-700 text-white px-3 py-2 rounded-full hover:bg-gray-600 focus:outline-none">
-              <svg id="post-visibility-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <!-- Initial "eye" icon -->
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-            <!-- Tooltip -->
-            <span id="post-visibility-tooltip" class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap hidden">
-              Create in public
-            </span>
-          </div>
-        </div>
-        <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white font-medium px-4 rounded-lg text-sm" style="height: 32px;">Generate Image</button>
+        <button id="options-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Options</button>
+        
+        <!--  
+        <button id="enhance-prompt-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Enhance Prompt</button>
+          
+        <button id="setup-character-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Add Character</button>
+
+        
+        <div class="flex justify-center mb-4">
+          <select id="character-select" class="w-full max-w-xs bg-gray-700 rounded-lg py-1 px-0 text-white" aria-label="Select Character">
+            <option value="" disabled selected>Select Character</option>
+            
+          </select>
+        </div> 
+          -->
+          
+      </div> 
+       
+        
+      
+    <!-- Post Visibility Toggle and Generate Button -->
+<div class="flex items-center space-x-2">
+  <!-- Visibility Text -->
+  <span id="post-visibility-text" class="ml-2 text-white">Post Public</span>
+  
+    
+  <!-- Post Visibility Button and Tooltip Wrapper -->
+  <div class="relative flex items-center"> <!-- Added "relative" to the container -->
+    <button id="post-visibility-button" class="bg-gray-700 text-white px-2 py-2 rounded-lg hover:bg-gray-600 focus:outline-none">
+      <!-- Eye Icon -->
+      <svg id="post-visibility-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Initial "eye" icon -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+      </svg>
+    </button>
+
+    <!-- Tooltip Element -->
+    <span id="post-visibility-tooltip" class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap hidden">
+      Create in public
+    </span>
+  </div>
+
+  <!-- Generate Image Button -->
+  <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white font-medium px-4 rounded-lg text-sm" style="height: 32px;">Generate Image</button>
+</div>
+        
+    </div>
+  </div>
+</div>
+
+  
+<!-- Buy Tokens Modal -->
+<div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="buy-tokens-modal-title">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
+      <h2 id="buy-tokens-modal-title" class="text-xl font-bold mb-4 text-gray-900">Buy Tokens</h2>
+      <div class="text-center text-gray-700">
+        <p class="text-lg">This feature is currently under development.</p>
+        <p>Please check back later for updates.</p>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Buy Tokens Modal -->
-  <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="buy-tokens-modal-title">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
-        <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
-        <h2 id="buy-tokens-modal-title" class="text-xl font-bold mb-4">Buy Tokens</h2>
-        <form id="buy-tokens-form">
-          <!-- Token Packages -->
-          <div class="mb-4">
-            <div class="flex flex-col space-y-4">
-              <!-- Free Package -->
-              <div class="bg-gray-700 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-2">Free</h3>
-                <p>0 Tokens</p>
-                <p>$0/month</p>
-                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="0" data-price="0">Select</button>
-              </div>
-              <!-- Starter Package -->
-              <div class="bg-gray-700 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-2">Starter</h3>
-                <p>100 Tokens</p>
-                <p>$5/month</p>
-                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="100" data-price="5">Select</button>
-              </div>
-              <!-- Hobbyist Package -->
-              <div class="bg-gray-700 p-4 rounded-lg">
-                <h3 class="text-lg font-semibold mb-2">Hobbyist</h3>
-                <p>250 Tokens</p>
-                <p>$10/month</p>
-                <button type="button" class="mt-2 w-full bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-lg select-token-button" data-tokens="250" data-price="10">Select</button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Options Modal -->
-  <div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="options-modal-title">
-    <div class="flex items-center justify-center min-h-screen px-4">
-      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
-        <button id="close-options-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
-        <h2 id="options-modal-title" class="text-xl font-bold mb-4">Options</h2>
-        <form id="options-form">
-          <!-- Select Style -->
+<!-- Options Modal -->
+<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="options-modal-title">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <button id="close-options-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
+      <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
+                     
+          <!-- Select Style 
           <div class="mb-4">
             <label for="style-select-modal" class="block font-medium mb-1">Select Style</label>
             <select id="style-select-modal" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
               <option value="" disabled selected>Choose a style</option>
               <option value="pixar">Pixar</option>
               <option value="anime">Anime</option>
-              <option value="cartoon">Cartoon</option>
-              <!-- Add more styles as needed -->
+              <option value="cartoon">Cartoon</option>             
             </select>
           </div>
-
-          <!-- Set Variables -->
-          <div class="mb-4">
-            <label for="width-modal" class="block font-medium mb-1">Width</label>
-            <input type="number" id="width-modal" value="800" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Width (e.g., 800)">
-            <label for="height-modal" class="block font-medium mb-1">Height</label>
-            <input type="number" id="height-modal" value="600" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Height (e.g., 600)">
-            <label for="guidance-scale-modal" class="block font-medium mb-1">Guidance Scale</label>
-            <input type="number" step="0.1" id="guidance-scale-modal" value="3.5" class="w-full bg-gray-700 rounded-lg py-2 px-3 mb-2 text-white" placeholder="Guidance Scale">
-            <label for="inference-steps-modal" class="block font-medium mb-1">Inference Steps</label>
-            <input type="number" id="inference-steps-modal" value="4" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" placeholder="Inference Steps">
-          </div>
-
-          <div class="flex justify-end">
-            <button type="submit" class="custom-button font-medium py-2 px-4 rounded-lg">Save Options</button>
-          </div>
-        </form>
-      </div>
-    </div>
+          -->
+        
+      <form id="options-form">           
+  <!-- Set Variables -->
+  <div class="mb-4">
+    <label for="width-modal" class="block font-medium mb-1 text-gray-900">Width</label>
+    <input type="number" id="width-modal" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Width (e.g., 800)">
+    <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
+    <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
+    <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
+    <input type="number" step="0.1" id="guidance-scale-modal" value="3.5" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
+    <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
+    <input type="number" id="inference-steps-modal" value="4" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
   </div>
 
+  <div class="flex justify-end">
+    <button type="submit" class="custom-button font-medium py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Save Options</button>
+  </div>
+</form>
+
+    </div>
+  </div>
+</div>
+    
+    
+
   <!-- Setup Character Modal -->
-  <div id="setup-character-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="setup-character-modal-title">
+<div id="setup-character-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="setup-character-modal-title">
+ 
     <div class="flex items-center justify-center min-h-screen px-4">
       <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
         <button id="close-setup-character-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
@@ -377,6 +440,7 @@
   <!-- JavaScript -->
   <script>
     // script.js
+    let isPublic = false;
 
     document.addEventListener('DOMContentLoaded', () => {
       // Fetch user data on page load
@@ -467,7 +531,7 @@
 
       // Event Listeners for Opening Modals
       document.getElementById('options-button').addEventListener('click', () => openModal('options-modal'));
-      document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
+      //document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
       document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
 
       // Event Listeners for Closing Modals
@@ -550,6 +614,7 @@
         }
       });
 
+        /*
       // Handle Enhance Prompt Button Click
       document.getElementById('enhance-prompt-button').addEventListener('click', async () => {
         const prompt = document.getElementById('prompt-input').value.trim();
@@ -587,7 +652,7 @@
           enhanceButton.textContent = 'Enhance Prompt';
           enhanceButton.disabled = false;
         }
-      });
+      });*/
 
       // Handle Generate Image Button Click
       document.getElementById('generate-button').addEventListener('click', async () => {
@@ -676,14 +741,16 @@
           // Show loading state
           const generateButton = document.getElementById('generate-button');
           generateButton.textContent = 'Generating...';
-          generateButton.disabled = true;
-
+          generateButton.disabled = true;              
+                      
+          alert("isPublic:"+isPublic);
           // Send data to backend for image generation
           const response = await fetch('/generate-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prompt: finalPrompt,
+              isPublic: isPublic,
               width: dimensions.width,
               height: dimensions.height,
               guidanceScale: parseFloat(options.guidanceScale) || 3.5,
@@ -760,13 +827,25 @@
 
       // Handle Public/Profile Toggle Buttons
       document.getElementById('public-toggle').addEventListener('click', () => {
-        // Toggle button styles
-        document.getElementById('public-toggle').classList.add('selected-toggle');
-        document.getElementById('profile-toggle').classList.remove('selected-toggle');
+          
+          // Reset pagination state when switching to Public Posts
+          page = 1; // Reset the page number
+          hasMoreImages = true; // Ensure hasMoreImages is set to true
 
-        // Load public posts
-        loadPublicPosts();
-      });
+          // Toggle button styles
+          document.getElementById('public-toggle').classList.add('selected-toggle');
+          document.getElementById('profile-toggle').classList.remove('selected-toggle');
+
+          // Clear existing images from the list if needed
+          const imageList = document.getElementById('image-list');
+          if (imageList) {
+            imageList.innerHTML = ''; // Clear current images to load new ones
+          }
+
+          // Load public posts
+          loadPublicPosts();
+        });
+
 
       document.getElementById('profile-toggle').addEventListener('click', async () => {
         // Fetch user data to check authentication
@@ -831,50 +910,10 @@
         });
       });
 
-      // Handle Post Visibility Toggle
-      const visibilityButton = document.getElementById('post-visibility-button');
-      const visibilityIcon = document.getElementById('post-visibility-icon');
-      const tooltip = document.getElementById('post-visibility-tooltip');
+     
+ 
 
-      let isPublic = true; // Default state
 
-      // Function to update the icon and tooltip
-      function updateVisibility() {
-        if (isPublic) {
-          // Public state: show "eye" icon
-          visibilityIcon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-          `;
-          tooltip.textContent = 'Create in public';
-        } else {
-          // Private state: show "eye-off" icon
-          visibilityIcon.innerHTML = `
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-          `;
-          tooltip.textContent = 'Create privately';
-        }
-      }
-
-      // Toggle visibility state on button click
-      if (visibilityButton) {
-        visibilityButton.addEventListener('click', () => {
-          isPublic = !isPublic;
-          updateVisibility();
-        });
-
-        // Show tooltip on hover
-        visibilityButton.addEventListener('mouseover', () => {
-          tooltip.classList.remove('hidden');
-        });
-        visibilityButton.addEventListener('mouseout', () => {
-          tooltip.classList.add('hidden');
-        });
-
-        // Initialize the default state
-        updateVisibility();
-      }
 
       // Accessibility: Close any open modals when focusing on the prompt input
       const promptInput = document.getElementById('prompt-input');
@@ -905,73 +944,248 @@
       });
     }
 
-    // Function to load public posts
+  
+   function showFullSizeImage(imageUrl) {
+      // Create a modal element
+      const modal = document.createElement('div');
+      modal.classList.add('fixed', 'inset-0', 'bg-black', 'bg-opacity-75', 'flex', 'justify-center', 'items-center', 'z-50');
+      modal.innerHTML = `
+        <div class="relative">
+          <img src="${imageUrl}" alt="Full Image" class="max-w-full max-h-screen rounded-lg">
+          <button class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full" id="close-modal">&times;</button>
+        </div>
+      `;
+
+      // Append modal to the document body
+      document.body.appendChild(modal);
+
+      // Add event listener to close the modal when clicking the close button or outside the image
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.id === 'close-modal') {
+          modal.remove();
+        }
+      });
+    }
+
+
+    
+    // Function to load public posts with infinite scrolling support
+    let page = 1; // Initial page number for pagination
+    let isLoading = false; // Prevent multiple simultaneous requests
+    let hasMoreImages = true; // Track if there are more images to load
+
+
     async function loadPublicPosts() {
+      if (isLoading || !hasMoreImages) return;
+      isLoading = true;
+
       try {
-        const response = await fetch('/api/public-posts');
+        const response = await fetch(`/api/public-posts?page=${page}&limit=10`);
         if (!response.ok) {
           throw new Error('Failed to load public posts');
         }
-        const images = await response.json();
+        const data = await response.json();
+        const images = data.images;
+        hasMoreImages = data.hasMore; // Update the hasMore flag based on server response
+
         const imageList = document.getElementById('image-list');
         if (!imageList) {
           console.error('Image List container not found in the DOM.');
           return;
         }
-        imageList.innerHTML = ''; // Clear current images
 
         images.forEach(image => {
           const imageCard = document.createElement('div');
-          imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
-
-          // Add a badge to indicate if the image is public
-          const badge = '<span class="badge-public">Public</span>';
+          imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
 
           imageCard.innerHTML = `
-            ${badge}
-            <img src="${image.imageUrl}" alt="Public Image" class="w-full h-auto rounded-lg" />
+            <span class="badge-public">Public</span>
+            <img src="${image.imageUrl}" alt="Public Image" class="w-full h-auto rounded-lg" loading="lazy" />
           `;
           imageList.appendChild(imageCard);
+
+          // Ensure the event listener is correctly attached to the image
+          imageCard.querySelector('img').addEventListener('click', () => {
+              console.log('Image clicked:', image.imageUrl); // Debugging line
+              showFullSizeImage(image.imageUrl);
+            });
+
         });
+
+        page++; // Increment page number for the next load
       } catch (error) {
         console.error('Error loading public posts:', error);
         showToast('An error occurred while loading public posts.', 'error');
+      } finally {
+        isLoading = false;
       }
     }
 
-    // Function to load private/profile posts
-    async function loadPrivatePosts() {
-      try {
-        const response = await fetch('/api/private-posts');
-        if (!response.ok) {
-          throw new Error('Failed to load profile posts');
+
+    // Infinite scrolling logic
+    window.addEventListener('scroll', () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !isLoading && hasMoreImages) {
+        loadPublicPosts();
+      }
+    });
+
+/*
+// Function to load private/profile posts
+   // Function to load private/profile posts
+async function loadPrivatePosts() {
+  try {
+    const response = await fetch('/api/private-posts');
+    if (!response.ok) {
+      throw new Error('Failed to load profile posts');
+    }
+    const images = await response.json();
+    const imageList = document.getElementById('image-list');
+    if (!imageList) {
+      console.error('Image List container not found in the DOM.');
+      return;
+    }
+    imageList.innerHTML = ''; // Clear current images
+
+    images.forEach(image => {
+      const imageCard = document.createElement('div');
+      imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+      // Add a badge to indicate if the image is private
+      const badge = '<span class="badge-private">Private</span>';
+
+      imageCard.innerHTML = `
+        ${badge}
+        <img src="${image.imageUrl}" alt="Private Image" class="w-full h-auto rounded-lg" loading="lazy" />
+      `;
+      imageList.appendChild(imageCard);
+
+      // Add click event listener for full-size view
+      imageCard.querySelector('img').addEventListener('click', () => {
+        showFullSizeImage(image.imageUrl);
+      });
+    });
+  } catch (error) {
+    console.error('Error loading private posts:', error);
+    showToast('An error occurred while loading your posts.', 'error');
+  }
+}
+
+*/
+   // Function to load private/profile posts
+async function loadPrivatePosts() {
+  try {
+    const response = await fetch('/api/private-posts');
+    if (!response.ok) {
+      throw new Error('Failed to load profile posts');
+    }
+    const images = await response.json();
+    const imageList = document.getElementById('image-list');
+    if (!imageList) {
+      console.error('Image List container not found in the DOM.');
+      return;
+    }
+    imageList.innerHTML = ''; // Clear current images
+
+    images.forEach(image => {
+      const imageCard = document.createElement('div');
+      imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+      // Badge indicating public or private
+      const badge = image.isPublic 
+        ? '<span class="badge-public">Public</span>'
+        : '<span class="badge-private">Private</span>';
+
+      // Choose the appropriate icon and tooltip for the toggle button
+      const toggleIcon = image.isPublic ? '<i class="fas fa-lock"></i>' : '<i class="fas fa-globe"></i>';
+      const toggleTooltip = image.isPublic ? 'Make Private' : 'Make Public';
+
+      // Create a container for all action buttons
+      const actionButtons = `
+        <div class="action-buttons absolute top-2 right-2 flex space-x-2">
+          <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
+            <i class="fas fa-download"></i>
+          </a>
+          <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-gray-100" data-id="${image.id}" title="Delete">
+            <i class="fas fa-trash"></i>
+          </button>
+          <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${toggleTooltip}">
+            ${toggleIcon}
+          </button>
+        </div>
+      `;
+
+      imageCard.innerHTML = `
+        ${badge}
+        <img src="${image.imageUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" class="w-full h-auto rounded-lg" loading="lazy" />
+        ${actionButtons}
+      `;
+
+      imageList.appendChild(imageCard);
+
+      // Add click event listener for full-size view
+      imageCard.querySelector('img').addEventListener('click', () => {
+        showFullSizeImage(image.imageUrl);
+      });
+
+      // Add click event listener for the delete button
+      imageCard.querySelector('.delete-button').addEventListener('click', async (event) => {
+        event.stopPropagation(); // Prevent triggering the full-size image view
+        const imageId = event.target.closest('button').getAttribute('data-id');
+
+        try {
+          const response = await fetch(`/delete-private-image/${imageId}`, {
+            method: 'DELETE',
+          });
+
+          if (response.ok) {
+            showToast('Image deleted successfully!', 'success');
+            imageCard.remove(); // Remove the card from the DOM
+          } else {
+            showToast('Failed to delete image', 'error');
+          }
+        } catch (error) {
+          console.error('Error deleting image:', error);
+          showToast('An error occurred while deleting the image', 'error');
         }
-        const images = await response.json();
-        const imageList = document.getElementById('image-list');
-        if (!imageList) {
-          console.error('Image List container not found in the DOM.');
-          return;
-        }
-        imageList.innerHTML = ''; // Clear current images
+      });
 
-        images.forEach(image => {
-          const imageCard = document.createElement('div');
-          imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+      // Add click event listener for the toggle visibility button
+      imageCard.querySelector('.toggle-visibility-button').addEventListener('click', async (event) => {
+          event.stopPropagation(); // Prevent triggering the full-size image view
+          const imageId = event.target.closest('button').getAttribute('data-id');
 
-          // Add a badge to indicate if the image is private
-          const badge = '<span class="badge-private">Private</span>';
+          try {
+            const response = await fetch(`/update-image-visibility/${imageId}`, {
+              method: 'PUT', 
+              headers: { 'Content-Type': 'application/json' },
+            });
 
-          imageCard.innerHTML = `
-            ${badge}
-            <img src="${image.imageUrl}" alt="Private Image" class="w-full h-auto rounded-lg" />
-          `;
-          imageList.appendChild(imageCard);
+
+            if (response.ok) {
+              const data = await response.json();
+              showToast('Image visibility updated!', 'success');
+              // Optionally, refresh the view to reflect changes
+              loadPrivatePosts();
+            } else {
+              showToast('Failed to update visibility', 'error');
+            }
+          } catch (error) {
+            console.error('Error updating image visibility:', error);
+            showToast('An error occurred while updating visibility', 'error');
+          }
         });
-      } catch (error) {
-        console.error('Error loading private posts:', error);
-        showToast('An error occurred while loading your posts.', 'error');
-      }
-    }
+
+        
+        
+    });
+  } catch (error) {
+    console.error('Error loading private posts:', error);
+    showToast('An error occurred while loading your posts.', 'error');
+  }
+}
+
+
+
 
     // Function to show toast notifications
     function showToast(message, type = 'error') {
@@ -999,8 +1213,83 @@
         toast.addEventListener('transitionend', () => {
           toast.remove();
         });
-      }, 3000);
+      }, 1000);
     }
+      
+      
+    async function updateImageVisibility(imageId, isPublic) {
+      try {
+        const response = await fetch('/update-image-visibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageId, isPublic })
+        });
+
+        if (response.ok) {
+          showToast(`Image visibility updated to ${isPublic ? 'public' : 'private'}!`, 'success');
+        } else {
+          showToast('Failed to update image visibility.', 'error');
+        }
+      } catch (error) {
+        console.error('Error updating image visibility:', error);
+        showToast('An error occurred while updating image visibility.', 'error');
+      }
+    }
+
+      document.addEventListener('DOMContentLoaded', () => {
+          
+          
+
+          
+          const visibilityButton = document.getElementById('post-visibility-button');
+          const visibilityIcon = document.getElementById('post-visibility-icon');
+          const visibilityText = document.getElementById('post-visibility-text');
+          const tooltip = document.getElementById('post-visibility-tooltip');
+
+          visibilityButton.addEventListener('mouseover', () => {
+            if (tooltip) {
+              tooltip.classList.remove('hidden');
+            }
+          });
+
+          visibilityButton.addEventListener('mouseout', () => {
+            if (tooltip) {
+              tooltip.classList.add('hidden');
+            }
+          });
+
+
+          // Initial state: private (false)  
+          updateVisibility();
+
+
+          visibilityButton.addEventListener('click', () => {
+            isPublic = !isPublic; // Toggle the state
+            updateVisibility();
+          });
+
+          function updateVisibility() {
+            if (isPublic) {
+              // Public state
+              visibilityIcon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+              `;
+              visibilityText.textContent = 'Post Public';
+              if (tooltip) tooltip.textContent = 'Create in public'; // Check if tooltip exists
+            } else {
+              // Private state
+              visibilityIcon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+              `;
+              visibilityText.textContent = 'Post Private';
+              if (tooltip) tooltip.textContent = 'Create privately'; // Check if tooltip exists
+            }
+          }
+    });
+
+
   </script>
 </body>
 </html>
