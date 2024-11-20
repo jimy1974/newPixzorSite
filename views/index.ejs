@@ -654,162 +654,164 @@
         }
       });*/
 
-      // Handle Generate Image Button Click
-      document.getElementById('generate-button').addEventListener('click', async () => {
-        const prompt = document.getElementById('prompt-input').value.trim();
-        const characterIndex = document.getElementById('character-select').value;
-        const options = JSON.parse(localStorage.getItem('options')) || {};
-        const dimensions = {
-          width: parseInt(options.width) || 800,
-          height: parseInt(options.height) || 600
-        };
-        const style = options.style || '';
+      document.addEventListener('DOMContentLoaded', () => {
+          // Handle Generate Image Button Click
+          document.getElementById('generate-button').addEventListener('click', async () => {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            const characterIndex = document.getElementById('character-select').value;
+            const options = JSON.parse(localStorage.getItem('options')) || {};
+            const dimensions = {
+              width: parseInt(options.width) || 800,
+              height: parseInt(options.height) || 600
+            };
+            const style = options.style || '';
 
-        // Clear previous error message
-        document.getElementById('error-message').textContent = '';
+            // Clear previous error message
+            document.getElementById('error-message').textContent = '';
 
-        // Fetch user data to check authentication
-        let userData;
-        try {
-          const response = await fetch('/user-data');
-          userData = await response.json();
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          showToast('An error occurred. Please try again.', 'error');
-          return;
-        }
+            // Fetch user data to check authentication
+            let userData;
+            try {
+              const response = await fetch('/user-data');
+              userData = await response.json();
+            } catch (error) {
+              console.error('Error fetching user data:', error);
+              showToast('An error occurred. Please try again.', 'error');
+              return;
+            }
 
-        if (!userData.loggedIn) {
-          // Prompt user to log in
-          showToast('Please log in to generate images.', 'error');
-          return;
-        }
+            if (!userData.loggedIn) {
+              // Prompt user to log in
+              showToast('Please log in to generate images.', 'error');
+              return;
+            }
 
-        // Check Token Availability
-        let currentTokens = parseInt(userData.tokens) || 0;
-        if (currentTokens <= 0) {
-          showToast('You have no tokens left. Please buy more tokens to generate images.', 'error');
-          return;
-        }
+            // Check Token Availability
+            let currentTokens = parseInt(userData.tokens) || 0;
+            if (currentTokens <= 0) {
+              showToast('You have no tokens left. Please buy more tokens to generate images.', 'error');
+              return;
+            }
 
-        if (!prompt) {
-          showToast('Please enter a prompt.', 'error');
-          return;
-        }
+            if (!prompt) {
+              showToast('Please enter a prompt.', 'error');
+              return;
+            }
 
-        // Add Placeholder
-        const imageList = document.getElementById('image-list');
-        if (!imageList) {
-          console.error('Image List container not found in the DOM.');
-          showToast('An error occurred. Please try again.', 'error');
-          return;
-        }
+            // Add Placeholder
+            const imageList = document.getElementById('image-list');
+            if (!imageList) {
+              console.error('Image List container not found in the DOM.');
+              showToast('An error occurred. Please try again.', 'error');
+              return;
+            }
 
-        // Create a container for both placeholder and image
-        const imageContainer = document.createElement('div');
-        imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+            // Create a container for both placeholder and image
+            const imageContainer = document.createElement('div');
+            imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
 
-        // Style the placeholder to be slightly lighter
-        imageContainer.style.backgroundColor = '#2d2d2d'; // Adjust as needed
+            // Style the placeholder to be slightly lighter
+            imageContainer.style.backgroundColor = '#2d2d2d'; // Adjust as needed
 
-        // Use Flexbox to center the spinner
-        imageContainer.innerHTML = `
-          <div class="flex justify-center items-center h-full">
-            <div class="spinner"></div>
-          </div>
-        `;
+            // Use Flexbox to center the spinner
+            imageContainer.innerHTML = `
+              <div class="flex justify-center items-center h-full">
+                <div class="spinner"></div>
+              </div>
+            `;
 
-        imageList.prepend(imageContainer);          
+            imageList.prepend(imageContainer);          
 
-        let finalPrompt = prompt;
+            let finalPrompt = prompt;
 
-        // Append character description if a character is selected
-        if (characterIndex !== "") {
-          const characters = JSON.parse(localStorage.getItem('characters')) || [];
-          const selectedCharacter = characters[characterIndex];
-          if (selectedCharacter) {
-            finalPrompt = `${selectedCharacter.description}. ${prompt}`;
-          }
-        }
-
-        // Append style if selected
-        if (style) {
-          finalPrompt = `${finalPrompt} Style: ${style}.`;
-        }
-
-        try {
-          // Show loading state
-          const generateButton = document.getElementById('generate-button');
-          generateButton.textContent = 'Generating...';
-          generateButton.disabled = true;              
-                      
-          alert("isPublic:"+isPublic);
-          // Send data to backend for image generation
-          const response = await fetch('/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prompt: finalPrompt,
-              isPublic: isPublic,
-              width: dimensions.width,
-              height: dimensions.height,
-              guidanceScale: parseFloat(options.guidanceScale) || 3.5,
-              inferenceSteps: parseInt(options.inferenceSteps) || 4
-            })
-          });
-
-          const data = await response.json();
-          if (response.ok && data.imageUrl) {
-            // Create image element
-            const imgElement = document.createElement('img');
-            imgElement.src = data.imageUrl;
-            imgElement.alt = 'Generated Image';
-            imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
-
-            // Hide image initially until it's fully loaded
-            imgElement.style.display = 'none';
-            imageContainer.appendChild(imgElement);
-
-            // Listen for image load event
-            imgElement.addEventListener('load', () => {
-              imgElement.style.display = 'block'; // Show image
-              // Remove spinner
-              const spinner = imageContainer.querySelector('.spinner');
-              if (spinner) {
-                spinner.remove();
+            // Append character description if a character is selected
+            if (characterIndex !== "") {
+              const characters = JSON.parse(localStorage.getItem('characters')) || [];
+              const selectedCharacter = characters[characterIndex];
+              if (selectedCharacter) {
+                finalPrompt = `${selectedCharacter.description}. ${prompt}`;
               }
+            }
 
-              // Update Tokens Count in Navbar
-              updateTokenCount(-data.tokensUsed); // Subtract tokens
+            // Append style if selected
+            if (style) {
+              finalPrompt = `${finalPrompt} Style: ${style}.`;
+            }
 
-              // Switch to Profile Posts after a short delay to ensure the image is visible
-              setTimeout(() => {
-                document.getElementById('profile-toggle').click();
-              }, 500);
+            try {
+              // Show loading state
+              const generateButton = document.getElementById('generate-button');
+              generateButton.textContent = 'Generating...';
+              generateButton.disabled = true;              
 
-              showToast('Image generated successfully!', 'success');
-            });
+              alert("isPublic:"+isPublic);
+              // Send data to backend for image generation
+              const response = await fetch('/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  prompt: finalPrompt,
+                  isPublic: isPublic,
+                  width: dimensions.width,
+                  height: dimensions.height,
+                  guidanceScale: parseFloat(options.guidanceScale) || 3.5,
+                  inferenceSteps: parseInt(options.inferenceSteps) || 4
+                })
+              });
 
-            // Handle image load error
-            imgElement.addEventListener('error', () => {
-              showToast('Failed to load image.', 'error');
+              const data = await response.json();
+              if (response.ok && data.imageUrl) {
+                // Create image element
+                const imgElement = document.createElement('img');
+                imgElement.src = data.imageUrl;
+                imgElement.alt = 'Generated Image';
+                imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
+
+                // Hide image initially until it's fully loaded
+                imgElement.style.display = 'none';
+                imageContainer.appendChild(imgElement);
+
+                // Listen for image load event
+                imgElement.addEventListener('load', () => {
+                  imgElement.style.display = 'block'; // Show image
+                  // Remove spinner
+                  const spinner = imageContainer.querySelector('.spinner');
+                  if (spinner) {
+                    spinner.remove();
+                  }
+
+                  // Update Tokens Count in Navbar
+                  updateTokenCount(-data.tokensUsed); // Subtract tokens
+
+                  // Switch to Profile Posts after a short delay to ensure the image is visible
+                  setTimeout(() => {
+                    document.getElementById('profile-toggle').click();
+                  }, 500);
+
+                  showToast('Image generated successfully!', 'success');
+                });
+
+                // Handle image load error
+                imgElement.addEventListener('error', () => {
+                  showToast('Failed to load image.', 'error');
+                  imageList.removeChild(imageContainer); // Remove the placeholder on error
+                });
+              } else {
+                // Handle error message from backend
+                showToast(data.error || 'Failed to generate image.', 'error');
+                imageList.removeChild(imageContainer); // Remove the placeholder on failure
+              }
+            } catch (error) {
+              console.error('Error generating image:', error);
+              showToast('An error occurred while generating the image.', 'error');
               imageList.removeChild(imageContainer); // Remove the placeholder on error
-            });
-          } else {
-            // Handle error message from backend
-            showToast(data.error || 'Failed to generate image.', 'error');
-            imageList.removeChild(imageContainer); // Remove the placeholder on failure
-          }
-        } catch (error) {
-          console.error('Error generating image:', error);
-          showToast('An error occurred while generating the image.', 'error');
-          imageList.removeChild(imageContainer); // Remove the placeholder on error
-        } finally {
-          // Reset button state
-          const generateButton = document.getElementById('generate-button');
-          generateButton.textContent = 'Generate Image';
-          generateButton.disabled = false;
-        }
+            } finally {
+              // Reset button state
+              const generateButton = document.getElementById('generate-button');
+              generateButton.textContent = 'Generate Image';
+              generateButton.disabled = false;
+            }
+          });
       });
 
       // Function to update the token count in the navbar
