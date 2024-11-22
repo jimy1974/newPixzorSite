@@ -352,29 +352,8 @@
   </div>
 </div>
 
-<!-- Buy Tokens Modal  -->
-    <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
-  <div class="flex items-center justify-center min-h-screen px-4">
-    <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
-      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">
-        &times;
-      </button>
-      <h2 class="text-xl font-bold mb-4">Buy Tokens</h2>
-      <form id="buy-tokens-form">
-        
-      <div class="text-center text-gray-700">
-        <p class="text-lg">This feature is currently under development.</p>
-        <p>Please check back later for updates.</p>
-      </div>
-        
-      </form>
-    </div>
-  </div>
-</div>
-    
-   
-    
-<!-- Buy Tokens Modal 
+  
+<!-- Buy Tokens Modal -->
 <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
@@ -397,7 +376,7 @@
     </div>
   </div>
 </div>
--->
+
 
 
 <!-- Options Modal -->
@@ -755,7 +734,7 @@
             const session = await response.json();
             if (response.ok) {
               // Replace with your actual publishable key
-              const stripe = Stripe('pk_test_51QNNomGgZQx5JKvI2PAzM2GO5f0ukOcam2RUMj0ceduOPIuoRmWgqt7nqs46lRF7eyKd46Q8MRs1OYX76xi7fxHQ00LwfUHss5');
+              const stripe = Stripe('pk_live_51QNNomGgZQx5JKvIyEzYuHbqZRdugWTVlseapCphcAL3gYdrXfSIN8R6toeaReScar1gFyxRODHv0XG1cf54xUsM00zJcyWw8j');
               await stripe.redirectToCheckout({ sessionId: session.id });
             } else {
               alert('Failed to initiate payment');
