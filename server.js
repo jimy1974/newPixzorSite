@@ -13,12 +13,16 @@ const Image = require('./models/Image');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const bodyParser = require('body-parser');
 const app = express();
 const PORT = 3000;
 
 // Set the base URL and redirect URI from .env variables
 const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `${appBaseUrl}/auth/google/callback`;
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
 
 // Set up the view engine
 app.set('views', path.join(__dirname, 'views'));
@@ -28,6 +32,79 @@ app.set('view engine', 'ejs');
 app.use(express.static('public')); 
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') {
+    console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
+  } else {
+    console.log('Parsed body:', req.body);
+  }
+  next();
+});
+
+
+// Webhook route must be placed before body-parser middleware
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  console.log('Webhook route hit');
+
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  // Raw body for Stripe signature verification
+  const rawBody = req.body.toString();
+
+  let event;
+
+  // Verify and construct the Stripe event
+  try {
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    console.log('Verified event:', event);
+  } catch (err) {
+    console.error('Error verifying webhook:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the checkout.session.completed event
+  if (event.type === 'checkout.session.completed') {
+    console.log('Handling checkout.session.completed');
+    const session = event.data.object;
+
+    try {
+      // Fetch the full session object to access metadata
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+      console.log('Full session retrieved:', fullSession);
+
+      const userId = fullSession.metadata.userId; // Metadata attached in create-checkout-session
+      const tokens = parseInt(fullSession.metadata.tokens, 10);
+
+      console.log(`tokens = ${tokens} `);
+        
+      if (!userId || isNaN(tokens)) {
+        throw new Error('Invalid metadata in session');
+      }
+
+      // Update the user's token balance in the database
+      const user = await User.findByPk(userId);
+      if (user) {
+        user.tokens += tokens;
+        await user.save();
+        console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
+      } else {
+        console.error(`User with ID ${userId} not found.`);
+      }
+    } catch (err) {
+      console.error(`Error processing checkout.session.completed: ${err.message}`);
+    }
+  } else {
+    console.log(`Unhandled event type: ${event.type}`);
+  }
+
+  // Respond to Stripe to acknowledge receipt of the event
+  res.status(200).json({ received: true });
+});
+
+
 
 // Middleware to parse JSON data
 app.use(express.json());
@@ -108,6 +185,110 @@ function ensureAuthenticated(req, res, next) {
   }
 }
 
+/*
+
+  message: 'Invalid payment_method_types[1]: must be one of card, acss_debit, affirm, afterpay_clearpay, alipay, au_becs_debit, bacs_debit, bancontact, blik, boleto, cashapp, customer_balance, eps, fpx, giropay, grabpay, ideal, klarna, konbini, link, multibanco, oxxo, p24, paynow, paypal, pix, promptpay, sepa_debit, sofort, swish, us_bank_account, wechat_pay, revolut_pay, mobilepay, zip, amazon_pay, alma, twint, kr_card, naver_pay, kakao_pay, payco, or samsung_pay',
+*/
+
+
+app.post('/create-checkout-session', async (req, res) => {
+  console.log('Request body:', req.body); // Log incoming data
+  const { tokens, price } = req.body;
+
+  if (!tokens || !price) {
+    console.error('Invalid request body:', req.body);
+    return res.status(400).json({ error: 'Missing tokens or price' });
+  }
+    
+  try {
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card', 'link', 'paypal' ], //, 'link', 'paypal'
+        line_items: [{
+            price_data: {
+                currency: 'usd',
+                product_data: {
+                    name: `${tokens} Tokens for Pixzor`,
+                },
+                unit_amount: price * 100, // Convert dollars to cents
+            },
+            quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${process.env.APP_BASE_URL}/success`,
+        cancel_url: `${process.env.APP_BASE_URL}/cancel`,
+        metadata: {
+            userId: req.user.id,
+            tokens: tokens,
+        },
+    });
+
+
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+/*
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (err) {
+        console.error(`Webhook signature verification failed: ${err.message}`);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+
+        // Extract metadata to identify the user and tokens
+        const userId = session.metadata.userId;
+        const tokens = parseInt(session.metadata.tokens, 10);
+
+        // Update user's tokens in the database
+        try {
+            const user = await User.findByPk(userId);
+            if (user) {
+                user.tokens += tokens;
+                await user.save();
+                console.log(`Successfully added ${tokens} tokens to user ${user.username}.`);
+            } else {
+                console.error(`User with ID ${userId} not found.`);
+            }
+        } catch (error) {
+            console.error(`Error updating tokens: ${error.message}`);
+        }
+    }
+
+    // Acknowledge receipt of the event
+    res.json({ received: true });
+});*/
+
+
+
+
+app.get('/success', (req, res) => {
+    res.redirect('/?status=success');
+});
+
+
+app.get('/cancel', (req, res) => {
+  res.redirect('/?status=cancel');
+});
 
 
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -204,13 +385,13 @@ app.get('/public-images', async (req, res) => {
 
 
 
-app.get('/demo', (req, res) => {
-  res.render('index'); // This is your main application page
+app.get('/test', (req, res) => {
+  res.render('test'); // This is your main application page
 });
 
 app.get('/', (req, res) => {
   //res.render('index'); // This is your main application page    
-  res.render('splash'); // Render a splash or landing page
+  res.render('index'); // Render a splash or landing page
 });
 
 
