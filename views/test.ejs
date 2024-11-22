@@ -734,7 +734,7 @@
             const session = await response.json();
             if (response.ok) {
               // Replace with your actual publishable key
-              const stripe = Stripe('pk_test_51QNNomGgZQx5JKvI2PAzM2GO5f0ukOcam2RUMj0ceduOPIuoRmWgqt7nqs46lRF7eyKd46Q8MRs1OYX76xi7fxHQ00LwfUHss5');
+              const stripe = Stripe('pk_live_51QNNomGgZQx5JKvIyEzYuHbqZRdugWTVlseapCphcAL3gYdrXfSIN8R6toeaReScar1gFyxRODHv0XG1cf54xUsM00zJcyWw8j');
               await stripe.redirectToCheckout({ sessionId: session.id });
             } else {
               alert('Failed to initiate payment');
