@@ -385,8 +385,7 @@
     <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
       <button id="close-options-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
       <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
-                     
-          <!-- Select Style 
+                         
           <div class="mb-4">
             <label for="style-select-modal" class="block font-medium mb-1">Select Style</label>
             <select id="style-select-modal" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
@@ -396,8 +395,7 @@
               <option value="cartoon">Cartoon</option>             
             </select>
           </div>
-          -->
-        
+                 
       <form id="options-form">           
   <!-- Set Variables -->
   <div class="mb-4">
@@ -714,9 +712,26 @@
       //document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
       //document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
 
-      document.getElementById('tokens-button').addEventListener('click', () => {
-        document.getElementById('buy-tokens-modal').classList.remove('hidden');
-      });
+      document.getElementById('tokens-button').addEventListener('click', async () => {
+          try {
+            // Fetch user data to check if the user is logged in
+            const response = await fetch('/user-data');
+            const userData = await response.json();
+
+            if (!userData.loggedIn) {
+              // If user is not logged in, show a message instead of the token modal
+              showToast('Please log in to buy tokens.', 'error');
+              return;
+            }
+
+            // Show the Buy Tokens Modal if the user is logged in
+            document.getElementById('buy-tokens-modal').classList.remove('hidden');
+          } catch (error) {
+            console.error('Error checking user login status:', error);
+            showToast('An error occurred. Please try again.', 'error');
+          }
+        });
+
 
       document.getElementById('buy-tokens-form').addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -1088,48 +1103,7 @@
       }
     });
 
-/*
-// Function to load private/profile posts
-   // Function to load private/profile posts
-async function loadPrivatePosts() {
-  try {
-    const response = await fetch('/api/private-posts');
-    if (!response.ok) {
-      throw new Error('Failed to load profile posts');
-    }
-    const images = await response.json();
-    const imageList = document.getElementById('image-list');
-    if (!imageList) {
-      console.error('Image List container not found in the DOM.');
-      return;
-    }
-    imageList.innerHTML = ''; // Clear current images
 
-    images.forEach(image => {
-      const imageCard = document.createElement('div');
-      imageCard.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
-
-      // Add a badge to indicate if the image is private
-      const badge = '<span class="badge-private">Private</span>';
-
-      imageCard.innerHTML = `
-        ${badge}
-        <img src="${image.imageUrl}" alt="Private Image" class="w-full h-auto rounded-lg" loading="lazy" />
-      `;
-      imageList.appendChild(imageCard);
-
-      // Add click event listener for full-size view
-      imageCard.querySelector('img').addEventListener('click', () => {
-        showFullSizeImage(image.imageUrl);
-      });
-    });
-  } catch (error) {
-    console.error('Error loading private posts:', error);
-    showToast('An error occurred while loading your posts.', 'error');
-  }
-}
-
-*/
    // Function to load private/profile posts
 async function loadPrivatePosts() {
   try {
