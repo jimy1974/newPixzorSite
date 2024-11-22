@@ -51,58 +51,51 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  // Raw body for Stripe signature verification
-  const rawBody = req.body.toString();
-
-  let event;
-
-  // Verify and construct the Stripe event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    // Use the raw body for Stripe's signature verification
+    const rawBody = req.body.toString(); 
+    const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+
     console.log('Verified event:', event);
+
+    // Handle the event
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+
+      try {
+        const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+        console.log('Full session retrieved:', fullSession);
+
+        const userId = fullSession.metadata.userId; // Metadata from the session
+        const tokens = parseInt(fullSession.metadata.tokens, 10);
+
+        if (!userId || isNaN(tokens)) {
+          throw new Error('Invalid metadata in session');
+        }
+
+        // Update user's token balance
+        const user = await User.findByPk(userId);
+        if (user) {
+          user.tokens += tokens;
+          await user.save();
+          console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
+        } else {
+          console.error(`User with ID ${userId} not found.`);
+        }
+      } catch (err) {
+        console.error(`Error processing checkout.session.completed: ${err.message}`);
+      }
+    } else {
+      console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.status(200).json({ received: true });
   } catch (err) {
     console.error('Error verifying webhook:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
-  // Handle the checkout.session.completed event
-  if (event.type === 'checkout.session.completed') {
-    console.log('Handling checkout.session.completed');
-    const session = event.data.object;
-
-    try {
-      // Fetch the full session object to access metadata
-      const fullSession = await stripe.checkout.sessions.retrieve(session.id);
-      console.log('Full session retrieved:', fullSession);
-
-      const userId = fullSession.metadata.userId; // Metadata attached in create-checkout-session
-      const tokens = parseInt(fullSession.metadata.tokens, 10);
-
-      console.log(`tokens = ${tokens} `);
-        
-      if (!userId || isNaN(tokens)) {
-        throw new Error('Invalid metadata in session');
-      }
-
-      // Update the user's token balance in the database
-      const user = await User.findByPk(userId);
-      if (user) {
-        user.tokens += tokens;
-        await user.save();
-        console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
-      } else {
-        console.error(`User with ID ${userId} not found.`);
-      }
-    } catch (err) {
-      console.error(`Error processing checkout.session.completed: ${err.message}`);
-    }
-  } else {
-    console.log(`Unhandled event type: ${event.type}`);
-  }
-
-  // Respond to Stripe to acknowledge receipt of the event
-  res.status(200).json({ received: true });
 });
+
 
 
 
