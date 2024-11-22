@@ -7,6 +7,7 @@
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://js.stripe.com/v3/"></script>
 
   <style>
     /* Custom styles for the fixed prompt box */
@@ -216,6 +217,12 @@
       margin-left: 4px; /* Add some space between buttons */
       display: inline-block; /* Align with other buttons */
    }
+    .bg-gray-100 {
+      background-color: #f9f9f9; /* Light gray background */
+    }
+    .text-gray-900 {
+      color: #111827; /* Dark text for contrast */
+    }
 
 </style>
 </head>
@@ -236,7 +243,7 @@
             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
             <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd" />
           </svg>
-          <span id="token-count" class="text-yellow-400">Tokens: 0</span>
+          <span id="token-count" class="text-yellow-400">Tokens: 0</span>          
         </button>
 
         <!-- Google Auth Button -->
@@ -345,20 +352,53 @@
   </div>
 </div>
 
-  
-<!-- Buy Tokens Modal -->
-<div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="buy-tokens-modal-title">
+<!-- Buy Tokens Modal  -->
+    <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
   <div class="flex items-center justify-center min-h-screen px-4">
-    <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
-      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
-      <h2 id="buy-tokens-modal-title" class="text-xl font-bold mb-4 text-gray-900">Buy Tokens</h2>
+    <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">
+        &times;
+      </button>
+      <h2 class="text-xl font-bold mb-4">Buy Tokens</h2>
+      <form id="buy-tokens-form">
+        
       <div class="text-center text-gray-700">
         <p class="text-lg">This feature is currently under development.</p>
         <p>Please check back later for updates.</p>
       </div>
+        
+      </form>
     </div>
   </div>
 </div>
+    
+   
+    
+<!-- Buy Tokens Modal 
+<div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">
+        &times;
+      </button>
+      <h2 class="text-xl font-bold mb-4">Buy Tokens</h2>
+      <form id="buy-tokens-form">
+        <label for="token-bundle" class="block mb-2">Select a Token Bundle:</label>
+        <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4">
+          <option value="500" data-price="5.00">500 Tokens - $5.00</option>
+          <option value="1200" data-price="10.00">1200 Tokens - $10.00</option>
+          <option value="3000" data-price="20.00">3000 Tokens - $20.00</option>
+          <option value="5000" data-price="30.00">5000 Tokens - $30.00</option>
+        </select>
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-500">
+          Purchase Tokens
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+-->
+
 
 <!-- Options Modal -->
 <div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="options-modal-title">
@@ -693,8 +733,43 @@
       // Event Listeners for Opening Modals
       document.getElementById('options-button').addEventListener('click', () => openModal('options-modal'));
       //document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
-      document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
+      //document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
 
+      document.getElementById('tokens-button').addEventListener('click', () => {
+        document.getElementById('buy-tokens-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('buy-tokens-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const bundle = document.getElementById('token-bundle');
+          const tokens = bundle.value;
+          const price = bundle.options[bundle.selectedIndex].dataset.price;
+
+          try {
+            const response = await fetch('/create-checkout-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tokens, price }),
+            });
+
+            const session = await response.json();
+            if (response.ok) {
+              // Replace with your actual publishable key
+              const stripe = Stripe('pk_test_51QNNomGgZQx5JKvI2PAzM2GO5f0ukOcam2RUMj0ceduOPIuoRmWgqt7nqs46lRF7eyKd46Q8MRs1OYX76xi7fxHQ00LwfUHss5');
+              await stripe.redirectToCheckout({ sessionId: session.id });
+            } else {
+              alert('Failed to initiate payment');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while processing your payment');
+          }
+        });
+
+
+        
+        
+        
       // Event Listeners for Closing Modals
       document.querySelectorAll('[id^="close-"]').forEach(button => {
         button.addEventListener('click', () => {
@@ -1290,6 +1365,14 @@ async function loadPrivatePosts() {
           }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('status') === 'success') {
+            showToast('Payment successful! Tokens have been added to your account.', 'success');
+        }
+    });
+
+    
 
   </script>
 </body>
