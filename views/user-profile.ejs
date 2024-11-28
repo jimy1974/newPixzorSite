@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Profile</title>
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white">
+  <!-- Navbar (Optional) -->
+  <nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
+    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <img src="/images/logo.png" alt="Pixzor Logo" class="w-8 h-7">
+        <span class="text-xl font-bold">Pixzor</span>
+      </div>
+      <!-- Add other navbar items if necessary -->
+    </div>
+  </nav>
+  
+  <!-- Main Content -->
+  <div class="container mx-auto py-20 mt-16">
+    <div id="profile-container" class="text-center">
+      <img id="profile-avatar" src="" alt="User Avatar" class="w-32 h-32 rounded-full mx-auto mb-4">
+      <h1 id="profile-username" class="text-3xl font-bold mb-2"></h1>
+      <p id="profile-email" class="text-gray-400 mb-8"></p>
+      
+      <!-- Public Images Grid -->
+      <h2 class="text-2xl font-semibold mb-4">Public Images</h2>
+      <div id="image-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Public images will be dynamically added here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-20 z-50"></div>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userId = '<%= userId %>'; // Injected from the server
+      
+      // Function to fetch and display user profile
+      async function loadUserProfile() {
+        try {
+          const response = await fetch(`/api/user-profile/${userId}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch user profile.');
+          }
+          const data = await response.json();
+          
+          // Update profile information
+          document.getElementById('profile-username').textContent = data.user.username;
+          document.getElementById('profile-email').textContent = data.user.email;
+          document.getElementById('profile-avatar').src = data.user.photo || '/images/avatar.png';
+          
+          // Load public images
+          const imageList = document.getElementById('image-list');
+          imageList.innerHTML = ''; // Clear existing images
+          
+          if (data.publicImages.length === 0) {
+            imageList.innerHTML = '<p>No public images to display.</p>';
+            return;
+          }
+          
+          data.publicImages.forEach(image => {
+            const imageCard = document.createElement('div');
+            imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4');
+            
+            imageCard.innerHTML = `
+              <img src="${image.thumbnailUrl}" alt="Public Image" class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+              <p class="mt-2 text-sm text-gray-400">${image.prompt}</p>
+            `;
+            
+            // Add click event to open comments modal
+            imageCard.querySelector('img').addEventListener('click', () => {
+              openCommentsModal(image.id, image.imageUrl, 'public');
+            });
+            
+            imageList.appendChild(imageCard);
+          });
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          showToast('Failed to load user profile.', 'error');
+        }
+      }
+      
+      loadUserProfile();
+      
+      // Function to show toast notifications
+      function showToast(message, type = 'error') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+          console.error('Toast container not found in the DOM.');
+          return;
+        }
+  
+        const toast = document.createElement('div');
+        toast.classList.add('toast');
+  
+        if (type === 'success') {
+          toast.classList.add('toast-success');
+        } else {
+          toast.classList.add('toast-error');
+        }
+  
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+  
+        // Remove the toast after 3 seconds with a fade-out animation
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.addEventListener('transitionend', () => {
+            toast.remove();
+          });
+        }, 3000);
+      }
+      
+      // Existing function to open comments modal
+      function openCommentsModal(imageId, imageUrl, source) {
+        // Your existing implementation
+        const modal = document.getElementById('comments-modal');
+        document.getElementById('modal-image').src = imageUrl;
+        document.getElementById('modal-prompt').textContent = 'Loading...';
+        document.getElementById('modal-user-profile').href = `/user-profile/${userId}`;
+        loadComments(imageId);
+        modal.classList.remove('hidden');
+  
+        // Close modal event
+        document.getElementById('close-comments-modal').addEventListener('click', () => {
+          modal.classList.add('hidden');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

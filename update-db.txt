@@ -1,0 +1,27 @@
+ALTER TABLE PublicImages ADD COLUMN thumbnailUrl VARCHAR(255) NULL;
+
+ALTER TABLE PersonalImages ADD COLUMN thumbnailUrl VARCHAR(255) NULL AFTER imageUrl;
+
+ALTER TABLE PublicImages ADD COLUMN prompt TEXT;
+
+ALTER TABLE PublicImages ADD COLUMN userId INT NOT NULL;
+
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE PublicImages SET userId = (  SELECT userId FROM PersonalImages  WHERE PersonalImages.imageUrl = PublicImages.imageUrl );
+
+SET SQL_SAFE_UPDATES = 1;
+
+ADD COLUMN userId INT NOT NULL, ADD CONSTRAINT fk_userId FOREIGN KEY (userId) REFERENCES Users(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE PublicImages ADD COLUMN userId INT NULL;
+
+ALTER TABLE PublicImages MODIFY COLUMN userId INT NULL;
+
+ALTER TABLE PublicImages ADD CONSTRAINT fk_userId FOREIGN KEY (userId) REFERENCES Users(id) ON UPDATE CASCADE ON DELETE SET NULL;
+
+ADD CONSTRAINT fk_publicimages FOREIGN KEY (imageId) REFERENCES publicimages(id);
+
+ALTER TABLE `publicimages` ADD COLUMN `personalImageId` INT NOT NULL AFTER `id`, ADD CONSTRAINT `fk_personal_image`   FOREIGN KEY (`personalImageId`) REFERENCES `personalimages`(`id`)  ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE `users` DROP INDEX `username`;

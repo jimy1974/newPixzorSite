@@ -1,6 +1,8 @@
+// server.js
+
 // Load environment variables
 require('dotenv').config();
-
+const axios = require('axios'); // Install via npm
 const express = require('express');
 const path = require('path');
 const fetch = require('cross-fetch');
@@ -8,8 +10,12 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const User = require('./models/User');
-const Image = require('./models/Image');
+const sharp = require('sharp');
+
+// Import the entire db object
+const db = require('./models'); // Centralized model loader
+const { User, PersonalImage, Comment, PublicImage, Image } = db;
+
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
@@ -24,6 +30,8 @@ const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `${appBaseUrl}/auth
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 
+
+
 // Set up the view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -34,11 +42,17 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
+
 app.use((req, res, next) => {
-  if (req.originalUrl === '/webhook') {
-    console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
-  } else {
-    console.log('Parsed body:', req.body);
+  // Only log `req.body` for requests that might have a body
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    if (req.originalUrl === '/webhook') {
+      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
+    } else {
+      console.log('Parsed body:', req.body ? req.body : 'No body sent');
+    }
+  }else{
+    console.log('Caught: '+req.originalUrl );  
   }
   next();
 });
@@ -112,21 +126,10 @@ app.use(session({
 }));
 
 app.use(flash());
-
-// Make user object available in all templates
-app.use((req, res, next) => {
-  res.locals.messages = req.flash();    
-  res.locals.user = req.user;
-  next();
-});
-
-
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-
-
+app.use('/personal-images', express.static(path.join(__dirname, 'public/personal-images')));
 const LocalStrategy = require('passport-local').Strategy;
 
 
@@ -289,23 +292,34 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: googleRedirectUri        
+  callbackURL: googleRedirectUri
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    // First, check if the user exists by googleId
     let user = await User.findOne({ where: { googleId: profile.id } });
+
     if (!user) {
-      
+      // Then, check if the email is already used
+      const existingEmailUser = await User.findOne({ where: { email: profile.emails[0].value } });
+
+      if (existingEmailUser) {
+        console.log(`A user with the email ${profile.emails[0].value} already exists.`);
+        // Optionally, you can link the existing account to this Google ID
+        existingEmailUser.googleId = profile.id;
+        await existingEmailUser.save();
+        user = existingEmailUser;
+      } else {
+        // Create a new user if no conflicts are found
         user = await User.create({
           googleId: profile.id,
           tokens: 200,
-          username: profile.displayName || 'Default Username',
+          username: profile.displayName || `User${Date.now()}`,
           email: profile.emails[0].value,
-          photo: profile.photos[0] ? profile.photos[0].value : null,          
+          photo: profile.photos[0] ? profile.photos[0].value : null,
         });
-
-
-        
+      }
     }
+
     return done(null, user);
   } catch (err) {
     console.error('Error in Google strategy:', err);
@@ -354,7 +368,7 @@ app.get('/user-data', (req, res) => {
       loggedIn: true,
       username: req.user.username,
       email: req.user.email,
-      photo: req.user.photo || 'default-photo-url.png', // Include photo URL if available
+      photo: req.user.photo || '/images/avatar.png', // Updated path
       tokens: req.user.tokens,    
     });
   } else {
@@ -363,7 +377,7 @@ app.get('/user-data', (req, res) => {
 });
 
 
-const PublicImage = require('./models/PublicImage');
+
 
 app.get('/public-images', async (req, res) => {
   try {
@@ -383,8 +397,7 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  //res.render('index'); // This is your main application page    
-  res.render('index'); // Render a splash or landing page
+  res.render('index', { showProfile: false, profileUserId : 0 });
 });
 
 
@@ -468,9 +481,6 @@ app.get('/logout', (req, res, next) => {
 
 
 
-const PersonalImage = require('./models/PersonalImage'); // Adjust based on your file structure
-
-
 
 app.post('/generate-image', ensureAuthenticated, async (req, res) => {
   try {
@@ -527,27 +537,136 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
     fs.writeFileSync(imagePath, imageData);
 
+    // Generate a thumbnail
+    const thumbnailName = `thumb_${imageName}`;
+    const thumbnailPath = path.join(userFolderPath, thumbnailName);
+
+    await sharp(imagePath)
+      .resize(408) // Maintain aspect ratio with width 408px
+      .toFile(thumbnailPath);
+
     // Save image metadata to the PersonalImages database
     const newPersonalImage = await PersonalImage.create({
       userId: req.user.id,
       imageUrl: `/personal-images/${req.user.id}/${imageName}`,
+      thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`,
       prompt,
-      isPublic: isPublic || false // Use the value from the request or default to false
+      isPublic: isPublic || false
     });
 
     // If the image is marked as public, also add it to the PublicImages database
     if (isPublic) {
       await PublicImage.create({
-        imageUrl: `/personal-images/${req.user.id}/${imageName}`,
-        title: prompt.substring(0, 50), // Optional: Use a substring of the prompt as the title
-        description: prompt, // Optional: Use the full prompt as the description
+        imageUrl: `/personal-images/${req.user.id}/${imageName}`, // Correct path
+        thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`,
+        title: prompt, // Use full prompt or a suitable title
+        description: prompt,
+        prompt: prompt, // Ensure the prompt field is included
+        userId: req.user.id, // Associate with the user
       });
     }
 
-    res.json({ imageUrl: `/personal-images/${req.user.id}/${imageName}`, tokensUsed: 1 });
+
+
+    res.json({ imageUrl: `/personal-images/${req.user.id}/${imageName}`, thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`, tokensUsed: 1 });
   } catch (error) {
     console.error('Error generating image:', error);
     res.status(500).json({ error: error.message || 'Failed to generate image' });
+  }
+});
+
+            
+
+app.get('/images/:id/comments', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const comments = await Comment.findAll({
+      where: { imageId: id },
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'photo'] }],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.json(comments.map(comment => ({
+      id: comment.id, // Include comment ID if needed
+      content: comment.content,
+      username: comment.user.username,
+      avatar: comment.user.photo || '/default-avatar.png',
+      createdAt: comment.createdAt,
+      userProfileUrl: `/users/${comment.user.id}`, // Link to user's profile
+    })));
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ error: 'Failed to fetch comments.' });
+  }
+});
+
+
+
+
+// server.js
+
+app.get('/users/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'username', 'photo', 'email'], // Include attributes as needed
+      include: [
+        { model: PersonalImage, as: 'personalImages' },
+        { model: Comment, as: 'comments' },
+        { model: Image, as: 'images' },
+        { model: PublicImage, as: 'publicImages' }
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    res.json({
+      id: user.id,
+      username: user.username,
+      photo: user.photo,
+      email: user.email,
+      personalImages: user.personalImages,
+      comments: user.comments,
+      images: user.images,
+      publicImages: user.publicImages,
+      // Include additional details as needed
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile.' });
+  }
+});
+
+
+
+
+
+app.post('/images/:id/comments', ensureAuthenticated, async (req, res) => {
+  const { id } = req.params;
+  const { content } = req.body;
+
+  try {
+    // First, check if the image exists in `personalimages`
+    const personalImage = await PersonalImage.findByPk(id);
+
+    if (!personalImage) {
+      return res.status(404).json({ error: 'Image not found.' });
+    }
+
+    const comment = await Comment.create({
+      imageId: id, // Always use the personal image ID
+      userId: req.user.id,
+      content,
+    });
+
+    res.json(comment);
+  } catch (error) {
+    console.error('Error posting comment:', error);
+    res.status(500).json({ error: 'Failed to post comment.' });
   }
 });
 
@@ -556,7 +675,7 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
 
 
-// Route to delete a private image
+
 // Route to delete a private image
 app.delete('/delete-private-image/:id', async (req, res) => {
   try {
@@ -613,94 +732,118 @@ app.get('/profile', ensureAuthenticated, (req, res) => {
 });
 
 
-// Adjust any routes or URL references to use `appBaseUrl` if needed
-app.listen(PORT, () => {
-  console.log(`Server is running on ${appBaseUrl}:${PORT}`);
-});
 
 app.get('/api/public-posts', async (req, res) => {
   try {
-    // Get page and limit from query parameters (default to page 1 and limit 10 if not provided)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // Fetch public images with pagination
     const publicImages = await PublicImage.findAll({
-      offset: offset,
-      limit: limit,
-      order: [['createdAt', 'DESC']] // Optional: Order by creation date or another relevant field
+      offset,
+      limit,
+      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'imageUrl', 'thumbnailUrl', 'title', 'description', 'prompt', 'createdAt'], // Include prompt
     });
 
-    // Check if there are more images for the next page
     const totalImages = await PublicImage.count();
     const hasMore = offset + limit < totalImages;
 
-    res.json({
-      images: publicImages,
-      hasMore: hasMore
-    });
+    res.json({ images: publicImages, hasMore });
   } catch (error) {
     console.error('Error loading public posts:', error);
     res.status(500).json({ error: 'Failed to load public posts' });
   }
 });
 
+
+app.get('/api/image-details/:id', async (req, res) => {
+  try {
+    const imageId = req.params.id;
+
+    // Attempt to find the image in PublicImage
+    let image = await PublicImage.findByPk(imageId, {
+      include: [{ model: User, as: 'user', attributes: ['username'] }],
+    });
+
+    if (image) {
+      return res.json({
+        imageUrl: image.imageUrl,
+        thumbnailUrl: image.thumbnailUrl,
+        prompt: image.prompt,
+        username: image.user?.username || 'Unknown User', // Changed 'User' to 'user'
+        userId: image.userId,
+        isPublic: true,
+      });
+    }
+
+    // If not found in PublicImage, try PersonalImage
+    image = await PersonalImage.findByPk(imageId, {
+      include: [{ model: User, as: 'user', attributes: ['username'] }],
+    });
+
+    if (image) {
+      return res.json({
+        imageUrl: image.imageUrl,
+        thumbnailUrl: image.thumbnailUrl,
+        prompt: image.prompt,
+        username: image.user?.username || 'Unknown User', // Changed 'User' to 'user'
+        userId: image.userId,
+        isPublic: image.isPublic,
+      });
+    }
+
+    // If not found in both tables
+    res.status(404).json({ error: 'Image not found' });
+  } catch (error) {
+    console.error('Error fetching image details:', error);
+    res.status(500).json({ error: 'Failed to fetch image details' });
+  }
+});
+
+
+
 app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) => {
   try {
     const imageId = req.params.id;
-    console.log('Received request to update visibility for image ID:', imageId);
-
     const image = await PersonalImage.findByPk(imageId);
 
     if (!image) {
-      console.warn('Image not found in PersonalImage table:', imageId);
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    // Check if the logged-in user owns the image
     if (image.userId !== req.user.id) {
-      console.warn('Unauthorized access attempt by user ID:', req.user.id);
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    // Toggle the isPublic field
     image.isPublic = !image.isPublic;
     await image.save();
-    console.log('Image visibility toggled. New visibility:', image.isPublic);
 
-    // If the image is made public, add it to the PublicImage table
     if (image.isPublic) {
-      console.log('Image set to public. Checking if it exists in PublicImage table:', image.imageUrl);
-
-      const existingPublicImage = await PublicImage.findOne({ where: { imageUrl: image.imageUrl } });
-
-      if (!existingPublicImage) {
-        console.log('Image not found in PublicImage table. Adding new entry.');
-
-        try {
-          await PublicImage.create({
-            imageUrl: image.imageUrl,
-            title: image.title || 'Untitled',
-            description: image.description || '',
-          });
-          console.log('Image successfully added to PublicImage table.');
-        } catch (createError) {
-          console.error('Error creating entry in PublicImage table:', createError);
-        }
+      // Create or update the public image entry
+      let publicImage = await PublicImage.findOne({ where: { personalImageId: imageId } });
+      if (!publicImage) {
+        publicImage = await PublicImage.create({
+          personalImageId: imageId,
+          imageUrl: image.imageUrl,
+          thumbnailUrl: image.thumbnailUrl,
+          title: image.title || 'Untitled',
+          description: image.description || '',
+          prompt: image.prompt,
+          userId: image.userId,
+        });
       } else {
-        console.log('Image already exists in PublicImage table. Skipping creation.');
+        // Update existing public image data if needed
+        publicImage.imageUrl = image.imageUrl;
+        publicImage.thumbnailUrl = image.thumbnailUrl;
+        publicImage.title = image.title || 'Untitled';
+        publicImage.description = image.description || '';
+        publicImage.prompt = image.prompt;
+        await publicImage.save();
       }
     } else {
-      // If the image is made private, remove it from the PublicImage table
-      console.log('Image set to private. Removing from PublicImage table if it exists.');
-
-      const deletedCount = await PublicImage.destroy({ where: { imageUrl: image.imageUrl } });
-      if (deletedCount > 0) {
-        console.log('Image successfully removed from PublicImage table.');
-      } else {
-        console.log('Image not found in PublicImage table. No deletion performed.');
-      }
+      // Remove the public image entry
+      await PublicImage.destroy({ where: { personalImageId: imageId } });
     }
 
     res.json({ message: 'Image visibility updated successfully', isPublic: image.isPublic });
@@ -709,6 +852,62 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
     res.status(500).json({ error: 'Failed to update image visibility' });
   }
 });
+
+
+
+app.get('/api/personal-image-details/:id', async (req, res) => {
+  try {
+    const imageId = req.params.id;
+    const image = await PersonalImage.findByPk(imageId, {
+      include: [{ model: User, attributes: ['username'] }],
+    });
+
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    res.json({
+      prompt: image.prompt,
+      username: image.User?.username || 'Unknown User',
+      userId: image.userId,
+    });
+  } catch (error) {
+    console.error('Error fetching personal image details:', error);
+    res.status(500).json({ error: 'Failed to fetch personal image details' });
+  }
+});
+
+app.get('/api/public-image-details/:id', async (req, res) => {
+  try {
+    const imageId = req.params.id;
+
+    const image = await PublicImage.findByPk(imageId, {
+      include: [
+        { model: User, as: 'user', attributes: ['username', 'photo'] },
+        { model: PersonalImage, as: 'personalImage' }
+      ],
+    });
+
+    if (!image) {
+      return res.status(404).json({ error: 'Public image not found.' });
+    }
+
+    res.json({
+      imageUrl: image.imageUrl,
+      thumbnailUrl: image.thumbnailUrl,
+      prompt: image.prompt,
+      username: image.user ? image.user.username : 'Unknown User',
+      userId: image.userId,
+      isPublic: image.isPublic,
+      personalImageId: image.personalImageId, // Include personalImageId
+    });
+  } catch (error) {
+    console.error('Error fetching image details:', error);
+    res.status(500).json({ error: 'Failed to fetch image details' });
+  }
+});
+
+
 
 
 
@@ -723,5 +922,65 @@ app.get('/api/private-posts', ensureAuthenticated, async (req, res) => {
     res.status(500).json({ error: 'Failed to load private posts' }); // Ensure JSON response on error
   }
 });
+
+
+// API route to fetch user profile details
+// Example usage:
+app.get('/api/user-profile/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Fetch user details from the database
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'username', 'photo'], // Adjust attributes as needed
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch public images associated with the user
+    const publicImages = await PublicImage.findAll({
+      where: { userId },
+      attributes: ['id', 'thumbnailUrl', 'imageUrl', 'prompt'], // Adjust attributes as needed
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.json({ user, publicImages });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+});
+
+
+
+
+app.get('/user-profile/:id', (req, res) => {
+  const userId = req.params.id;
+  res.render('index', { showProfile: true, profileUserId: userId });
+});
+
+
+
+// Catch-all route to serve the frontend
+app.get('*', (req, res) => {
+  res.render('index'); // Renders 'views/index.ejs'
+});
+
+
+(async () => {
+  try {
+    await db.sequelize.sync({ alter: false }); // Set to false to prevent altering tables
+    console.log('Database synchronized successfully.');
+  } catch (error) {
+    console.error('Error synchronizing database:', error);
+  }
+
+  // Start the server after synchronization
+  app.listen(PORT, () => {
+    console.log(`Server is running on https://localhost:${PORT}`);
+  });
+})();
 
 

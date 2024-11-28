@@ -1,9 +1,37 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pixzor</title>
+    <!-- Character Encoding -->
+    <meta charset="UTF-8">
+    
+    <!-- Viewport for Responsive Design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <!-- Primary Meta Tags -->
+    <title>Pixzor - AI Image and Video Creation Platform</title>
+    <meta name="title" content="Pixzor - AI Image and Video Creation Platform">
+    <meta name="description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
+    <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.pixzor.com/">
+    <meta property="og:title" content="Pixzor - AI Image and Video Creation Platform">
+    <meta property="og:description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
+    <meta property="og:image" content="https://www.pixzor.com/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://www.pixzor.com/">
+    <meta name="twitter:title" content="Pixzor - AI Image and Video Creation Platform">
+    <meta name="twitter:description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
+    <meta name="twitter:image" content="https://www.pixzor.com/twitter-image.jpg">
+    <meta http-equiv="Content-Security-Policy" content="img-src 'self' https://lh3.googleusercontent.com;">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://www.pixzor.com/">
+    
   <!-- Tailwind CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -224,17 +252,154 @@
       color: #111827; /* Dark text for contrast */
     }
 
+   #close-comments-modal {
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 10; /* Ensure it is above other elements */
+      color: #555; /* Default color */
+    }
+
+  #comments-modal {
+    z-index: 1050; /* A value higher than the prompt box */
+  }
+      
+ #comments-modal > div {
+  width: 90%; /* Default width */
+  height: 90%; /* Default height */
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+      
+.full-size-image {
+  transition: transform 0.2s ease;
+  cursor: zoom-in;      
+}
+      .fullscreen-modal {
+  z-index: 1100; /* A value higher than #comments-modal */
+}
+/* Magnifying glass visibility */
+#modal-image:hover + span {
+  opacity: 1; /* Makes magnifying glass visible on hover */
+}
+
+/* Default state for the magnifying glass */
+#modal-image + span {
+  opacity: 0;
+}
+
+/* Text adjustments */
+.text-black {
+  color: black;
+}
+
+textarea#comment-input {
+  color: black; /* Ensures visible text in comments input */
+}
+/* Magnifying glass visibility */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+.group-hover\:opacity-100 {
+  opacity: 0;
+}
+
+/* Text shadow for magnifying glass */
+.drop-shadow-md {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7), -2px -2px 4px rgba(255, 255, 255, 0.7);
+}
+
+#modal-image {
+  position: relative;
+  padding: 10px;
+  background: white; 
+  border-radius: 8px;
+}
+
+#modal-prompt-container {
+  height: 6rem; 
+}
+#comments-list {
+  background-color: #ffffff; /* Optional: Set a light background */
+  padding: 10px;
+  border-radius: 5px;
+}
+
+#comments-list li {
+  color: black; /* Ensures text is visible */
+  font-size: 1rem;
+  line-height: 1.5; /* Optional: Improves readability */
+  margin-bottom: 8px; /* Adds spacing between comments */
+}
+#comments-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+#comments-list img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#comments-list p {
+  margin: 0;
+}
+
+#comments-list .font-bold {
+  margin-bottom: 2px;
+}
+
+
+#copy-prompt {
+  cursor: pointer; /* Make it clear the button is clickable */
+  font-size: 1rem; /* Adjust size to match the title */
+  margin-left: 8px; /* Add space between the title and the icon */
+  background: none; /* Remove any default button styling */
+  border: none; /* Remove border */
+  padding: 0; /* Remove extra padding */
+}
+#copy-prompt:hover {
+  color: #1f2937; /* Slight color change on hover */
+}
+
+
+
+
+@media (max-width: 768px) { 
+  #comments-modal > div {
+    flex-direction: column; 
+    height: auto;
+  }
+  #comments-modal .bg-gray-100 {
+    width: 100%; 
+  }
+  #comments-modal .p-6 {
+    width: 100%; 
+  }
+}
+      
 </style>
 </head>
 <body class="bg-gray-900 text-white">
+    
+    
+
+    
   <!-- Navbar -->
   <nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
     <div class="container mx-auto px-4 py-2 flex justify-between items-center">
       <!-- Logo -->
-      <div class="flex items-center space-x-2">
+      <div id="logo" class="flex items-center space-x-2 cursor-pointer">
         <img src="/images/logo.png" alt="Pixzor Logo" class="w-8 h-7">
         <span class="text-xl font-bold">Pixzor</span>
       </div>
+
 
       <div class="flex items-center space-x-4">
         <!-- Token Display and Purchase Button -->
@@ -248,7 +413,7 @@
 
         <!-- Google Auth Button -->
         <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-4 py-2 rounded-lg">
-          <img src="https://img.icons8.com/ios-filled/24/ffffff/google-logo.png" alt="Google" class="mr-2" />
+          <img src="https://img.icons8.com/ios-filled/24/ffffff/google-logo.png" alt="Google" class="mr-2"  crossorigin="anonymous"  referrerPolicy="no-referrer" />
           <span>Login / Register</span>
         </button>
       </div>
@@ -260,7 +425,7 @@
 <div class="fixed left-0 right-0 z-40" style="top: 56px;"> <!-- Adjust top value as needed -->
   <div class="container mx-auto py-2 flex justify-center">
     <!-- Buttons without a distinct background layer -->
-    <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">
+    <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">        
       Public Posts
     </button>
     <button id="profile-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">
@@ -269,16 +434,26 @@
   </div>
 </div>
 
-  <!-- Main Container -->
-  <div class="container mx-auto py-20 content-padding">
-    <!-- Add padding to compensate for the fixed buttons -->
-    <div id="error-message" class="text-red-500 text-center mb-4"></div>
+<!-- Main Container -->
+<div class="container mx-auto py-20 content-padding">
+  <!-- Error Message -->
+  <div id="error-message" class="text-red-500 text-center mb-4"></div>
 
-    <!-- Main Content Container with Padding -->
+  <!-- User Profile Container -->
+  <div id="profile-container">
+    <!-- User Profile Header -->
+    <div class="flex items-center space-x-4 mb-8">
+      <img id="profile-avatar" src="" alt="User Avatar" class="w-16 h-16 rounded-full hidden"  referrerPolicy="no-referrer" >
+      <h1 id="profile-username" class="text-2xl font-bold"></h1>
+    </div>
+
+    <!-- Public Images Grid -->
     <div id="image-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-      <!-- Images will be dynamically added here -->
+      <!-- Public images will be dynamically added here -->
     </div>
   </div>
+</div>
+
 
  
     
@@ -450,6 +625,99 @@
       </div>
     </div>
   </div>
+    
+ <!-- Updated Comments Modal -->
+<div id="comments-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center">
+  <div class="bg-white rounded-lg shadow-lg flex overflow-hidden relative w-11/12 md:w-4/5 h-5/6 md:h-4/5 flex-col md:flex-row">
+    <!-- Close Button -->
+    <button id="close-comments-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl">
+      &times;
+    </button>
+
+    <!-- Left Section: Image -->
+    <div class="md:w-2/3 bg-gray-100 flex items-start justify-center p-4 relative overflow-hidden">
+      <!-- Fullscreen Icon -->
+      <button id="fullscreen-icon" class="absolute top-2 left-2 bg-black text-white p-1 rounded-full text-sm z-20">
+        <i class="fas fa-expand"></i>
+      </button>
+      <img id="modal-image" src="" alt="Full Image" class="w-full h-auto rounded-lg object-contain">
+    </div>
+
+    <!-- Right Section: Details and Comments -->
+    <div class="md:w-1/3 p-6 flex flex-col space-y-4 overflow-hidden">
+      <!-- Prompt -->
+      <div class="flex flex-col">
+          <h3 class="text-lg font-bold text-black mb-2 flex items-center">
+            Prompt
+            <button id="copy-prompt" class="ml-2 text-gray-500 hover:text-gray-700" title="Copy Prompt">
+              <i class="fas fa-copy"></i>
+            </button>
+          </h3>
+          <div id="modal-prompt-container" class="border p-3 rounded h-24 overflow-y-auto bg-gray-50 relative">
+            <p id="modal-prompt" class="text-gray-600 pr-8"></p>
+          </div>
+        </div>
+
+
+      <!-- User Profile -->
+      <div>
+        <h3 class="text-lg font-bold text-black">Created By <a id="modal-user-profile" href="#" class="text-blue-500 hover:underline"></a>
+        </h3>    
+      </div>
+
+      <!-- Action Buttons with Icons and Tooltips -->
+      <div class="flex flex-wrap gap-2">
+        <div class="relative group">
+          <a id="download-button" href="#" class="bg-green-600 text-white p-2 rounded flex items-center" download>
+            <i class="fas fa-download"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Download</span>
+        </div>
+        <div class="relative group">
+          <button id="create-button" class="bg-purple-600 text-white p-2 rounded flex items-center">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Create Similar</span>
+        </div>
+
+        <div class="relative group">
+          <a id="share-facebook" href="#" target="_blank" class="bg-blue-600 text-white p-2 rounded flex items-center">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Facebook</span>
+        </div>
+        <div class="relative group">
+          <a id="share-twitter" href="#" target="_blank" class="bg-blue-400 text-white p-2 rounded flex items-center">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Twitter</span>
+        </div>
+        <div class="relative group">
+          <a id="share-pinterest" href="#" target="_blank" class="bg-red-600 text-white p-2 rounded flex items-center">
+            <i class="fab fa-pinterest-p"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Pinterest</span>
+        </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="flex flex-col flex-grow overflow-hidden">
+        <h3 class="text-lg font-bold text-black mb-2">Comments</h3>
+        <div class="flex-grow overflow-y-auto mb-4">
+          <ul id="comments-list" class="space-y-2"></ul>
+        </div>
+        
+        <!-- Comment Input at the Bottom -->
+        <div class="mt-auto">
+          <textarea id="comment-input" placeholder="Write a comment..." class="w-full p-2 border rounded text-black mb-2"></textarea>
+          <button id="post-comment" class="w-full bg-green-600 text-white px-4 py-2 rounded">Post Comment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-20 right-20 z-50"></div>
@@ -473,6 +741,142 @@
       setupEventListeners();
     });
 
+      
+    
+   
+
+
+async function loadUserProfile(userId) {
+  try {
+    // Close comments modal if it is open
+    const commentsModal = document.getElementById('comments-modal');
+    if (!commentsModal.classList.contains('hidden')) {
+      commentsModal.classList.add('hidden'); // Hide the modal
+      history.pushState(null, '', window.location.origin);    
+    }
+
+    const response = await fetch(`/api/user-profile/${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile.');
+    }
+
+    const { user, publicImages } = await response.json();
+
+    // Render user info
+    const profileUsername = document.getElementById('profile-username');
+    const profileAvatar = document.getElementById('profile-avatar');
+    profileUsername.textContent = user.username;
+    profileAvatar.src = user.photo || '/default-avatar.png'; // Fallback to default avatar
+    profileAvatar.classList.remove('hidden');
+
+    // Render public images
+    const imageList = document.getElementById('image-list');
+    imageList.innerHTML = ''; // Clear existing images
+
+    publicImages.forEach(image => {
+      const imageCard = document.createElement('div');
+      imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+      imageCard.innerHTML = `
+        <img src="${image.thumbnailUrl}" alt="Public Image" class="w-full h-auto rounded-lg" />
+        <p class="text-sm text-gray-400 mt-2">${image.prompt}</p>
+      `;
+
+      imageList.appendChild(imageCard);
+
+      // Optional: Add click listener for full-size image view
+      imageCard.querySelector('img').addEventListener('click', () => {
+        openCommentsModal(image.id, image.imageUrl, 'public');
+      });
+    });
+  } catch (error) {
+    console.error('Error loading user profile:', error);
+    showToast('Failed to load user profile.', 'error');
+  }
+}
+
+      
+      
+    function updateShareLinks(imageId, source) {
+  const baseUrl = window.location.origin;
+  const modalUrl = `${baseUrl}/?image=${imageId}&source=${source}`;
+  const shareText = 'Check out this amazing AI-generated image!';
+
+  document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(modalUrl)}`;
+  document.getElementById('share-twitter').href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(modalUrl)}&text=${encodeURIComponent(shareText)}`;
+  document.getElementById('share-pinterest').href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(modalUrl)}&media=${encodeURIComponent(source)}&description=${encodeURIComponent(shareText)}`;
+}
+
+    function updateBrowserHistory(imageId, source) {
+      history.pushState(null, '', `/?image=${imageId}&source=${source}`);
+    }
+      
+    function setupComments(imageId) {
+      
+      // Use imageId to fetch and post comments
+      // Update the global or modal-scoped variable to keep track of imageId
+      window.currentImageId = imageId;
+
+      // Fetch comments
+      loadComments(imageId);
+    }  
+
+
+    function openCommentsModal(imageId, imageUrl, source) {
+
+
+      const modalImage = document.getElementById('modal-image');
+      const modalPrompt = document.getElementById('modal-prompt');
+      const modalUserProfile = document.getElementById('modal-user-profile');
+      const downloadButton = document.getElementById('download-button');
+
+      modalImage.src = imageUrl;
+      downloadButton.href = imageUrl;
+      downloadButton.download = `image-${imageId}.jpg`;
+
+      fetch(`/api/image-details/${imageId}`)
+        .then(response => response.json())
+        .then(data => {
+          modalPrompt.textContent = data.prompt || 'No prompt available.';
+          modalUserProfile.textContent = data.username;
+          modalUserProfile.href = `/user-profile/${data.userId}`;
+          modalUserProfile.dataset.userId = data.userId; // Using dataset
+        })
+        .catch(error => {
+          console.error('Error fetching image details:', error);
+          showToast('Failed to load image details.', 'error');
+        });
+
+      updateShareLinks(imageId, source);
+      updateBrowserHistory(imageId, source);
+        
+      // Update the imageId to be the personalImageId if necessary
+      if (source === 'public') {
+        // Fetch the personalImageId from the public image
+        fetch(`/api/public-image-details/${imageId}`)
+          .then(response => response.json())
+          .then(data => {
+            const personalImageId = data.personalImageId;
+            
+            // Use personalImageId for comments
+            setupComments(personalImageId);
+          })
+          .catch(error => {
+            console.error('Error fetching image details:', error);
+            showToast('Failed to load image details.', 'error');
+          });
+      } else {
+        // For personal images, use the imageId directly          
+        setupComments(imageId);
+      }    
+
+      document.getElementById('comments-modal').classList.remove('hidden');
+        
+    }
+
+      
+      
+      
     // Function to fetch user data
     async function fetchUserData() {
       try {
@@ -515,6 +919,75 @@
     // Function to set up all event listeners
     function setupEventListeners() {
           
+          const modalImage = document.getElementById('modal-image');
+        
+        
+          document.getElementById('create-button').addEventListener('click', () => {
+              const promptText = document.getElementById('modal-prompt').textContent.trim();
+              const mainPromptInput = document.getElementById('prompt-input');
+
+              if (mainPromptInput && promptText) {
+                mainPromptInput.value = promptText; // Copy the prompt text to the main input
+                document.getElementById('comments-modal').classList.add('hidden'); // Close the modal
+                showToast('Prompt copied! Ready to create similar.', 'success'); // Optional: Provide feedback
+              }
+            });
+
+        
+          document.getElementById('copy-prompt').addEventListener('click', () => {
+              const promptText = document.getElementById('modal-prompt').textContent.trim();
+
+              // Check if there's text to copy
+              if (promptText) {
+                navigator.clipboard.writeText(promptText).then(() => {
+                  // Show success toast
+                  showToast('Prompt copied to clipboard!');
+                }).catch(err => {
+                  // Show error toast if copying fails
+                  showToast('Failed to copy prompt', 'error');
+                  console.error('Copy failed:', err);
+                });
+              } else {
+                showToast('No prompt to copy', 'error');
+              }
+            });
+
+          modalImage.addEventListener('click', () => {
+            const fullScreenModal = document.createElement('div');
+            fullScreenModal.classList.add(
+              'fixed',
+              'inset-0',
+              'bg-black',
+              'bg-opacity-90',
+              'flex',
+              'justify-center',
+              'items-center',
+              'fullscreen-modal'
+            );
+            fullScreenModal.innerHTML = `
+              <div class="relative">
+                <img src="${modalImage.src}" alt="Full Image" class="max-w-full max-h-screen rounded-lg">
+                <button class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full" id="close-fullscreen-modal">&times;</button>
+              </div>
+            `;
+
+            // Append fullscreen modal to the document body
+            document.body.appendChild(fullScreenModal);
+
+            // Add event listener to close the modal
+            const closeButton = fullScreenModal.querySelector('#close-fullscreen-modal');
+            closeButton.addEventListener('click', () => {
+              fullScreenModal.remove();
+            });
+
+            // Close the modal when clicking outside the image
+            fullScreenModal.addEventListener('click', (e) => {
+              if (e.target === fullScreenModal) {
+                fullScreenModal.remove();
+              }
+            });
+          });
+
           // Handle Generate Image Button Click
           document.getElementById('generate-button').addEventListener('click', async () => {
             const prompt = document.getElementById('prompt-input').value.trim();
@@ -901,7 +1374,13 @@
 
       // Handle Public/Profile Toggle Buttons
       document.getElementById('public-toggle').addEventListener('click', () => {
-          
+          // Hide or clear the user profile elements
+          const profileUsername = document.getElementById('profile-username');
+          const profileAvatar = document.getElementById('profile-avatar');
+          profileUsername.textContent = ''; // Clear username
+          profileAvatar.src = ''; // Clear avatar
+          profileAvatar.classList.add('hidden'); // Hide avatar
+
           // Reset pagination state when switching to Public Posts
           page = 1; // Reset the page number
           hasMoreImages = true; // Ensure hasMoreImages is set to true
@@ -918,34 +1397,44 @@
 
           // Load public posts
           loadPublicPosts();
+          history.pushState(null, '', '/');
         });
 
 
-      document.getElementById('profile-toggle').addEventListener('click', async () => {
-        // Fetch user data to check authentication
-        let userData;
-        try {
-          const response = await fetch('/user-data');
-          userData = await response.json();
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-          showToast('An error occurred. Please try again.', 'error');
-          return;
-        }
 
-        if (!userData.loggedIn) {
-          // Display a message prompting the user to log in
-          showToast('Please log in to view your posts.', 'error');
-          return;
-        }
+       document.getElementById('profile-toggle').addEventListener('click', async () => {
+          // Hide or clear the user profile elements
+          const profileUsername = document.getElementById('profile-username');
+          const profileAvatar = document.getElementById('profile-avatar');
+          profileUsername.textContent = ''; // Clear username
+          profileAvatar.src = ''; // Clear avatar
+          profileAvatar.classList.add('hidden'); // Hide avatar
 
-        // Toggle button styles
-        document.getElementById('profile-toggle').classList.add('selected-toggle');
-        document.getElementById('public-toggle').classList.remove('selected-toggle');
+          // Fetch user data to check authentication
+          let userData;
+          try {
+            const response = await fetch('/user-data');
+            userData = await response.json();
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            showToast('An error occurred. Please try again.', 'error');
+            return;
+          }
 
-        // Load private/profile posts
-        loadPrivatePosts();
-      });
+          if (!userData.loggedIn) {
+            // Display a message prompting the user to log in
+            showToast('Please log in to view your posts.', 'error');
+            return;
+          }
+
+          // Toggle button styles
+          document.getElementById('profile-toggle').classList.add('selected-toggle');
+          document.getElementById('public-toggle').classList.remove('selected-toggle');
+
+          // Load private/profile posts
+          loadPrivatePosts();
+        });
+
 
       // Handle Buy Tokens Selection
       document.querySelectorAll('.select-token-button').forEach(button => {
@@ -1039,7 +1528,41 @@
           modal.remove();
         }
       });
+       
+} //End events 
+
+      
+
+
+async function loadComments(imageId) {
+  try {
+    const response = await fetch(`/images/${imageId}/comments`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch comments.');
     }
+
+    const comments = await response.json();
+
+    const commentsList = document.getElementById('comments-list');
+    commentsList.innerHTML = ''; // Clear old comments
+
+    comments.forEach(comment => {
+      const li = document.createElement('li');
+      li.classList.add('flex', 'items-start', 'space-x-2'); // For layout
+      li.innerHTML = `
+        <img src="${comment.avatar}" alt="${comment.username}" class="w-8 h-8 rounded-full" crossorigin="anonymous" referrerPolicy="no-referrer" />
+        <div>
+          <p class="font-bold text-black">${comment.username}</p>
+          <p class="text-gray-600">${comment.content}</p>
+        </div>
+      `;
+      commentsList.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error loading comments:', error);
+  }
+}
+
 
 
     
@@ -1072,16 +1595,14 @@
           const imageCard = document.createElement('div');
           imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
 
-          imageCard.innerHTML = `
-            <span class="badge-public">Public</span>
-            <img src="${image.imageUrl}" alt="Public Image" class="w-full h-auto rounded-lg" loading="lazy" />
-          `;
+            
+          imageCard.innerHTML = `<img src="${image.thumbnailUrl}" alt="Public Image" class="w-full h-auto rounded-lg" loading="lazy" />`;
+            
           imageList.appendChild(imageCard);
 
           // Ensure the event listener is correctly attached to the image
-          imageCard.querySelector('img').addEventListener('click', () => {
-              console.log('Image clicked:', image.imageUrl); // Debugging line
-              showFullSizeImage(image.imageUrl);
+          imageCard.querySelector('img').addEventListener('click', () => {              
+              openCommentsModal(image.id, image.imageUrl, 'public'); // For public images
             });
 
         });
@@ -1146,10 +1667,10 @@ async function loadPrivatePosts() {
           </button>
         </div>
       `;
-
+      
       imageCard.innerHTML = `
         ${badge}
-        <img src="${image.imageUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" class="w-full h-auto rounded-lg" loading="lazy" />
+        <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" class="w-full h-auto rounded-lg" loading="lazy" />
         ${actionButtons}
       `;
 
@@ -1157,7 +1678,9 @@ async function loadPrivatePosts() {
 
       // Add click event listener for full-size view
       imageCard.querySelector('img').addEventListener('click', () => {
-        showFullSizeImage(image.imageUrl);
+          //showFullSizeImage(image.imageUrl);
+          //showImagePopup(image);
+          openCommentsModal(image.id, image.imageUrl, 'personal'); // For personal images
       });
 
       // Add click event listener for the delete button
@@ -1325,7 +1848,232 @@ async function loadPrivatePosts() {
         }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+  const commentsModal = document.getElementById('comments-modal');
+  const closeModalButton = document.getElementById('close-comments-modal');
+
+  // Close the modal when the "x" button is clicked
+  closeModalButton.addEventListener('click', () => {
+    commentsModal.classList.add('hidden'); // Hide the modal
+    history.pushState(null, '', window.location.origin);
+  });
+
+  // Close the modal when clicking outside the modal content
+  commentsModal.addEventListener('click', (event) => {
+    if (event.target === commentsModal) {
+      commentsModal.classList.add('hidden'); // Hide the modal
+      history.pushState(null, '', window.location.origin);    
+    }
+  });
+        
+  document.getElementById('post-comment').addEventListener('click', async () => {
+      const commentInput = document.getElementById('comment-input');
+      const commentText = commentInput.value.trim();
+      const imageId = window.currentImageId;
+
+      if (!commentText) {
+        showToast('Please enter a comment.', 'error');
+        return;
+      }
+
+      try {
+                
+        const response = await fetch(`/images/${imageId}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: commentText }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to post comment.');
+        }
+
+        const newComment = await response.json();
+
+        const commentsList = document.getElementById('comments-list');
+        const li = document.createElement('li');
+        li.classList.add('flex', 'items-start', 'space-x-2');
+        li.innerHTML = `
+          <img src="${newComment.avatar}" alt="${newComment.username}" class="w-8 h-8 rounded-full" />
+          <div>
+            <p class="font-bold text-black">${newComment.username}</p>
+            <p class="text-gray-600">${newComment.content}</p>
+          </div>
+        `;
+        commentsList.appendChild(li);
+
+
+        // Clear the comment input field
+        commentInput.value = '';
+        showToast('Comment posted successfully!', 'success');
+      } catch (error) {
+        console.error('Error posting comment:', error);
+        showToast('Failed to post your comment. Please try again.', 'error');
+      }
+    });
+        
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        commentsModal.classList.add('hidden'); // Hide the modal
+      }
+    });
+        
+    const modalImage = document.getElementById('modal-image');
+  const fullscreenIcon = document.getElementById('fullscreen-icon');
+  
+
+  // Fullscreen Modal Function
+  const showFullscreenModal = () => {
+    const fullScreenModal = document.createElement('div');
+    fullScreenModal.classList.add(
+      'fixed',
+      'inset-0',
+      'bg-black',
+      'bg-opacity-90',
+      'flex',
+      'justify-center',
+      'items-center',
+      'fullscreen-modal'
+    );
+    fullScreenModal.innerHTML = `
+      <div class="relative">
+        <img src="${modalImage.src}" alt="Full Image" class="max-w-full max-h-screen rounded-lg">
+        <button class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full" id="close-fullscreen-modal">&times;</button>
+      </div>
+    `;
+    document.body.appendChild(fullScreenModal);
+
+    fullScreenModal.addEventListener('click', (e) => {
+      if (e.target.id === 'close-fullscreen-modal' || e.target === fullScreenModal) {
+        fullScreenModal.remove();
+      }
+    });
+  };
+
+  // Attach Fullscreen Modal Event Listeners
+  modalImage.addEventListener('click', showFullscreenModal);
+  fullscreenIcon.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent triggering image click
+    showFullscreenModal();
+  });
+
+ 
+    // Handle profile link click
+  document.getElementById('modal-user-profile').addEventListener('click', (e) => {
+    e.preventDefault();
+    const userId = e.currentTarget.getAttribute('data-user-id'); // Use e.currentTarget
+
+    if (userId) {
+      history.pushState(null, '', `/user-profile/${userId}`);
+      loadUserProfile(userId);
+    } else {
+      console.error('User ID is null or undefined.');
+      showToast('Unable to load user profile.', 'error');
+    }
+  });
+    // Listen for navigation changes
+    window.addEventListener('popstate', (event) => {
+          const url = new URL(window.location.href);
+          const path = url.pathname;
+
+          if (path.startsWith('/user-profile/')) {
+            const userId = path.split('/').pop(); // Extract user ID from the path
+            loadUserProfile(userId);
+          } else {
+            // Handle other routes (e.g., load public posts)
+            loadPublicPosts();
+          }
+    });
     
+    
+    const currentPath = window.location.pathname;
+    const profileMatch = currentPath.match(/^\/user-profile\/(\d+)$/);
+
+    if (profileMatch) {
+        const userId = profileMatch[1];
+        loadUserProfile(userId); // Fetch and display the profile
+    }
+
+    document.getElementById('logo').addEventListener('click', () => {
+      // Hide or clear the user profile elements
+      const profileUsername = document.getElementById('profile-username');
+      const profileAvatar = document.getElementById('profile-avatar');
+      profileUsername.textContent = ''; // Clear username
+      profileAvatar.src = ''; // Clear avatar
+      profileAvatar.classList.add('hidden'); // Hide avatar
+
+      // Reset UI state for Public Posts
+      const publicToggle = document.getElementById('public-toggle');
+      const profileToggle = document.getElementById('profile-toggle');
+      publicToggle.classList.add('selected-toggle'); // Highlight "Public Posts"
+      profileToggle.classList.remove('selected-toggle'); // Unhighlight "Profile Posts"
+
+      // Clear existing images from the list
+      const imageList = document.getElementById('image-list');
+      if (imageList) {
+        imageList.innerHTML = ''; // Clear the image grid
+      }
+
+      // Reset pagination state for public posts
+      page = 1; // Reset the page number
+      hasMoreImages = true; // Ensure hasMoreImages is set to true
+
+      // Load public posts
+      loadPublicPosts();
+
+      // Update the URL to the root path
+      history.pushState(null, '', '/'); // Use '/' or the desired default path
+    });
+
+   const urlParams = new URLSearchParams(window.location.search);
+  const imageId = urlParams.get('image');
+
+  if (imageId) {
+    // Fetch image details from the unified endpoint
+    fetch(`/api/image-details/${imageId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Image not found');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data) {
+          // Open the comments modal with the fetched image details
+          openCommentsModal(imageId, data.imageUrl, data.isPublic ? 'public' : 'personal');
+        } else {
+          console.error('Image details could not be found.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching image details:', error);
+        showToast('The requested image could not be found or is no longer available.', 'error');
+      });
+  }
+        
+});
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const commentInput = document.getElementById('comment-input');
+  const postCommentButton = document.getElementById('post-comment');
+
+  try {
+    const response = await fetch('/user-data'); // Fetch user data
+    const userData = await response.json();
+
+    if (!userData.loggedIn) {
+      commentInput.disabled = true; // Disable the input box
+      commentInput.placeholder = 'Please log in to comment';
+      postCommentButton.disabled = true;
+    }
+  } catch (error) {
+    console.error('Error checking login status:', error);
+  }
+});
+
+
+
 
   </script>
 </body>

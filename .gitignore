@@ -17,3 +17,5 @@ Thumbs.db
 # Optional: Other files/folders to ignore
 dist/
 build/
+
+stripe.exe
