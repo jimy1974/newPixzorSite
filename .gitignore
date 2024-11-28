@@ -19,3 +19,6 @@ dist/
 build/
 
 stripe.exe
+
+# Ignore personal images
+public/personal-images/7/
