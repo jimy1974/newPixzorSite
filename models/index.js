@@ -1,40 +1,45 @@
-// models/index.js
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-const sequelize = require('../db'); // Adjust path as needed
+const sequelize = require('../db'); // Ensure this path is correct
 
-const db = {};
+// Initialize the models object
+const models = {};
 
 // Dynamically import all models
 fs.readdirSync(__dirname)
-  .filter(file => file !== 'index.js' && file.endsWith('.js'))
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize);
-    db[model.name] = model;
+  .filter((file) => file !== 'index.js' && file.endsWith('.js'))
+  .forEach((file) => {
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes); // Pass Sequelize DataTypes
+    models[model.name] = model;
   });
 
 // Establish associations
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
+Object.keys(models).forEach((modelName) => {
+  if (models[modelName].associate) {
+    models[modelName].associate(models); // Pass the models object to associate
   }
 });
 
-// Optional: Log associations for debugging
-Object.keys(db).forEach(modelName => {
-  const model = db[modelName];
+// Log associations for debugging (optional)
+Object.keys(models).forEach((modelName) => {
+  const model = models[modelName];
   console.log(`Model ${modelName} associations:`);
   if (model.associations && Object.keys(model.associations).length > 0) {
-    Object.keys(model.associations).forEach(assoc => {
-      console.log(`  - ${assoc}:`, model.associations[assoc].associationType, `with ${model.associations[assoc].target.name}`);
+    Object.keys(model.associations).forEach((assoc) => {
+      console.log(
+        `  - ${assoc}:`,
+        model.associations[assoc].associationType,
+        `with ${model.associations[assoc].target.name}`
+      );
     });
   } else {
     console.log('  - No associations');
   }
 });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// Add Sequelize and sequelize to the models object
+models.sequelize = sequelize;
+models.Sequelize = Sequelize;
 
-module.exports = db;
+module.exports = models;

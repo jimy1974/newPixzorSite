@@ -1,4 +1,3 @@
-// models/PublicImage.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -38,16 +37,17 @@ module.exports = (sequelize) => {
         model: 'personalimages', // Correct table name
         key: 'id',
       },
-    },
+    },   
+
   }, {
-    tableName: 'publicimages', // Correct table name
+    tableName: 'PublicImages', // Correct table name
     timestamps: true,
   });
 
-  // Define associations
+// Define associations here
   PublicImage.associate = (models) => {
-    PublicImage.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    PublicImage.belongsTo(models.PersonalImage, { foreignKey: 'personalImageId', as: 'personalImage' });
+    PublicImage.belongsTo(models.User, { foreignKey: 'userId', as: 'user' }); // Associate PublicImage with User
+    PublicImage.belongsTo(models.PersonalImage, { foreignKey: 'personalImageId', as: 'personalImage' }); // Optional additional association
   };
 
   return PublicImage;

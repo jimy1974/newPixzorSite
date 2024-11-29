@@ -36,7 +36,7 @@ module.exports = (sequelize) => {
       },
     },
   }, {
-    tableName: 'personalimages', // Ensure this matches your actual table name
+    tableName: 'PersonalImages', // Ensure this matches your actual table name
     timestamps: true,
   });
 
