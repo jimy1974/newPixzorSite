@@ -263,7 +263,16 @@
       z-index: 10; /* Ensure it is above other elements */
       color: #555; /* Default color */
     }
-
+/* Modal content */
+#comments-modal > div {
+  background-color: white;
+  border-radius: 8px;
+  
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+      
   #comments-modal {
     z-index: 1050; /* A value higher than the prompt box */
   }
@@ -373,10 +382,41 @@ textarea#comment-input {
   color: #1f2937; /* Slight color change on hover */
 }
 
+#comments-modal {
+  overflow-y: auto;  /* Allow vertical scrolling for the entire modal */
+  -webkit-overflow-scrolling: touch;  /* Smooth scrolling on iOS */
+}
 
+#comments-modal > div {
+  max-height: 90vh;  /* Limit height to 90% of viewport height */
+  overflow-y: auto;  /* Enable scrolling for the modal content */
+}
+
+/* Ensure the comments list can scroll independently */
+#comments-list {
+  max-height: 50vh;  /* Limit comments list height */
+  
+}
 
 
 @media (max-width: 768px) { 
+  /* Ensure the modal container doesn't scroll the background */
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* Make the modal content scrollable */
+    #comments-modal {
+      overflow: auto;
+      max-height: 100vh; /* Limit modal height to the viewport */
+    }
+
+    #comments-modal .flex-grow.overflow-hidden {
+      overflow-y: auto; /* Enable vertical scrolling for the comments section */
+      max-height: 60vh; /* Adjust based on desired modal height */
+    }
+    
+    
   #comments-modal > div {
     flex-direction: column; 
     height: auto;
@@ -752,18 +792,26 @@ textarea#comment-input {
           </a>
           <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Download</span>
         </div>
+          
+          
         <div class="relative group">
-          <button id="create-button" class="bg-purple-600 text-white p-2 rounded flex items-center" aria-label="Create Similar">
+          <a id="create-button" href="#" class="btn bg-purple-600 text-white p-2 rounded flex items-center" aria-label="Create Similar">
             <i class="fas fa-pencil-alt"></i>
-          </button>
+          </a>
           <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Create Similar</span>
         </div>
+          
+          
+          
         <div class="relative group">
           <a id="share-facebook" href="#" target="_blank" class="bg-blue-600 text-white p-2 rounded flex items-center" aria-label="Share on Facebook">
             <i class="fab fa-facebook-f"></i>
           </a>
           <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Facebook</span>
         </div>
+          
+          
+          
         <div class="relative group">
           <a id="share-twitter" href="#" target="_blank" class="bg-blue-400 text-white p-2 rounded flex items-center" aria-label="Share on Twitter">
             <i class="fab fa-twitter"></i>
@@ -1246,6 +1294,7 @@ async function loadUserProfile(userId) {
       function openModal(modalId) {
         if (modals[modalId]) {
           modals[modalId].classList.remove('hidden');
+          document.body.classList.add('modal-open');    
           document.body.classList.add('overflow-hidden'); // Prevent background scrolling
         }
       }
@@ -1254,6 +1303,7 @@ async function loadUserProfile(userId) {
       function closeModal(modalId) {
         if (modals[modalId]) {
           modals[modalId].classList.add('hidden');
+          document.body.classList.remove('modal-open');       
           document.body.classList.remove('overflow-hidden');
         }
       }
