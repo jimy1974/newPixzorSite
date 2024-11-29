@@ -22,3 +22,5 @@ stripe.exe
 
 # Ignore personal images
 public/personal-images/7/
+public/personal-images/
+public/thumbnails/
