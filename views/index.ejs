@@ -8,25 +8,22 @@
     <!-- Viewport for Responsive Design -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
-    <!-- Primary Meta Tags -->
-    <title>Pixzor - AI Image and Video Creation Platform</title>
+    
+  <title><%= title %></title>
+  <% if (imageUrl) { %>
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:image" content="<%= imageUrl %>" />
+    <meta property="og:url" content="<%= url %>" />
+    <meta property="og:type" content="website" />
+  <% } %>
+    
     <meta name="title" content="Pixzor - AI Image and Video Creation Platform">
     <meta name="description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
     <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools">
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.pixzor.com/">
-    <meta property="og:title" content="Pixzor - AI Image and Video Creation Platform">
-    <meta property="og:description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
-    <meta property="og:image" content="https://www.pixzor.com/og-image.jpg">
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://www.pixzor.com/">
-    <meta name="twitter:title" content="Pixzor - AI Image and Video Creation Platform">
-    <meta name="twitter:description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
-    <meta name="twitter:image" content="https://www.pixzor.com/twitter-image.jpg">
+   
+   
     <meta http-equiv="Content-Security-Policy" content="img-src 'self' https://lh3.googleusercontent.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <!-- Canonical Link -->
@@ -599,9 +596,8 @@ textarea#comment-input {
        
         <button id="enhance-prompt-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Enhance Prompt</button>
           
+          
         <button id="setup-character-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Add Character</button>
-
-        
         <div class="flex justify-center mb-4">
           <select id="character-select" class="w-full max-w-xs bg-gray-700 rounded-lg py-1 px-0 text-white" aria-label="Select Character">
             <option value="" disabled selected>Select Character</option>
@@ -923,15 +919,17 @@ async function loadUserProfile(userId) {
 
       
       
-    function updateShareLinks(imageId, source) {
-  const baseUrl = window.location.origin;
-  const modalUrl = `${baseUrl}/?image=${imageId}&source=${source}`;
-  const shareText = 'Check out this amazing AI-generated image!';
+   function updateShareLinks(imageId, source) {
+      const baseUrl = window.location.origin;
+      const modalUrl = `${baseUrl}/?image=${imageId}&source=${source}`;
+      const shareText = 'Check out this amazing AI-generated image!';
 
-  document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(modalUrl)}`;
-  document.getElementById('share-twitter').href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(modalUrl)}&text=${encodeURIComponent(shareText)}`;
-  document.getElementById('share-pinterest').href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(modalUrl)}&media=${encodeURIComponent(source)}&description=${encodeURIComponent(shareText)}`;
-}
+      document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(modalUrl)}`;
+      document.getElementById('share-twitter').href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(modalUrl)}&text=${encodeURIComponent(shareText)}`;
+      document.getElementById('share-pinterest').href = `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(modalUrl)}&media=${encodeURIComponent(modalUrl)}&description=${encodeURIComponent(shareText)}`;
+    }
+
+
 
     function updateBrowserHistory(imageId, source) {
       history.pushState(null, '', `/?image=${imageId}&source=${source}`);
@@ -1047,17 +1045,67 @@ async function loadUserProfile(userId) {
           
           const modalImage = document.getElementById('modal-image');
         
-        
-          document.getElementById('create-button').addEventListener('click', () => {
-              const promptText = document.getElementById('modal-prompt').textContent.trim();
-              const mainPromptInput = document.getElementById('prompt-input');
+          document.getElementById("enhance-prompt-button").addEventListener("click", async () => {
+              const promptInput = document.getElementById("prompt-input");
+              const prompt = promptInput.value.trim();
 
-              if (mainPromptInput && promptText) {
-                mainPromptInput.value = promptText; // Copy the prompt text to the main input
-                document.getElementById('comments-modal').classList.add('hidden'); // Close the modal
-                showToast('Prompt copied! Ready to create similar.', 'success'); // Optional: Provide feedback
+              // Check if the prompt is empty
+              if (!prompt) {
+                showToast("Please enter a prompt!", "error");
+                return;
+              }
+
+              try {
+                // Send the prompt to the server
+                const response = await fetch("/enhance-prompt", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ prompt })
+                });
+
+                if (!response.ok) {
+                  throw new Error("Failed to enhance the prompt. Please try again.");
+                }
+
+                const data = await response.json();
+                promptInput.value = data.result; // Update the input area with the enhanced prompt
+                showToast("Prompt enhanced successfully!", "success");
+              } catch (error) {
+                console.error(error);
+                showToast(error.message, "error");
               }
             });
+        
+        
+          document.getElementById('create-button').addEventListener('click', async () => {
+          try {
+            // Check authentication status
+            const response = await fetch('/check-auth', { method: 'GET' });
+            const data = await response.json();
+
+            if (!data.isAuthenticated) {
+              // Show a toast notification if the user is not logged in
+              showToast('Please log in first to create an image.', 'error');
+              return; // Prevent further actions
+            }
+
+            // Proceed with copying the prompt if the user is authenticated
+            const promptText = document.getElementById('modal-prompt').textContent.trim();
+            const mainPromptInput = document.getElementById('prompt-input');
+
+            if (mainPromptInput && promptText) {
+              mainPromptInput.value = promptText; // Copy the prompt text to the main input
+              document.getElementById('comments-modal').classList.add('hidden'); // Close the modal
+              showToast('Prompt copied! Ready to create similar.', 'success'); // Optional: Provide feedback
+            }
+          } catch (error) {
+            console.error('Error checking authentication:', error);
+            showToast('An error occurred. Please try again.', 'error');
+          }
+        });
+
 
         
           document.getElementById('copy-prompt').addEventListener('click', () => {
@@ -1113,6 +1161,9 @@ async function loadUserProfile(userId) {
               }
             });
           });
+        
+        
+
 
           // Handle Generate Image Button Click
           document.getElementById('generate-button').addEventListener('click', async () => {
@@ -2183,6 +2234,7 @@ async function loadPrivatePosts() {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+      
   const commentInput = document.getElementById('comment-input');
   const postCommentButton = document.getElementById('post-comment');
 
@@ -2198,8 +2250,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (error) {
     console.error('Error checking login status:', error);
   }
+    
+      
 });
 
+document.addEventListener("DOMContentLoaded", async () => {
+  const response = await fetch("/check-auth", { method: "GET" });
+  const data = await response.json();
+
+  const promptInput = document.getElementById("prompt-input");
+  const generateButton = document.getElementById("generate-button");
+
+  if (!data.isAuthenticated) {
+    // Disable prompt box and button
+    promptInput.disabled = true;
+    generateButton.disabled = true;
+
+    // Add placeholder text to indicate the user must log in
+    promptInput.placeholder = "Please log in to create images.";
+  }
+});
 
 
 

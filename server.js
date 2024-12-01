@@ -21,6 +21,8 @@ const upload = multer({ dest: 'uploads/' }); // Configure storage location and f
 const fs = require('fs');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const bodyParser = require('body-parser');
+const cors = require("cors");
+const { OpenAI } = require("openai");
 const app = express();
 const PORT = 3000;
 
@@ -28,7 +30,6 @@ const PORT = 3000;
 const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `${appBaseUrl}/auth/google/callback`;
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 
 
 
@@ -41,6 +42,9 @@ app.use(express.static('public'));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
+});
 
 
 app.use((req, res, next) => {
@@ -112,6 +116,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 
 
+// Middleware
+app.use(cors());
 
 // Middleware to parse JSON data
 app.use(express.json());
@@ -187,6 +193,28 @@ function ensureAuthenticated(req, res, next) {
 */
 
 
+app.post('/enhance-prompt', async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) {
+        return res.status(400).send({ error: "Prompt is required!" });
+    }
+
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: `Create a detailed image prompt based on: ${prompt}` }],
+            max_tokens: 150,
+        });
+
+        res.json({ result: response.choices[0].message.content.trim() });
+    } catch (error) {
+        console.error("Error with OpenAI API:", error.message);
+        res.status(500).send({ error: "Error generating prompt." });
+    }
+});
+
+
+
 app.post('/create-checkout-session', async (req, res) => {
   console.log('Request body:', req.body); // Log incoming data
   const { tokens, price } = req.body;
@@ -225,55 +253,6 @@ app.post('/create-checkout-session', async (req, res) => {
     res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
-
-
-
-
-
-
-
-
-
-
-/*
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-        console.error(`Webhook signature verification failed: ${err.message}`);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    // Handle the event
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
-
-        // Extract metadata to identify the user and tokens
-        const userId = session.metadata.userId;
-        const tokens = parseInt(session.metadata.tokens, 10);
-
-        // Update user's tokens in the database
-        try {
-            const user = await User.findByPk(userId);
-            if (user) {
-                user.tokens += tokens;
-                await user.save();
-                console.log(`Successfully added ${tokens} tokens to user ${user.username}.`);
-            } else {
-                console.error(`User with ID ${userId} not found.`);
-            }
-        } catch (error) {
-            console.error(`Error updating tokens: ${error.message}`);
-        }
-    }
-
-    // Acknowledge receipt of the event
-    res.json({ received: true });
-});*/
-
 
 
 
@@ -358,6 +337,12 @@ app.get('/demo/auth/google/callback',
 );
 
 
+app.get("/check-auth", (req, res) => {
+  if (req.isAuthenticated()) {
+    return res.json({ isAuthenticated: true });
+  }
+  res.json({ isAuthenticated: false });
+});
 
 
 
@@ -396,9 +381,61 @@ app.get('/test', (req, res) => {
   res.render('test'); // This is your main application page
 });
 
-app.get('/', (req, res) => {
-  res.render('index', { showProfile: false, profileUserId : 0 });
+app.get('/', async (req, res) => {
+  const { image, source } = req.query;
+
+  let imageUrl = '';
+  let thumbnailUrl = '';
+  let title = 'Welcome to Pixzor!';
+  let description = 'Create stunning AI-generated images and videos!';
+  const url = req.protocol + '://' + req.get('host') + req.originalUrl;
+
+  try {
+    if (image && source) {
+      
+
+      let imageDetails;
+      if (source === 'public') {
+        imageDetails = await PublicImage.findByPk(image);
+        
+      } else {
+        imageDetails = await PersonalImage.findByPk(image);
+        
+      }
+
+      if (imageDetails) {
+        // Use correct properties from the database response
+        imageUrl = `${req.protocol}://${req.get('host')}${imageDetails.imageUrl || ''}`;
+        thumbnailUrl = `${req.protocol}://${req.get('host')}${imageDetails.thumbnailUrl || ''}`;
+
+        title = `Check out this amazing AI-generated image!`;
+        description = imageDetails.prompt || 'Discover creative AI-generated art with Pixzor!';
+      } 
+    } 
+  } catch (error) {
+    console.error(`[ERROR] Error fetching image details:`, error.message);
+  }
+
+  // Fallback for missing thumbnail
+  if (!thumbnailUrl) {
+    thumbnailUrl = `${req.protocol}://${req.get('host')}/default-thumbnail.jpg`;
+
+  }
+
+
+  res.render('index', {
+    showProfile: false,
+    profileUserId: 0,
+    title,
+    description,
+    imageUrl: thumbnailUrl, // Use thumbnail for sharing
+    url,
+  });
 });
+
+
+
+
 
 
 app.get('/login', (req, res) => {
