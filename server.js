@@ -385,50 +385,37 @@ app.get('/', async (req, res) => {
   const { image, source } = req.query;
 
   let imageUrl = '';
-  let thumbnailUrl = '';
   let title = 'Welcome to Pixzor!';
   let description = 'Create stunning AI-generated images and videos!';
   const url = req.protocol + '://' + req.get('host') + req.originalUrl;
 
   try {
     if (image && source) {
-      
-
       let imageDetails;
       if (source === 'public') {
         imageDetails = await PublicImage.findByPk(image);
-        
       } else {
         imageDetails = await PersonalImage.findByPk(image);
-        
       }
 
       if (imageDetails) {
-        // Use correct properties from the database response
-        imageUrl = `${req.protocol}://${req.get('host')}${imageDetails.imageUrl || ''}`;
-        thumbnailUrl = `${req.protocol}://${req.get('host')}${imageDetails.thumbnailUrl || ''}`;
-
+        // Use the full-size image URL for sharing
+        imageUrl = `${req.protocol}://${req.get('host')}${imageDetails.imageUrl}`;
         title = `Check out this amazing AI-generated image!`;
         description = imageDetails.prompt || 'Discover creative AI-generated art with Pixzor!';
-      } 
-    } 
+      }
+    }
   } catch (error) {
-    console.error(`[ERROR] Error fetching image details:`, error.message);
+    console.error('Error fetching image details:', error.message);
   }
 
-  // Fallback for missing thumbnail
-  if (!thumbnailUrl) {
-    thumbnailUrl = `${req.protocol}://${req.get('host')}/default-thumbnail.jpg`;
-
-  }
-
-
+  // Render the page with updated meta tags
   res.render('index', {
     showProfile: false,
     profileUserId: 0,
     title,
     description,
-    imageUrl: thumbnailUrl, // Use thumbnail for sharing
+    imageUrl,
     url,
   });
 });
