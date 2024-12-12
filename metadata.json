@@ -1,0 +1,14 @@
+{
+  "name": "PIXZOR",
+  "symbol": "PIXZOR",
+  "description": "PIXZOR is a custom SPL token for the Solana blockchain.",
+  "image": "https://raw.githubusercontent.com/jimy1974/newPixzorSite/refs/heads/main/public/images/icon-256.png",
+  "properties": {
+    "files": [
+      {
+        "uri": "https://raw.githubusercontent.com/jimy1974/newPixzorSite/refs/heads/main/public/images/icon-256.png",
+        "type": "image/png"
+      }
+    ]
+  }
+}
