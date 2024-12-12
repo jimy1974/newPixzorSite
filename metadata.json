@@ -11,8 +11,13 @@
       }
     ]
   },
-  "creator": {
-    "name": "Pixzor",
-    "site": "https://www.pixzor.com"
-  }
+  "creators": [
+    {
+        "address": "2Nba9pbnMksGoMffrBioHbcvvE8m3yV16dcBsjk8pi95",
+        "verified": true,
+        "share": 100
+    }
+   ]
 }
+
+
