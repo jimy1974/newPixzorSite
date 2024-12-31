@@ -1,4 +1,3 @@
-// models/PersonalImage.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -27,20 +26,28 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    style: {
+      type: DataTypes.STRING, // Matches the style column in the database
+      allowNull: true, // Since it defaults to NULL
+    },
+    type: {
+      type: DataTypes.ENUM('ai-generated', 'user-uploaded', 'stylized-photo'), // Matches the ENUM
+      defaultValue: 'ai-generated',
+      allowNull: false,
+    },
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: true, // Changed from false to match DB (DEFAULT NULL)
+      allowNull: true, // Set to NULLABLE as per your DB schema
       references: {
-        model: 'users', // Correct table name
+        model: 'users',
         key: 'id',
       },
     },
   }, {
-    tableName: 'PersonalImages', // Ensure this matches your actual table name
+    tableName: 'PersonalImages',
     timestamps: true,
   });
 
-  // Define associations
   PersonalImage.associate = (models) => {
     PersonalImage.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
     PersonalImage.hasMany(models.Comment, { foreignKey: 'imageId', as: 'comments' });

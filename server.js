@@ -12,9 +12,15 @@ const passport = require('passport');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
 
-// Import the entire db object
 const db = require('./models'); // Centralized model loader
-const { User, PersonalImage, Comment, PublicImage, Image } = db;
+const { User, PersonalImage, Comment, PublicImage, Image, Like } = db;
+
+//const { sequelize } = db; // Extract sequelize instance
+
+const sequelize = require('./db'); // Import sequelize
+
+const { Op } = sequelize; // Extract Op from sequelize
+
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
@@ -41,6 +47,25 @@ app.set('view engine', 'ejs');
 app.use(express.static('public')); 
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Set up paths for personal and public images
+const personalImagesPath = path.resolve(__dirname, '../SiteData/personal-images');
+const publicImagesPath = path.resolve(__dirname, '../SiteData/public-images');
+
+// Serve static files for personal and public images
+app.use('/personal-images', express.static(personalImagesPath));
+app.use('/public-images', express.static(publicImagesPath));
+//app.use('/personal-images', express.static(path.join(__dirname, 'public/personal-images')));
+
+// Ensure the directories exist
+if (!fs.existsSync(personalImagesPath)) {
+  fs.mkdirSync(personalImagesPath, { recursive: true });
+}
+
+if (!fs.existsSync(publicImagesPath)) {
+  fs.mkdirSync(publicImagesPath, { recursive: true });
+}
+
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
@@ -135,7 +160,6 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-app.use('/personal-images', express.static(path.join(__dirname, 'public/personal-images')));
 const LocalStrategy = require('passport-local').Strategy;
 
 
@@ -175,11 +199,17 @@ passport.use(new LocalStrategy(
   }
 ));
 
-
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) {
     return next();
   }
+
+  // Check if the request is an API call
+  if (req.originalUrl.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Unauthorized: Please log in to perform this action.' });
+  }
+
+ 
   if (req.xhr || req.headers.accept.indexOf('json') > -1) {
     return res.status(401).json({ error: 'Please log in to generate an image.' });
   } else {
@@ -214,15 +244,98 @@ app.post('/enhance-prompt', async (req, res) => {
 });
 
 
+app.post('/create-checkout-session', async (req, res) => {
+  console.log('Request body:', req.body);
 
+  const { tokens, price } = req.body;
+
+  if (!tokens) {
+    console.error('Missing tokens in request body:', req.body);
+    return res.status(400).json({ error: 'Tokens are required' });
+  }
+
+  // Predefined valid bundles
+  const validBundles = {
+    "500": "5.00",
+    "1200": "10.00",
+    "3000": "20.00",
+    "5000": "30.00",
+    "20000": "100.00",
+  };
+
+  // Validate tokens and derive price from server-side data
+  const expectedPrice = validBundles[tokens];
+  if (!expectedPrice) {
+    console.error('Invalid token amount:', tokens);
+    return res.status(400).json({ error: 'Invalid number of tokens selected' });
+  }
+  if (expectedPrice !== price) {
+    console.error('Price mismatch:', { expectedPrice, price });
+    return res.status(400).json({ error: 'Price does not match the selected token bundle' });
+  }
+
+  if (!req.user || !req.user.id) {
+    console.error('Unauthorized user');
+    return res.status(403).json({ error: 'User not authenticated' });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'link', 'paypal'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${tokens} Tokens for Pixzor`,
+            },
+            unit_amount: parseFloat(expectedPrice) * 100, // Convert dollars to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.APP_BASE_URL}/success`,
+      cancel_url: `${process.env.APP_BASE_URL}/cancel`,
+      metadata: {
+        userId: req.user.id,
+        tokens: tokens,
+      },
+    });
+
+    console.log('Stripe session created:', session.id);
+    res.json({ id: session.id });
+  } catch (error) {
+    console.error('Error creating checkout session:', error.message, error.stack);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+
+/*
 app.post('/create-checkout-session', async (req, res) => {
   console.log('Request body:', req.body); // Log incoming data
   const { tokens, price } = req.body;
-
+    
   if (!tokens || !price) {
     console.error('Invalid request body:', req.body);
     return res.status(400).json({ error: 'Missing tokens or price' });
   }
+    
+  
+  // Predefined valid bundles
+  const validBundles = {
+    "500": "5.00",
+    "1200": "10.00",
+    "3000": "20.00",
+    "5000": "30.00",
+    "20000": "100.00",
+  };
+
+  // Validate token-price pair
+  if (!validBundles[tokens] || validBundles[tokens] !== price) {
+    return res.status(400).json({ error: "Invalid token bundle selected" });
+  }    
     
   try {
     const session = await stripe.checkout.sessions.create({
@@ -252,7 +365,7 @@ app.post('/create-checkout-session', async (req, res) => {
     console.error('Error creating checkout session:', error);
     res.status(500).json({ error: 'Failed to create checkout session' });
   }
-});
+});*/
 
 
 
@@ -291,7 +404,7 @@ passport.use(new GoogleStrategy({
         // Create a new user if no conflicts are found
         user = await User.create({
           googleId: profile.id,
-          tokens: 200,
+          tokens: 50,
           username: profile.displayName || `User${Date.now()}`,
           email: profile.emails[0].value,
           photo: profile.photos[0] ? profile.photos[0].value : null,
@@ -367,12 +480,17 @@ app.get('/user-data', (req, res) => {
 app.get('/public-images', async (req, res) => {
   try {
     const images = await PublicImage.findAll();
+    images.forEach((image) => {
+      image.imageUrl = `/public-images${image.imageUrl}`;
+      image.thumbnailUrl = `/public-images${image.thumbnailUrl}`;
+    });
     res.json(images);
   } catch (error) {
     console.error('Error fetching public images:', error);
     res.status(500).json({ error: 'Failed to fetch images' });
   }
 });
+
 
 
 
@@ -390,6 +508,7 @@ app.get('/', async (req, res) => {
   const url = req.protocol + '://' + req.get('host') + req.originalUrl;
 
   try {
+    // Fetch image details if an image and source are specified
     if (image && source) {
       let imageDetails;
       if (source === 'public') {
@@ -399,26 +518,56 @@ app.get('/', async (req, res) => {
       }
 
       if (imageDetails) {
-        // Use the full-size image URL for sharing
         imageUrl = `${req.protocol}://${req.get('host')}${imageDetails.imageUrl}`;
         title = `Check out this amazing AI-generated image!`;
         description = imageDetails.prompt || 'Discover creative AI-generated art with Pixzor!';
       }
     }
-  } catch (error) {
-    console.error('Error fetching image details:', error.message);
-  }
 
-  // Render the page with updated meta tags
-  res.render('index', {
-    showProfile: false,
-    profileUserId: 0,
-    title,
-    description,
-    imageUrl,
-    url,
-  });
+    // Fetch styles and their counts from the database
+    const stylesWithCounts = await sequelize.query(
+      `
+      SELECT 
+        name AS value, 
+        label, 
+        count 
+      FROM styles 
+      ORDER BY name ASC
+      `,
+      { type: sequelize.QueryTypes.SELECT }
+    );
+
+    // Validate and format the styles array
+    const updatedStylesWithCounts = stylesWithCounts.map((style) => ({
+      ...style,
+      label: style.label || style.value.charAt(0).toUpperCase() + style.value.slice(1).replace(/-/g, ' '), // Default to formatted `value` if `label` is missing
+      count: style.count || 0, // Default to 0 if `count` is missing
+    }));
+      
+    console.log('Styles with Counts:', updatedStylesWithCounts);
+  
+
+    // Render the page with the fetched data
+    res.render('index', {
+      isLoggedIn: !!req.user, // True if user is logged in
+      user: req.user || null, // Send user info if available
+      showProfile: false,
+      profileUserId: 0,
+      title,
+      description,
+      imageUrl,
+      url,
+      stylesWithCounts: updatedStylesWithCounts, // Pass styles with counts and formatted labels
+    });
+  } catch (error) {
+    console.error('Error fetching image details or styles:', error.stack);
+    res.status(500).send('Internal Server Error');
+  }
 });
+
+
+
+
 
 
 
@@ -504,7 +653,9 @@ app.get('/logout', (req, res, next) => {
 });
 
 
-
+let consecutiveFailures = 0; // Track the number of consecutive failures for getimg.ai
+let useBackupAPI = false; // Flag to indicate if we should use the backup API
+const SWITCH_BACK_TIMEOUT = 5 * 60 * 60 * 1000; // 5-hour timeout for switching back
 
 app.post('/generate-image', ensureAuthenticated, async (req, res) => {
   try {
@@ -512,11 +663,333 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
     }
 
-    const { prompt, width, height, guidanceScale, inferenceSteps, isPublic } = req.body;
+    const { prompt, width, height, guidanceScale, inferenceSteps, isPublic, style, model } = req.body;
 
-    if (prompt.length > 2000) {
-      return res.status(400).json({ error: 'Prompt is too long. Please shorten it and try again.' });
+    // Debugging input parameters
+    console.log('Generate Image API Called');
+    console.log('Input Parameters:');
+    console.log(`Prompt: ${prompt}`);
+    console.log(`Width: ${width}`);
+    console.log(`Height: ${height}`);
+    console.log(`Guidance Scale: ${guidanceScale}`);
+    console.log(`Inference Steps: ${inferenceSteps}`);
+    console.log(`Style: ${style}`);
+    console.log(`Model: ${model}`);
+    console.log(`Public: ${isPublic}`);
+
+    let response;
+    let imageData;
+
+    // Determine the correct endpoint and body parameters based on the model
+    let endpoint = '';
+    let requestBody = {};
+
+    if (model.startsWith('flux')) {
+      // Use Flux endpoint
+      endpoint = 'https://api.getimg.ai/v1/flux-schnell/text-to-image';
+      requestBody = {
+        model: model, // "flux-dev" or "flux-schnell"
+        prompt,
+        width,
+        height,
+        guidance: guidanceScale || 3.5,
+        steps: 4, // Flux models generally use lower steps
+        output_format: 'jpeg',
+        response_format: 'url',
+      };
+    } else {
+      // Use Stable Diffusion XL endpoint
+      endpoint = 'https://api.getimg.ai/v1/stable-diffusion-xl/text-to-image';
+      requestBody = {
+        model: model || 'stable-diffusion-xl-v1-0', // Default to SD XL if no model is specified
+        prompt,
+        width,
+        height,
+        guidance: guidanceScale || 7.5, // Higher guidance scale for SD XL
+        steps: inferenceSteps || 25, // Default to 25 steps for SD XL models
+        output_format: 'jpeg',
+        response_format: 'url',
+      };
     }
+
+    // Log the selected endpoint and request body
+    console.log('Selected Endpoint:', endpoint);
+    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+
+    // Make the API call
+    try {
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.GETIMG_API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error('getimg.ai API Error:', errorResponse);
+        throw new Error('getimg.ai API failed');
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (data.url) {
+        const imageResponse = await fetch(data.url);
+        if (!imageResponse.ok) {
+          throw new Error('Failed to download the image from getimg.ai');
+        }
+        imageData = await imageResponse.buffer();
+      } else {
+        throw new Error('getimg.ai API did not return a valid image URL');
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      return res.status(500).json({ error: 'Failed to generate image.' });
+    }
+
+    // Deduct a token
+    req.user.tokens -= 1;
+    await req.user.save();
+
+    // Save the image to the user's folder
+    const userFolderPath = path.join(personalImagesPath, req.user.id.toString());
+    const thumbnailsFolderPath = path.join(userFolderPath, 'thumbnails');
+    if (!fs.existsSync(thumbnailsFolderPath)) {
+      fs.mkdirSync(thumbnailsFolderPath, { recursive: true });
+    }
+
+    const fileName = `image_${Date.now()}.jpg`;
+    const imagePath = path.join(userFolderPath, fileName);
+    const thumbnailPath = path.join(thumbnailsFolderPath, `thumb_${fileName}`);
+
+    // Save the image
+    fs.writeFileSync(imagePath, imageData);
+
+    // Generate a thumbnail
+    await sharp(imagePath).resize(408).toFile(thumbnailPath);
+
+    const savedImageUrl = `/personal-images/${req.user.id}/${fileName}`;
+    const savedThumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
+
+    // Save to PersonalImages table
+    const newPersonalImage = await PersonalImage.create({
+      userId: req.user.id,
+      imageUrl: savedImageUrl,
+      thumbnailUrl: savedThumbnailUrl,
+      prompt,
+      style, // Add style to the database
+      type: 'ai-generated', // Default to AI-generated
+      isPublic: isPublic || false,
+    });
+
+    // If public, save to PublicImages table
+    if (isPublic) {
+      await PublicImage.create({
+        userId: req.user.id,
+        personalImageId: newPersonalImage.id,
+        imageUrl: savedImageUrl,
+        thumbnailUrl: savedThumbnailUrl,
+        prompt,
+        style, // Add style
+        type: 'ai-generated',
+        likes: 0,
+      });
+    }
+
+    console.log('Image saved successfully:', savedImageUrl);
+
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
+  } catch (error) {
+    console.error('Error generating image:', error);
+    res.status(500).json({ error: 'Failed to generate image.' });
+  }
+});
+
+
+
+
+
+app.post('/edit-image', ensureAuthenticated, async (req, res) => {
+  console.log('Edit Image API called');
+  console.log('Request body:', req.body);
+
+  const { imagePath, prompt, strength, steps, guidance, style, model, keepStyle, keepFace, keepPose, isPublic } = req.body;
+
+  if (!imagePath) {
+    console.error('No image path provided');
+    return res.status(400).json({ error: 'Image path is required for editing' });
+  }
+
+  console.log('Editing image at path:', imagePath);
+  console.log('Selected style:', style);
+  console.log('Selected model:', model);
+  console.log('Keep Style:', keepStyle);
+  console.log('Keep Face:', keepFace);
+  console.log('Keep Pose:', keepPose);
+
+  try {
+    // Modify the prompt to include the style if provided
+    const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
+
+    console.log('Updated Prompt:', updatedPrompt);
+
+    // Resolve the full file path
+    let resolvedImagePath;
+    if (imagePath.startsWith('/personal-images/')) {
+      resolvedImagePath = path.join(personalImagesPath, imagePath.replace('/personal-images/', ''));
+    } else if (imagePath.startsWith('/public-images/')) {
+      resolvedImagePath = path.join(publicImagesPath, imagePath.replace('/public-images/', ''));
+    } else {
+      console.error('Invalid image path provided');
+      return res.status(400).json({ error: 'Invalid image path' });
+    }
+
+    console.log('Resolved full image path:', resolvedImagePath);
+
+    // Check if the file exists
+    if (!fs.existsSync(resolvedImagePath)) {
+      console.error('Image file not found at path:', resolvedImagePath);
+      return res.status(404).json({ error: 'Image file not found' });
+    }
+
+    // Load and convert the image to Base64
+    const base64Image = fs.readFileSync(resolvedImagePath, { encoding: 'base64' });
+
+    // Determine the control net adapter based on user options
+    let adapter = '';
+    if (keepFace) adapter = 'face';
+    else if (keepStyle) adapter = 'style';
+    else if (keepPose) adapter = 'content'; // Assuming 'content' is for pose control
+
+    if (!adapter) {
+      console.log('No control net adapter specified, proceeding without control net.');
+    } else {
+      console.log('Selected Control Net Adapter:', adapter);
+    }
+
+    // Select the correct API endpoint based on the presence of an adapter
+    const endpoint = adapter
+      ? 'https://api.getimg.ai/v1/stable-diffusion-xl/ip-adapter' // Adapter API
+      : 'https://api.getimg.ai/v1/stable-diffusion-xl/image-to-image'; // Standard Image-to-Image API
+
+    // Prepare the body for the API request
+    const apiPayload = {
+      model: model || 'stable-diffusion-xl-v1-0', // Use model from request or default
+      prompt: updatedPrompt, // Pass the updated prompt with the style
+      negative_prompt: 'disfigured, blurry', // Add your negative prompts here
+      image: base64Image,
+      strength: strength || 0.5, // Default strength if not provided
+      steps: steps || 50, // Default steps
+      guidance: guidance || 7.5, // Default guidance scale
+      output_format: 'jpeg',
+      response_format: 'url',
+      scheduler: 'euler',
+    };
+
+    // Include the adapter field only if it is set
+    if (adapter) {
+      apiPayload.adapter = adapter;
+    }
+
+    console.log('API Request Payload:', apiPayload);
+
+    const options = {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        authorization: `Bearer ${process.env.GETIMG_API_KEY}`,
+      },
+      body: JSON.stringify(apiPayload),
+    };
+
+    const response = await fetch(endpoint, options);
+    const data = await response.json();
+
+    console.log('Response from getimg.ai:', data);
+
+    if (!response.ok || !data.url) {
+      console.error('Error editing image:', data);
+      throw new Error(data.error || 'Failed to edit image');
+    }
+
+    // Download the resulting image from the returned URL
+    const editedImageResponse = await fetch(data.url);
+    if (!editedImageResponse.ok) {
+      throw new Error('Failed to download the edited image from getimg.ai');
+    }
+    const editedImageData = await editedImageResponse.buffer();
+
+    // Save the edited image to the user's personal folder
+    const userFolderPath = path.join(personalImagesPath, req.user.id.toString());
+    const thumbnailsFolderPath = path.join(userFolderPath, 'thumbnails');
+
+    if (!fs.existsSync(thumbnailsFolderPath)) {
+      fs.mkdirSync(thumbnailsFolderPath, { recursive: true });
+    }
+
+    const fileName = `edited_image_${Date.now()}.jpg`;
+    const savedImagePath = path.join(userFolderPath, fileName);
+    const thumbnailPath = path.join(thumbnailsFolderPath, `thumb_${fileName}`);
+
+    // Save the edited image
+    fs.writeFileSync(savedImagePath, editedImageData);
+
+    // Generate a thumbnail
+    await sharp(savedImagePath).resize(408).toFile(thumbnailPath);
+
+    const savedImageUrl = `/personal-images/${req.user.id}/${fileName}`;
+    const savedThumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
+
+    // Save to PersonalImages table
+    const newPersonalImage = await PersonalImage.create({
+      userId: req.user.id,
+      imageUrl: savedImageUrl,
+      thumbnailUrl: savedThumbnailUrl,
+      prompt,
+      style, // Save the style
+      type: 'stylized-photo', // Mark this as a stylized photo
+      isPublic: isPublic || false,
+    });
+
+    // If public, save to PublicImages table
+    if (isPublic) {
+      await PublicImage.create({
+        userId: req.user.id,
+        personalImageId: newPersonalImage.id,
+        imageUrl: savedImageUrl,
+        thumbnailUrl: savedThumbnailUrl,
+        prompt,
+        style, // Save the style
+        type: 'stylized-photo',
+        likes: 0,
+      });
+    }
+
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
+  } catch (error) {
+    console.error('Error in /edit-image:', error);
+    res.status(500).json({ error: error.message || 'Failed to edit image' });
+  }
+});
+
+
+
+
+
+
+
+/*
+app.post('/generate-image', ensureAuthenticated, async (req, res) => {
+  try {
+    if (req.user.tokens <= 0) {
+      return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
+    }
+
+    const { prompt, width, height, guidanceScale, inferenceSteps, isPublic } = req.body;
 
     const response = await fetch('https://api.fireworks.ai/inference/v1/workflows/accounts/fireworks/models/flux-1-schnell-fp8/text_to_image', {
       method: 'POST',
@@ -535,14 +1008,7 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
     });
 
     if (!response.ok) {
-      let errorMessage = 'Failed to fetch the image from the external API';
-      try {
-        const errorData = await response.json();
-        if (errorData && errorData.error) {
-          errorMessage = `External API Error: ${errorData.error}`;
-        }
-      } catch (parseError) {}
-      throw new Error(errorMessage);
+      throw new Error('Failed to fetch the image from the external API');
     }
 
     const buffer = await response.arrayBuffer();
@@ -551,53 +1017,117 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
     req.user.tokens -= 1;
     await req.user.save();
 
-    const userFolderPath = path.join(__dirname, 'public', 'personal-images', req.user.id.toString());
-    if (!fs.existsSync(userFolderPath)) {
-      fs.mkdirSync(userFolderPath, { recursive: true });
+    const userFolderPath = path.join(personalImagesPath, req.user.id.toString());
+    const thumbnailsFolderPath = path.join(userFolderPath, 'thumbnails');
+
+    if (!fs.existsSync(thumbnailsFolderPath)) {
+      fs.mkdirSync(thumbnailsFolderPath, { recursive: true });
     }
 
-    const imageName = `image_${Date.now()}.jpg`;
-    const imagePath = path.join(userFolderPath, imageName);
+    const fileName = `image_${Date.now()}.jpg`;
+    const imagePath = path.join(userFolderPath, fileName);
+    const thumbnailPath = path.join(thumbnailsFolderPath, `thumb_${fileName}`);
 
     fs.writeFileSync(imagePath, imageData);
 
-    // Generate a thumbnail
-    const thumbnailName = `thumb_${imageName}`;
-    const thumbnailPath = path.join(userFolderPath, thumbnailName);
+    await sharp(imagePath).resize(408).toFile(thumbnailPath);
 
-    await sharp(imagePath)
-      .resize(408) // Maintain aspect ratio with width 408px
-      .toFile(thumbnailPath);
+    const imageUrl = `/personal-images/${req.user.id}/${fileName}`;
+    const thumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
 
-    // Save image metadata to the PersonalImages database
     const newPersonalImage = await PersonalImage.create({
       userId: req.user.id,
-      imageUrl: `/personal-images/${req.user.id}/${imageName}`,
-      thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`,
+      imageUrl,
+      thumbnailUrl,
       prompt,
-      isPublic: isPublic || false
+      isPublic: isPublic || false,
     });
 
-    // If the image is marked as public, also add it to the PublicImages database
-    if (isPublic) {
-      await PublicImage.create({
-        imageUrl: `/personal-images/${req.user.id}/${imageName}`, // Correct path
-        thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`,
-        title: prompt, // Use full prompt or a suitable title
-        description: prompt,
-        prompt: prompt, // Ensure the prompt field is included
-        userId: req.user.id, // Associate with the user
-      });
-    }
+if (isPublic) {
+  const validTypes = ['ai-generated', 'user-uploaded', 'stylized-photo'];
+  const imageType = personalImage.type ? personalImage.type.toLowerCase() : 'ai-generated'; // Default to 'ai-generated'
+  const finalType = validTypes.includes(imageType) ? imageType : 'ai-generated'; // Fallback to a valid type if necessary
+
+  console.log('PublicImage type being inserted:', finalType);
+
+  await PublicImage.create({
+    imageUrl: personalImage.imageUrl,
+    thumbnailUrl: personalImage.thumbnailUrl,
+    title: personalImage.title || personalImage.prompt,
+    description: personalImage.description || '',
+    prompt: personalImage.prompt,
+    userId: personalImage.userId,
+    personalImageId: personalImage.id,
+    likes: 0,
+    type: finalType, // Ensure consistent ENUM value
+  });
+}
 
 
 
-    res.json({ imageUrl: `/personal-images/${req.user.id}/${imageName}`, thumbnailUrl: `/personal-images/${req.user.id}/${thumbnailName}`, tokensUsed: 1 });
+    res.json({ imageUrl, thumbnailUrl, tokensUsed: 1 });
   } catch (error) {
     console.error('Error generating image:', error);
     res.status(500).json({ error: error.message || 'Failed to generate image' });
   }
 });
+*/
+
+
+app.post('/api/like/:imageId', ensureAuthenticated, async (req, res) => {
+  try {
+    const { imageId } = req.params;
+    const { liked } = req.body;
+
+    console.log(`[DEBUG] Toggling like for Image ID: ${imageId}, liked: ${liked}, userId: ${req.user.id}`);
+
+    if (typeof liked !== 'boolean') {
+      console.error('[ERROR] Invalid "liked" value:', liked);
+      return res.status(400).json({ error: '"liked" must be a boolean.' });
+    }
+
+    const image = await PublicImage.findByPk(imageId);
+
+    if (!image) {
+      console.error(`[ERROR] Public image ID ${imageId} not found.`);
+      return res.status(404).json({ error: 'Public image not found.' });
+    }
+
+    const alreadyLiked = await db.Like.findOne({
+      where: { userId: req.user.id, imageId },
+    });
+
+    if (liked && alreadyLiked) {
+      return res.status(400).json({ error: 'You have already liked this image.' });
+    }
+
+    if (!liked && !alreadyLiked) {
+      return res.status(400).json({ error: 'You have not liked this image.' });
+    }
+
+    if (liked) {
+      image.likes = (image.likes || 0) + 1;
+      await db.Like.create({ userId: req.user.id, imageId });
+    } else {
+      image.likes = Math.max((image.likes || 0) - 1, 0);
+      await alreadyLiked.destroy();
+    }
+
+    await image.save();
+
+    console.log(`[DEBUG] Likes updated successfully for Image ID ${imageId}, new likes: ${image.likes}`);
+    res.json({ likes: image.likes, liked });
+  } catch (error) {
+    console.error('[ERROR] Failed to toggle like:', error);
+    res.status(500).json({ error: 'Failed to toggle like.' });
+  }
+});
+
+
+
+
+
+
 
             
 
@@ -735,14 +1265,30 @@ app.delete('/delete-private-image/:id', async (req, res) => {
 
 
 
-app.post('/upload-image', ensureAuthenticated, async (req, res) => {
-  // Code to handle image uploads and store file paths in the database
+app.get('/profile', ensureAuthenticated, (req, res) => {
+  res.render('profile', { user: req.user });
 });
+
+
 
 app.get('/personal-images', ensureAuthenticated, async (req, res) => {
   try {
-    // Fetch images from the database where userId matches the logged-in user
-    const images = await PersonalImage.findAll({ where: { userId: req.user.id } });
+    const images = await PersonalImage.findAll({
+      where: { userId: req.user.id },
+      attributes: [
+        'id',
+        'imageUrl',
+        'thumbnailUrl',
+        'title',
+        'description',
+        'prompt',
+        'likes',
+        [
+          sequelize.literal(`EXISTS (SELECT 1 FROM Likes WHERE Likes.imageId = PersonalImage.id AND Likes.userId = ${req.user.id})`),
+          'likedByUser',
+        ],
+      ],
+    });
     res.json(images);
   } catch (error) {
     console.error('Error fetching personal images:', error);
@@ -751,26 +1297,59 @@ app.get('/personal-images', ensureAuthenticated, async (req, res) => {
 });
 
 
-app.get('/profile', ensureAuthenticated, (req, res) => {
-  res.render('profile', { user: req.user });
-});
-
-
-
 app.get('/api/public-posts', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
 
+    const { type, style, sort } = req.query;
+
+    console.log(`Loading public posts of type: ${type}, style: ${style}, sort: ${sort}`);
+
+    const where = {};
+    if (type && type !== 'undefined') {
+      if (type === 'ai-generated') {
+        // Include both 'ai-generated' and 'stylized-photo' under one filter
+        where.type = { [Op.in]: ['ai-generated', 'stylized-photo'] };
+      } else {
+        where.type = type;
+      }
+    }
+
+    if (style && style !== 'all-styles' && style !== 'undefined') {
+      where.style = style;
+    }
+
+    const order = [];
+    if (sort === 'most-liked') {
+      order.push(['likes', 'DESC']);
+    } else if (sort === 'newest') {
+      order.push(['createdAt', 'DESC']);
+    }
+
     const publicImages = await PublicImage.findAll({
+      where,
       offset,
       limit,
-      order: [['createdAt', 'DESC']],
-      attributes: ['id', 'imageUrl', 'thumbnailUrl', 'title', 'description', 'prompt', 'createdAt'], // Include prompt
+      order,
+      attributes: [
+        'id',
+        'imageUrl',
+        'thumbnailUrl',
+        'title',
+        'description',
+        'prompt',
+        'likes',
+        [
+          sequelize.literal(`EXISTS (SELECT 1 FROM Likes WHERE Likes.imageId = PublicImage.id AND Likes.userId = ${req.user ? req.user.id : 0})`),
+          'likedByUser',
+        ],
+      ],
     });
 
-    const totalImages = await PublicImage.count();
+    const totalImages = await PublicImage.count({ where });
     const hasMore = offset + limit < totalImages;
 
     res.json({ images: publicImages, hasMore });
@@ -781,49 +1360,85 @@ app.get('/api/public-posts', async (req, res) => {
 });
 
 
+
+
+
+
 app.get('/api/image-details/:id', async (req, res) => {
   try {
     const imageId = req.params.id;
 
+    console.log(`[DEBUG] Fetching details for Image ID: ${imageId}`);
+
     // Attempt to find the image in PublicImage
     let image = await PublicImage.findByPk(imageId, {
+      attributes: [
+        'id',
+        'imageUrl',
+        'thumbnailUrl',
+        'title',
+        'description',
+        'prompt',
+        'userId',
+        'personalImageId',
+        'createdAt',
+        'updatedAt',
+        'likes' // Explicitly include the likes field
+      ],
       include: [{ model: User, as: 'user', attributes: ['username'] }],
     });
 
     if (image) {
+      console.log(`[DEBUG] Found image in PublicImage:`, image.toJSON());
       return res.json({
         imageUrl: image.imageUrl,
         thumbnailUrl: image.thumbnailUrl,
+        likes: image.likes || 0, // Include likes count  
         prompt: image.prompt,
-        username: image.user?.username || 'Unknown User', // Changed 'User' to 'user'
+        username: image.user?.username || 'Unknown User',
         userId: image.userId,
         isPublic: true,
       });
-    }
-
-    // If not found in PublicImage, try PersonalImage
-    image = await PersonalImage.findByPk(imageId, {
-      include: [{ model: User, as: 'user', attributes: ['username'] }],
-    });
-
-    if (image) {
-      return res.json({
-        imageUrl: image.imageUrl,
-        thumbnailUrl: image.thumbnailUrl,
-        prompt: image.prompt,
-        username: image.user?.username || 'Unknown User', // Changed 'User' to 'user'
-        userId: image.userId,
-        isPublic: image.isPublic,
+    } else {
+      console.log(`[DEBUG] Image ID ${imageId} not found in PublicImage, checking PersonalImage.`);
+      image = await PersonalImage.findByPk(imageId, {
+        attributes: [
+          'id',
+          'imageUrl',
+          'thumbnailUrl',
+          'title',
+          'description',
+          'prompt',
+          'userId',
+          'createdAt',
+          'updatedAt',
+          'likes' // Include likes for PersonalImage too
+        ],
+        include: [{ model: User, as: 'user', attributes: ['username'] }],
       });
+
+      if (image) {
+        console.log(`[DEBUG] Found image in PersonalImage:`, image.toJSON());
+        return res.json({
+          imageUrl: image.imageUrl,
+          thumbnailUrl: image.thumbnailUrl,
+          prompt: image.prompt,
+          likes: image.likes || 0, // Include likes count
+          username: image.user?.username || 'Unknown User',
+          userId: image.userId,
+          isPublic: image.isPublic,
+        });
+      }
     }
 
-    // If not found in both tables
+    console.error(`[ERROR] Image ID ${imageId} not found in both PublicImage and PersonalImage tables.`);
     res.status(404).json({ error: 'Image not found' });
   } catch (error) {
-    console.error('Error fetching image details:', error);
-    res.status(500).json({ error: 'Failed to fetch image details' });
+    console.error(`[ERROR] Failed to fetch details for Image ID: ${imageId}`, error);
+    res.status(500).json({ error: 'Failed to fetch image details.' });
   }
 });
+
 
 
 
@@ -844,9 +1459,11 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
     await image.save();
 
     if (image.isPublic) {
-      // Create or update the public image entry
       let publicImage = await PublicImage.findOne({ where: { personalImageId: imageId } });
       if (!publicImage) {
+        const validTypes = ['ai-generated', 'user-uploaded', 'stylized-photo'];
+        const type = validTypes.includes(image.type) ? image.type : 'ai-generated';
+
         publicImage = await PublicImage.create({
           personalImageId: imageId,
           imageUrl: image.imageUrl,
@@ -855,20 +1472,23 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
           description: image.description || '',
           prompt: image.prompt,
           userId: image.userId,
+          type,
+          style: image.style || null,  // <-- Add this
         });
       } else {
-        // Update existing public image data if needed
         publicImage.imageUrl = image.imageUrl;
         publicImage.thumbnailUrl = image.thumbnailUrl;
         publicImage.title = image.title || 'Untitled';
         publicImage.description = image.description || '';
         publicImage.prompt = image.prompt;
+        publicImage.type = image.type || 'ai-generated';
+        publicImage.style = image.style || null; // <-- Add this
         await publicImage.save();
       }
     } else {
-      // Remove the public image entry
       await PublicImage.destroy({ where: { personalImageId: imageId } });
     }
+
 
     res.json({ message: 'Image visibility updated successfully', isPublic: image.isPublic });
   } catch (error) {
@@ -877,29 +1497,6 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
   }
 });
 
-
-
-app.get('/api/personal-image-details/:id', async (req, res) => {
-  try {
-    const imageId = req.params.id;
-    const image = await PersonalImage.findByPk(imageId, {
-      include: [{ model: User, attributes: ['username'] }],
-    });
-
-    if (!image) {
-      return res.status(404).json({ error: 'Image not found' });
-    }
-
-    res.json({
-      prompt: image.prompt,
-      username: image.User?.username || 'Unknown User',
-      userId: image.userId,
-    });
-  } catch (error) {
-    console.error('Error fetching personal image details:', error);
-    res.status(500).json({ error: 'Failed to fetch personal image details' });
-  }
-});
 
 app.get('/api/public-image-details/:id', async (req, res) => {
   try {
@@ -930,23 +1527,6 @@ app.get('/api/public-image-details/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch image details' });
   }
 });
-
-
-
-
-
-
-
-app.get('/api/private-posts', ensureAuthenticated, async (req, res) => {
-  try {
-    const privateImages = await PersonalImage.findAll({ where: { userId: req.user.id } });
-    res.json(privateImages);
-  } catch (error) {
-    console.error('Error loading private posts:', error);
-    res.status(500).json({ error: 'Failed to load private posts' }); // Ensure JSON response on error
-  }
-});
-
 
 // API route to fetch user profile details
 // Example usage:
@@ -980,6 +1560,46 @@ app.get('/api/user-profile/:id', async (req, res) => {
 
 
 
+
+app.get('/api/personal-image-details/:id', async (req, res) => {
+  try {
+    const imageId = req.params.id;
+    const image = await PersonalImage.findByPk(imageId, {
+      include: [{ model: User, attributes: ['username'] }],
+    });
+
+    if (!image) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    res.json({
+      prompt: image.prompt,
+      username: image.User?.username || 'Unknown User',
+      userId: image.userId,
+    });
+  } catch (error) {
+    console.error('Error fetching personal image details:', error);
+    res.status(500).json({ error: 'Failed to fetch personal image details' });
+  }
+});
+
+
+
+app.get('/api/private-posts', ensureAuthenticated, async (req, res) => {
+  try {
+    const privateImages = await PersonalImage.findAll({ where: { userId: req.user.id } });
+    res.json(privateImages);
+  } catch (error) {
+    console.error('Error loading private posts:', error);
+    res.status(500).json({ error: 'Failed to load private posts' }); // Ensure JSON response on error
+  }
+});
+
+
+
+
+
+
 app.get('/user-profile/:id', (req, res) => {
   const userId = req.params.id;
   res.render('index', { showProfile: true, profileUserId: userId });
@@ -988,9 +1608,13 @@ app.get('/user-profile/:id', (req, res) => {
 
 
 // Catch-all route to serve the frontend
-app.get('*', (req, res) => {
-  res.render('index'); // Renders 'views/index.ejs'
+app.get('*', (req, res, next) => {
+  if (req.originalUrl.startsWith('/api/')) {
+    return next(); // Pass through for API routes
+  }
+  res.render('index');
 });
+
 
 
 (async () => {
@@ -1006,5 +1630,159 @@ app.get('*', (req, res) => {
     console.log(`Server is running on https://localhost:${PORT}`);
   });
 })();
+
+
+
+
+
+
+
+
+app.post('/upload-image', ensureAuthenticated, upload.single('image'), async (req, res) => {
+  console.log('[DEBUG] Received upload request:', req.body); // Log the parsed body
+  console.log('[DEBUG] File uploaded:', req.file); // Log the uploaded file
+
+  const description = req.body.description || ''; // Safeguard for missing description
+
+  if (!description.trim()) {
+    console.log('[DEBUG] No description!!');
+    return res.status(400).json({ error: 'Description (prompt) is required.' });
+  }
+
+  try {
+    const userId = req.user.id;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const userFolderPath = path.join(personalImagesPath, userId.toString());
+    const thumbnailsFolderPath = path.join(userFolderPath, 'thumbnails');
+
+    if (!fs.existsSync(thumbnailsFolderPath)) {
+      fs.mkdirSync(thumbnailsFolderPath, { recursive: true });
+    }
+
+    const fileName = `${Date.now()}_${file.originalname}`;
+    const filePath = path.join(userFolderPath, fileName);
+    fs.renameSync(file.path, filePath);
+
+    const thumbnailName = `thumb_${fileName}`;
+    const thumbnailPath = path.join(thumbnailsFolderPath, thumbnailName);
+
+    await sharp(filePath).resize(408).toFile(thumbnailPath);
+
+    const imageUrl = `/personal-images/${userId}/${fileName}`;
+    const thumbnailUrl = `/personal-images/${userId}/thumbnails/${thumbnailName}`;
+
+    console.log('[DEBUG] Saving with data:', {
+      userId,
+      imageUrl,
+      thumbnailUrl,
+      prompt: description,
+    });
+
+    const newImage = await PersonalImage.create({
+        userId,
+        imageUrl,
+        thumbnailUrl,
+        prompt: description,
+        type: 'user-uploaded', // <--- set it explicitly for uploads
+      });
+
+    res.status(200).json({ message: 'Image uploaded successfully!', image: newImage });
+  } catch (error) {
+    console.error('[ERROR] Upload handler failed:', error);
+    res.status(500).json({ error: 'Image upload failed.' });
+  }
+});
+
+
+
+
+app.get('/api/search', async (req, res) => {
+  try {
+    const query = req.query.query || '';
+    const type = req.query.type || 'ai-generated';
+    const style = req.query.style || 'all-styles';
+    const sort = req.query.sort || 'newest';
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    const where = {};
+
+    // Add search query to the filters
+    if (query) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${query}%` } },
+        { description: { [Op.like]: `%${query}%` } },
+        { prompt: { [Op.like]: `%${query}%` } },
+      ];
+    }
+
+    // Add style filter
+    if (style !== 'all-styles') {
+      where.style = style;
+    }
+
+    // Add type filter
+    if (type !== 'all') {
+      where.type = type;
+    }
+
+    const order = [];
+    if (sort === 'most-liked') {
+      order.push(['likes', 'DESC']);
+    } else {
+      order.push(['createdAt', 'DESC']);
+    }
+
+    const results = await PublicImage.findAll({
+      where,
+      offset,
+      limit,
+      order,
+    });
+
+    const totalResults = await PublicImage.count({ where });
+    const hasMore = offset + limit < totalResults;
+
+    res.json({ images: results, hasMore }); // Respond with JSON
+  } catch (error) {
+    console.error('Error during search:', error.stack);
+    res.status(500).json({ error: 'Failed to perform search.' }); // Respond with JSON error
+  }
+});
+
+
+
+
+/*
+
+// Route to fetch token balance (proxy to crypto service)
+app.get("/balance/:address", async (req, res) => {
+  try {
+    const response = await axios.get(`http://localhost:4000/balance/${req.params.address}`);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching balance from crypto service:", error);
+    res.status(500).json({ error: "Failed to fetch balance" });
+  }
+});
+
+// Route to withdraw tokens (proxy to crypto service)
+app.post("/withdraw", async (req, res) => {
+  try {
+    const response = await axios.post("http://localhost:4000/withdraw", req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error withdrawing tokens via crypto service:", error);
+    res.status(500).json({ error: "Failed to withdraw tokens" });
+  }
+});
+*/
+
 
 

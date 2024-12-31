@@ -1,5 +1,5 @@
 require('dotenv').config(); // Import dotenv to load .env variables
-const { Sequelize } = require('sequelize');
+const { Sequelize, Op } = require('sequelize'); // Import Op and Sequelize
 
 // Use environment variables for database connection
 const sequelize = new Sequelize(process.env.DATABASE_NAME, process.env.DATABASE_USER, process.env.DATABASE_PASSWORD, {
@@ -7,6 +7,9 @@ const sequelize = new Sequelize(process.env.DATABASE_NAME, process.env.DATABASE_
   dialect: 'mysql',
   logging: console.log, // Enable logging for debugging
 });
+
+// Attach Op to the sequelize instance
+sequelize.Op = Op;
 
 sequelize.authenticate()
   .then(() => {
@@ -17,4 +20,5 @@ sequelize.authenticate()
     console.error('Full error:', error);
   });
 
+// Export sequelize (with Op attached)
 module.exports = sequelize;

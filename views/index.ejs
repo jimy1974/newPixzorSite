@@ -31,11 +31,6 @@
     <meta name="description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
     <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools">
     
-   
-   
-    <meta http-equiv="Content-Security-Policy" content="img-src 'self' https://lh3.googleusercontent.com;">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <!-- Canonical Link -->
     <link rel="canonical" href="https://www.pixzor.com/">
     
   <!-- Tailwind CSS CDN -->
@@ -44,7 +39,7 @@
   <script src="https://js.stripe.com/v3/"></script>
 
   <style>
-    /* Custom styles for the fixed prompt box */
+      
     .fixed-prompt {
       position: fixed;
       bottom: 0;
@@ -56,6 +51,52 @@
       border-radius: 12px 12px 0 0;
       padding: 16px; /* Reduce padding slightly */
     }
+      
+    /* General Button Styles */
+    .custom-button {
+      background-color: #374151; /* Tailwind's bg-gray-800 */
+      color: white; /* Text color */
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem; /* Rounded corners */
+      font-size: 0.875rem; /* Tailwind's text-sm */
+      padding: 0 1rem; /* Horizontal padding */
+      transition: background-color 0.2s, box-shadow 0.2s; /* Smooth transitions */
+      cursor: pointer; /* Pointer cursor on hover */
+    }
+
+    /* Hover Effect */
+    .custom-button:hover {
+      background-color: #4b5563; /* Tailwind's bg-gray-700 */
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+    }
+
+    /* Selected Toggle Button */
+    .custom-button.selected-toggle {
+      background-color: #d1d5db; /* Tailwind's bg-gray-300 (light gray) */
+      color: #1f2937; /* Dark gray text color for contrast */
+      font-weight: bold; /* Emphasize selected button */
+      box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2); /* Adds subtle inset shadow */
+    }
+
+    /* Rounded Button Styles */
+    .custom-button.rounded-l-lg {
+      border-top-left-radius: 0.5rem; /* Left rounded corner */
+      border-bottom-left-radius: 0.5rem;
+    }
+
+    .custom-button.rounded-r-lg {
+      border-top-right-radius: 0.5rem; /* Right rounded corner */
+      border-bottom-right-radius: 0.5rem;
+    }
+
+    /* Hidden Button */
+    .custom-button.hidden {
+      display: none; /* Hide the button */
+    }
+
 
     /* Add padding to the main content to prevent overlap with the fixed prompt box */
     .content-padding {
@@ -63,21 +104,19 @@
       padding-top: 60px; /* Adjust based on the height of your navbar */
     }
 
-    /* Button styles */
-      .custom-button {
-          background-color: #4b5563; /* Gray color */
-      color: white;
-      transition: background-color 0.3s;
-          
-  width: auto; /* Let buttons adjust to content */
-  padding: 8px 12px; /* Reduce padding for smaller screens */
-  font-size: 0.875rem; /* Slightly smaller font for smaller screens */
-}
-    
-
-    .custom-button:hover {
-      background-color: #10b981; /* Green color on hover */
+      
+    #public-toggle {
+      border-radius: 8px 0 0 8px; /* Rounded left corners */
     }
+
+    #profile-toggle {
+      border-radius: 0 8px 8px 0; /* Rounded right corners */
+    }
+
+    #friend-toggle {
+      border-radius: 0; /* No rounded corners for the middle button */
+    }
+
 
     /* Modal backdrop */
     .modal-backdrop {
@@ -227,13 +266,6 @@
       position: relative; 
     }
 
-    .custom-button {
-      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.2);
-      transition: background-color 0.2s, box-shadow 0.2s;
-    }
-    .custom-button:hover {
-      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-    }
 
     .image-card {
       position: relative;
@@ -403,7 +435,39 @@ textarea#comment-input {
   max-height: 50vh;  /* Limit comments list height */
   
 }
+.like-button {
+  position: absolute;
+  top: 8px; /* Adjust positioning */
+  right: 8px; /* Adjust positioning */
+  width: 40px; /* Set button width */
+  height: 40px; /* Set button height */
+  background-color: transparent; /* Transparent background */
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Optional border for visibility */
+  border-radius: 50%; /* Make the button circular */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
 
+.like-button:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Slight hover effect */
+  transform: scale(1.1); /* Slight zoom on hover */
+}
+
+.like-button i {
+  color: white; /* Set the heart color */
+  font-size: 1.2rem; /* Adjust size */
+}
+
+.like-button.liked i {
+  color: #f00; /* Highlighted heart color for liked state */
+}
+
+  .liked {
+    color: red; /* Red when liked */
+  }
 
 @media (max-width: 768px) { 
   /* Ensure the modal container doesn't scroll the background */
@@ -448,111 +512,579 @@ textarea#comment-input {
 }
   
       
-@media (max-width: 640px) {
-  body {
-    font-size: 14px;
-  }
+      
+      
+      
+      
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #2d3748; /* Tailwind's bg-gray-800 equivalent */
+  display: flex;
+  justify-content: center; /* Align buttons to the center */
+  padding: 16px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Add subtle shadow for elevation */
+  border-radius: 12px 12px 0 0; /* Match rounded style */
+}
 
+.large-button {
+  background-color: #4b5563; /* Tailwind's bg-gray-600 equivalent */
+  color: white;
+  font-size: 1rem;
+  padding: 12px 20px;
+  margin: 0 8px; /* Add spacing between buttons */
+  border: none;
+  border-radius: 8px; /* Rounded corners */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover effects */
+  cursor: pointer;
+}
+
+.large-button:hover {
+  background-color: #10b981; /* Tailwind's green-500 equivalent for hover */
+  transform: scale(1.05); /* Slightly larger on hover */
+}
+
+
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.large-button.active {
+  background-color: #10b981; /* Green */
+  color: white;
+}
+      
+.upload-container, .search-container {
+  padding: 20px;
+  background-color: #2d3748; /* Tailwind's bg-gray-800 */
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+  margin: 20px auto;
+  max-width: 80%;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+#search-results img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+      
+      
+.modal {
+  display: none; /* Hidden by default */
+}
+
+.modal-content {
+  animation: fadeIn 0.3s ease-in-out; /* Smooth fade-in animation */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hidden {
+  display: none;
+}
+.modal-content {
+  outline: 2px solid red; /* Temporary outline for debugging */
+}
+
+.upload-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #2d3748;
+  padding: 20px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+}
+.search-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #2d3748;
+  padding: 20px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+  max-height: 20vh; /* Prevent unnecessary scrollbars */
+  overflow-y: hidden; /* Hide scrollbars unless necessary */
+  display: flex;
+  flex-wrap: wrap; /* Allow flexible layout with wrapping */
+  gap: 10px; /* Add space between input and dropdown */
+}
+
+.search-container h2 {
+  margin-bottom: 8px; /* Reduce the bottom margin */
+}
+
+.search-container .flex {
+  margin-top: 0; /* Remove extra margin at the top of the input container */
+}
+
+#filter-sidebar {
+  /* Layout & Position */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px; /* Sidebar width */
+  height: 100%; /* Full height */
+  z-index: 1000; /* Ensure it appears above most content */
+
+  /* Styling */
+  background-color: #1a202c; /* Darker gray for blending */
+  border-right: 1px solid #2d3748; /* Subtle border for separation */
+  color: white; /* Text color */
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+
+  /* Scroll & Overflow */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #4b5563 #1a202c; /* Thumb and track colors */
+
+  /* Hidden by default (slide out) */
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out; /* Smooth sliding animation */
+  padding: 16px; /* Add padding around content */
+}
+
+/* Scrollbar styling for Webkit-based browsers (Chrome, Edge, Safari) */
+#filter-sidebar::-webkit-scrollbar {
+  width: 8px; /* Scrollbar width */
+}
+
+#filter-sidebar::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* Dark gray thumb */
+  border-radius: 8px; /* Rounded edges for thumb */
+}
+
+#filter-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280; /* Lighter gray on hover */
+}
+
+#filter-sidebar::-webkit-scrollbar-track {
+  background-color: #1a202c; /* Dark track matching sidebar */
+  border-radius: 8px; /* Rounded edges for track */
+}
+
+/* Sidebar when open (slide-in effect) */
+#filter-sidebar.open {
+  transform: translateX(0); /* Slide in */
+  animation: bounce-in 0.5s ease-in-out; /* Optional bounce effect */
+}
+
+
+
+/* Add bounce animation for slide-in (optional) */
+@keyframes bounce-in {
+  0% {
+    transform: translateX(-100%);
+  }
+  40% {
+    transform: translateX(10px); /* Slight bounce */
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+  
+      
+      
+#filter-toggle {
+  margin-right: 8px; /* Adjust spacing between hamburger and logo */
+}
+
+
+/* Default filter button style */
+.filter-button {  
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;  
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  position: relative; /* Ensure pseudo-elements are positioned relative to this button */
+  padding-right: 35px; /* Add space for the tick to the right */
+  transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition */    
+}
+
+/* When selected, show light gray and a red or yellow tick */
+.filter-button.selected {
+  background-color: #4b5563; /* Slightly lighter gray */
+  color: white;
+}
+
+.filter-button:hover {
+  background-color: #374151; /* Tailwind's bg-gray-700 for hover */
+  
+}
+
+.filter-button.selected::after {
+  content: "✔"; /* Red or Yellow tick */
+  
+  position: absolute;
+  right: 8px; /* Position tick to the far right */
+  top: 50%; /* Center tick vertically */
+  transform: translateY(-50%); /* Align the tick properly */
+  font-size: 1rem;
+}
+
+
+      
+#open-filters-button:hover {
+  background-color: #10b981; /* Green hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+
+[data-category="image-source"] .selected::before {
+  color: #ff6347; /* Example: Orange arrow for "Image Source" */
+}
+
+[data-category="art-styles"] .selected::before {
+  color: #1e90ff; /* Example: Blue arrow for "Art Styles" */
+}
+
+[data-category="advanced"] .selected::before {
+  color: #32cd32; /* Example: Green arrow for "Advanced Filters" */
+}
+
+
+
+
+
+
+     
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.2em;
+  padding-right: 2rem;
+}
+.custom-select {
+  background-color: #374151;
+  color: white;
+  height: 32px;
+  padding: 0 2rem 0 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.2em;
+  appearance: none;
+}
+#generate-button {
+  height: 32px;
+  min-width: 100px;
+}
+
+
+
+.fixed-prompt .container {
+  padding-top: 0; /* Remove padding only from the top */
+}
+
+
+
+.fixed-prompt .flex-col {
+  gap: 0; /* Remove extra vertical spacing between elements */
+}
+
+button.down-arrow-btn {
+  background-color: #374151; /* Tailwind's bg-gray-700 */
+  color: white;
+  height: 24px; /* Adjust height to match design */
+  width: auto; /* Ensure it’s not overly wide */
+  padding: 0 8px; /* Minimal padding for arrow */
+  margin: 0; /* Remove all margins */
+  border-radius: 8px; /* Keep a small rounded corner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.down-arrow-btn:hover {
+  background-color: #4b5563; /* Slightly lighter gray on hover */
+}
+
+.flex.justify-center {
+  margin: 0; /* Remove extra margin around the button container */
+  padding: 0; /* Remove extra padding */
+}
+
+      
+.toggle-buttons.hidden {
+  display: none;
+}
+.toggle-buttons {  
+  display: flex;
+  justify-content: space-around; /* Spread buttons evenly */
+  gap: 0.5rem; /* Add spacing between buttons */
+    
+}
+      
+/* Default button styles */
+.toggle-buttons button {
+  background-color: #374151; /* Default dark gray */
+  color: white; /* Text color */
+  font-size: 0.875rem; /* Base font size */
+  padding: 0.5rem; /* Padding for buttons */
+  border: none; /* Remove default borders */
+  border-radius: 0.375rem; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor */
+  transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition */
+}
+
+/* Hover effect (dark green highlight) */
+.toggle-buttons button:hover {
+  background-color: #14532d; /* Dark green for hover */
+  color: #e5f4e3; /* Light greenish text for hover */
+}
+
+/* Active state (green background when clicked) */
+button.active {
+  background-color: #4caf50; /* Bright green background */
+  color: white; /* Keep text white */
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2); /* Subtle inset shadow */
+}
+
+      
+    
+/* Action buttons responsive layout */
+.action-buttons {
+  
+  flex-direction: row; /* Ensure buttons stay side by side */
+  justify-content: flex-start;
+  gap: 0.5rem; /* Ensure consistent spacing between buttons */
+}
+
+
+.image-card .toggle-buttons {
+  position: absolute;
+  bottom: 8px; /* Adjust for spacing */
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-around;
+}
+
+   
+      
+
+@media (max-width: 640px) {
+   /* Custom styles for the fixed prompt box */
+  .fixed-prompt {
+      position: fixed;
+      bottom: 0;
+      
+      width: 100%;
+      max-height: 35vh;
+      overflow-y: auto;
+      z-index: 50;
+      padding-top: 4px;
+      padding: 2px;    
+    }  
+      
   .content-padding {
     padding-bottom: 200px;
     padding-top: 50px;
   }
-
-  .image-card {
-    margin: 5px;
-  }
-
-  .custom-button {
-    font-size: 0.75rem;
-    padding: 6px 10px;
-  }
-
-  button, 
-  .custom-button, 
-  .toggle-visibility-button {
-    min-height: 48px; /* Improve touch targets */
-    min-width: 48px;
-  }
-
-  .custom-button:active {
-    background-color: #10b981; 
-    transform: scale(0.98);
-  }
-
-  .fixed-prompt {
-    width: 100%; 
-    left: 0;
-    transform: none;
-    box-sizing: border-box;
-    padding: 8px;    
-    overflow-y: auto;
-  }
-
+  
+ 
+  
   #prompt-input {
     font-size: 0.875rem;
-    padding: 8px;
+    padding: 8px 160px 8px 8px;
     width: 100%;
-    box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 6px;
   }
-
+  
   .fixed-prompt .flex-col {
-    gap: 0.5rem; /* Reduce space between items */
+    gap: 0.5rem;
+  }
+  
+  select {
+    height: 32px;
+  }
+  .toggle-buttons {
+    flex-direction: row; /* Ensure buttons stay side by side */
+    align-items: center; /* Center buttons vertically */
+    justify-content: space-around; /* Spread buttons evenly */
+    gap: 0.25rem; /* Adjust spacing for smaller screens */
   }
 
-  .image-card:hover img {
-    transform: none; /* Disable hover effects */
+  .toggle-buttons button {
+    font-size: 0.75rem; /* Make text smaller */
+    padding: 0.5rem; /* Reduced padding for smaller buttons */
   }
+
+  .action-buttons {
+    flex-direction: row; /* Ensure action buttons stay side by side */
+    align-items: center; /* Vertically center align */
+    justify-content: flex-start;
+    gap: 0.25rem; /* Reduce gap for smaller screens */
+  }
+
+  .action-buttons button,
+  .action-buttons a {
+    font-size: 0.75rem; /* Smaller font size for compact layout */
+    padding: 0.5rem; /* Reduced padding for smaller buttons */
+  }
+}
+#options-button {
+  pointer-events: auto !important; /* Ensure it's always clickable */
 }
 
 </style>
 </head>
 <body class="bg-gray-900 text-white">
     
+ <!-- Navbar -->
+<nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
+  <div class="container mx-auto px-2 py-2 flex justify-between items-center">
     
-
-    
-  <!-- Navbar -->
-  <nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
-  <div class="container mx-auto px-2 py-2 flex flex-wrap justify-between items-center">
-    <!-- Logo -->
-    <div id="logo" class="flex items-center space-x-2 cursor-pointer">
-      <img src="/images/logo.png" alt="Pixzor Logo" class="w-6 h-6 sm:w-8 sm:h-7">
-      <span class="text-lg sm:text-xl font-bold">Pixzor</span>
+    <!-- Left Section: Hamburger Menu and Logo -->
+    <div class="flex items-center space-x-4">
+      <!-- Hamburger Menu Button -->
+      <button id="filter-toggle" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-600">
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <!-- Logo -->
+      <div id="logo" class="flex items-center space-x-2">
+        <img src="/images/logo.png" alt="Pixzor Logo"  >
+        <span class="text-lg sm:text-xl font-bold">Pixzor</span>
+      </div>
     </div>
 
-    <!-- Mobile-friendly button layout -->
+    <!-- Right Section: Mobile-friendly Buttons -->
     <div class="flex items-center space-x-2 sm:space-x-4">
       <button id="tokens-button" class="flex items-center bg-gray-700 hover:bg-yellow-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
           <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd" />
         </svg>
-        <span id="token-count" class="text-yellow-400">Tokens</span>          
+        <span id="token-count" class="text-yellow-400">Tokens</span>
       </button>
 
       <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-        <img src="https://img.icons8.com/ios-filled/24/ffffff/google-logo.png" alt="Google" class="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2" crossorigin="anonymous" referrerPolicy="no-referrer" />
+        <img src="" alt="Google" class="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2" crossorigin="anonymous" referrerPolicy="no-referrer" />
         <span>Login</span>
       </button>
     </div>
   </div>
 </nav>
 
+
   
-  <!-- Fixed Container for Toggle Buttons -->
-<div class="fixed left-0 right-0 z-40" style="top: 56px;"> <!-- Adjust top value as needed -->
-  <div class="container mx-auto py-2 flex justify-center">
-    <!-- Buttons without a distinct background layer -->
-    <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">        
-      Public Posts
-    </button>
-    <button id="profile-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-gray-700" style="height: 32px; border: 1px solid rgba(255, 255, 255, 0.3);">
-      Profile Posts
-    </button>
+
+<!-- Filter Sidebar -->
+<div id="filter-sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white p-4 hidden">
+
+  <h2 class="text-lg font-bold mb-4">Filters</h2>
+  
+  <!-- Image Source -->
+<h3 class="text-md font-semibold mb-2">Image Source</h3>
+<ul class="mb-4">
+  <li>
+    <button class="filter-button" data-category="image-source" data-filter="ai-generated">Ai Generated</button>
+  </li>
+  <li>
+    <button class="filter-button" data-category="image-source" data-filter="user-uploaded">User Uploaded</button>
+  </li>
+  <li>
+    <button class="filter-button" data-category="image-source" data-filter="stylized-photo">Stylized Photos</button>
+  </li>
+</ul>
+    
+<!-- Advanced Filters -->
+<h3 class="text-md font-semibold mb-2">Advanced Filters</h3>
+<ul>
+  <li>
+    <button class="filter-button" data-category="advanced" data-advanced="newest">Newest</button>
+  </li>
+  <li>
+    <button class="filter-button" data-category="advanced" data-advanced="most-liked">Most Liked</button>
+  </li>
+  <li>
+    <button class="filter-button" data-category="advanced" data-advanced="most-commented">Most Commented</button>
+  </li>
+  <li>
+    <button class="filter-button" data-category="advanced" data-advanced="trending">Trending</button>
+  </li>
+</ul>    
+
+<!-- AI Subcategories -->
+<h3 class="text-md font-semibold mb-2">ai-generated - Art Styles</h3>
+<ul class="menu-style-list mb-4"></ul>  
+  <!-- Close Button -->
+  <button id="close-sidebar" class="mt-8 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded">Close</button>
+</div>
+
+    
+
+    
+    
+<!-- Fixed Container for Toggle Buttons -->
+<div class="fixed left-0 right-0 z-40 " style="top: 56px;">
+  <div class="container mx-auto py-2 flex items-center">
+    <!-- Open Filters Button (aligned to the left) -->
+    <div class="flex-grow">
+      <button 
+        id="open-filters-button" 
+        class="bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+        <i class="fas fa-filter"></i>
+        <span>Open Filters</span>
+      </button>
+    </div>
+
+   <div class="flex justify-center flex-grow">
+  <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-gray-700">
+    Public Posts
+  </button>
+
+  <button id="profile-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-gray-700">
+    Profile Posts
+  </button>
+  
+  <button id="search-results-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-gray-700 hidden">
+    Search Results
+  </button>
+</div>
+
+    
+    <!-- Empty space on the right (optional for future elements) -->
+    <div class="flex-grow"></div>
   </div>
 </div>
+
+
+
 
 <!-- Main Container -->
 <div class="container mx-auto py-20 content-padding">
@@ -574,98 +1106,208 @@ textarea#comment-input {
   </div>
 </div>
 
+    
+    
+    
+    
+<div class="fixed-prompt bottom-action-bar">
+  <button class="large-button" onclick="showUploadImage()">Upload Image</button>
+  <button class="large-button" onclick="showCreateImage()">Create Image</button>
+  <button class="large-button" onclick="showSearchImages()">Search Images</button>
+</div>
+    
 
-<!-- Fixed Prompt and Buttons at the Bottom -->
-<div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
-  <div class="container mx-auto">
-      
-    <!-- Prompt Input --> 
-    <div class="flex flex-col md:flex-row items-stretch md:space-x-4"> <!-- Changed items-center to items-stretch -->
-      <div class="mb-4 md:mb-0 flex-grow min-w-0">
+<!-- Image Upload Section -->
+<div id="image-upload" class="hidden">
+  <div class="upload-container">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-white text-lg">Upload Your Image</h2>
+      <button onclick="returnToMain()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">
+        Back
+      </button>
+    </div>
+    <form id="image-upload-form" enctype="multipart/form-data">
+      <input
+        type="file"
+        id="image-file"
+        name="image"
+        accept="image/*"
+        class="block w-full text-sm text-white bg-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none"
+        required
+      />
+      <textarea
+        id="image-description"
+        name="description"        
+        rows="3"
+        class="mt-4 block w-full bg-gray-700 text-white rounded-lg p-2 border border-gray-300"
+        placeholder="Add a description (optional)"
+      ></textarea>
+      <button
+        type="submit"
+        class="mt-4 bg-green-700 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg text-sm"
+      >
+        Upload Image
+      </button>
+      <div class="mt-4 w-full bg-gray-700 rounded-lg h-2">
+        <div id="upload-progress-bar" class="h-2 bg-blue-500 rounded-lg" style="width: 0;"></div>
+      </div>
+      <div id="upload-status" class="mt-2 text-sm text-white"></div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
+<div id="ai-creation" class="hidden">
+  <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
+    <div class="container mx-auto px-2 py-3">
+      <!-- Main Content Area -->
+      <div class="flex flex-col space-y-2">
+        <!-- Down Arrow Button -->
           
-        <textarea
-  id="prompt-input"
-  class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white border border-gray-300 resize-y"
-  rows="2"
-  placeholder="Enter your prompt"
-  aria-label="Prompt Input"
-></textarea>
+        <div class="flex justify-center">
+  <button onclick="returnToMain()" class="bg-gray-700 hover:bg-gray-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
+    <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+</div>
 
+        <!-- Thumbnail and Prompt Layout -->
+        <div class="flex flex-row space-x-2">
+          <div id="selected-thumbnail-container" >
+            <!-- Thumbnail will be inserted here -->
+          </div>
+          <div class="flex-grow relative">
+            <textarea
+              id="prompt-input"
+              class="w-full bg-gray-700 rounded-lg p-2 text-sm text-white border border-gray-600 resize-none"
+              rows="2"
+              placeholder="Enter your prompt"
+              aria-label="Prompt Input"
+            ></textarea>
+              
+              
+              
+            <div class="absolute right-2 top-2 flex items-center space-x-2">
+  <!-- Visibility Button -->
+  <button id="post-visibility-button" class="bg-gray-700 p-1 rounded-lg hover:bg-gray-600 relative" >
+    <svg id="post-visibility-icon" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <!-- Default icon for private -->
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+    </svg>
+    <!-- Tooltip -->
+    <div id="post-visibility-tooltip" class="hidden absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-md">
+      Create privately
+    </div>
+  </button>
+
+  <!-- Generate Button -->
+  <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
+    Generate
+  </button>
+</div>
+          </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="flex flex-wrap gap-2">
+          <button id="options-button" class="custom-button px-3" title="Options">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          <button id="enhance-prompt-button" class="custom-button px-3" title="Enhance Prompt">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </button>
+            
+          <select id="aspect-ratio-select" class="custom-select">
+            <option value="1:1">Ratio</option>
+            <option value="1:1">1:1</option>
+            <option value="4:3">4:3</option>
+            <option value="3:4">3:4</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+          </select>
+            
+          <select id="style-select" class="custom-select">
+            <option value="" disabled selected>Style</option>
+          </select>
+          
+          <select id="model-select" class="custom-select">
+            <option value="" disabled selected>Model</option>  
+            <!-- Automatically added below -->
+        </select>
+            
+        </div>
       </div>
     </div>
-
-
-
-    <!-- Prompt Options and Generate Button -->
-    <div class="flex flex-col md:flex-row justify-between mt-4 space-y-2 md:space-y-0">
-      <div class="flex space-x-2">
-          
-        <button id="options-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Options</button>
-        
-       
-        <button id="enhance-prompt-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Enhance Prompt</button>
-          
-          
-        <button id="setup-character-button" class="custom-button font-medium px-4 rounded-lg text-sm" style="height: 32px;">Add Character</button>
-        <div class="flex justify-center mb-4">
-          <select id="character-select" class="w-full max-w-xs bg-gray-700 rounded-lg py-1 px-0 text-white" aria-label="Select Character">
-            <option value="" disabled selected>Select Character</option>
-            
-          </select>
-        </div> 
-          
-          
-      </div> 
-       
-        
-      
-    <!-- Post Visibility Toggle and Generate Button -->
-<div class="flex items-center space-x-2">
-  <!-- Visibility Text -->
-  <span id="post-visibility-text" class="ml-2 text-white">Post Public</span>
-  
-    
-  <!-- Post Visibility Button and Tooltip Wrapper -->
-  <div class="relative flex items-center"> <!-- Added "relative" to the container -->
-    <button id="post-visibility-button" class="bg-gray-700 text-white px-2 py-2 rounded-lg hover:bg-gray-600 focus:outline-none">
-      <!-- Eye Icon -->
-      <svg id="post-visibility-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <!-- Initial "eye" icon -->
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-      </svg>
-    </button>
-
-    <!-- Tooltip Element -->
-    <span id="post-visibility-tooltip" class="absolute bottom-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap hidden">
-      Create in public
-    </span>
   </div>
-
-  <!-- Generate Image Button -->
-  <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white font-medium px-4 rounded-lg text-sm" style="height: 32px;">Generate Image</button>
 </div>
-        
+
+
+    
+    
+
+<!-- Image Search Section -->
+<div id="image-search" class="hidden">
+  <div class="search-container">
+    <div class="flex justify-between items-center w-full">
+      <h2 class="text-white text-lg">Search for Images</h2>
+      <button onclick="returnToMain()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">Back</button>
+    </div>
+    <!-- Search Input and Dropdown -->
+    <div class="flex flex-grow gap-4 items-center mt-2"> <!-- Adjusted mt-4 to mt-2 -->
+      <input
+        type="text"
+        id="search-query"
+        class="flex-grow bg-gray-700 text-white rounded-lg py-2 px-3 border border-gray-300"
+        placeholder="Enter keywords to search for images"
+      />
+      
+
+      <button
+        id="search-button"
+        class="bg-blue-700 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm"
+      >
+        Search
+      </button>
     </div>
   </div>
 </div>
 
-  
+
+
 <!-- Buy Tokens Modal -->
 <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <!-- Close Button -->
       <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">
         &times;
       </button>
-      <h2 class="text-xl font-bold mb-4">Buy Tokens</h2>
-      <form id="buy-tokens-form">
+
+      <!-- Modal Header -->
+      <h2 class="text-xl font-bold mb-4">Manage PIXZOR Tokens</h2>
+
+      <!-- Token Purchase Form -->
+      <form id="buy-tokens-form" class="mb-6">
         <label for="token-bundle" class="block mb-2">Select a Token Bundle:</label>
         <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4">
+          <!-- Adjusted Token Options -->
           <option value="500" data-price="5.00">500 Tokens - $5.00</option>
-          <option value="1200" data-price="10.00">1200 Tokens - $10.00</option>
-          <option value="3000" data-price="20.00">3000 Tokens - $20.00</option>
-          <option value="5000" data-price="30.00">5000 Tokens - $30.00</option>
+          <option value="1000" data-price="10.00">1,000 Tokens - $10.00</option>
+          <option value="2500" data-price="20.00">2,500 Tokens - $20.00</option>            
+          <option value="4000" data-price="30.00">4,000 Tokens - $30.00</option>            
+          <option value="6000" data-price="40.00">6,000 Tokens - $40.00</option>            
+          <option value="10000" data-price="50.00">10,000 Tokens - $50.00</option>
         </select>
         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-500">
           Purchase Tokens
@@ -677,23 +1319,17 @@ textarea#comment-input {
 
 
 
+
+
+
 <!-- Options Modal -->
-<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="options-modal-title">
+<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden"  aria-modal="true" aria-labelledby="options-modal-title">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
       <button id="close-options-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
       <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
                          
-          <div class="mb-4">
-            <label for="style-select-modal" class="block font-medium mb-1">Select Style</label>
-            <select id="style-select-modal" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
-              <option value="" disabled selected>Choose a style</option>
-              <option value="pixar">Photo</option>    
-              <option value="pixar">Pixar</option>
-              <option value="anime">Anime</option>
-              <option value="cartoon">Cartoon</option>             
-            </select>
-          </div>
+         
                  
       <form id="options-form">           
   <!-- Set Variables -->
@@ -703,9 +1339,9 @@ textarea#comment-input {
     <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
     <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
     <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
-    <input type="number" step="0.1" id="guidance-scale-modal" value="3.5" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
+    <input type="number" step="0.1" id="guidance-scale-modal" value="10.0" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
     <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
-    <input type="number" id="inference-steps-modal" value="4" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
+    <input type="number" id="inference-steps-modal" value="25" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
   </div>
 
   <div class="flex justify-end">
@@ -784,6 +1420,13 @@ textarea#comment-input {
         </div>
       </div>
 
+      <div class="flex items-center">
+      <button id="like-button-modal" class="bg-gray-700 text-white p-2 rounded-full">
+        <i class="fas fa-heart"></i>
+      </button>
+      <span id="like-count" class="ml-2 text-gray-600">0</span>
+    </div>
+    
       <!-- User Profile -->
       <div>
         <h3 class="text-lg font-bold text-black">Created By <a id="modal-user-profile" href="#" class="text-blue-500 hover:underline"></a></h3>    
@@ -857,23 +1500,390 @@ textarea#comment-input {
   <script>
     // script.js
     let isPublic = false;
+    let page = 1; // Initial page for pagination
+    let isLoading = false; // Prevent multiple simultaneous requests
+    let hasMoreImages = true; // Track if there are more images to load
+    let selectedStyle = '';
+      
+    window.isLoggedIn = <%= isLoggedIn %>; // Pass `true` or `false`
+    window.currentUser = <%- JSON.stringify(user || {}) %>;
+  
+    if (!window.isLoggedIn) {
+        console.log('User is not logged in');
+    } else {
+        console.log(`Welcome, ${window.currentUser.username}!`);
+    }       
+    let selectedFilters = {
+      type: 'ai-generated', // Default value
+      style: 'all-styles', // Default value
+      sort: 'newest', // Default value
+    };
 
+  
+window.addEventListener('scroll', () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Check if we're near the bottom of the page
+  if (scrollTop + clientHeight >= scrollHeight - 50 && hasMoreImages) {
+    let apiEndpoint;
+
+    // Determine the current mode (search or public)
+    const searchResultsToggle = document.getElementById('search-results-toggle');
+    if (searchResultsToggle && searchResultsToggle.classList.contains('selected-toggle')) {
+      // In search mode
+      const query = document.getElementById('search-query').value.trim();
+      const category = 'all-styles'; // Default category, since the dropdown was removed
+      apiEndpoint = `/api/search?query=${query}&type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
+    } else {
+      // In public posts mode
+      apiEndpoint = `/api/public-posts?type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
+    }
+
+    loadImages(apiEndpoint, searchResultsToggle && searchResultsToggle.classList.contains('selected-toggle') ? 'search' : 'public');
+  }
+});
+
+      
+      
+  // Dynamically generated styles array
+  const styles = <%- JSON.stringify(stylesWithCounts) %>;
+
+      
+function populateMenuStyles() {
+  const menu = document.querySelector(".menu-style-list");
+  if (!menu) {
+    console.error("Menu element not found!");
+    return;
+  }
+
+  menu.innerHTML = ""; // Clear existing items
+
+  styles.forEach((style) => {
+    const countDisplay = style.value === 'all-styles' ? style.count : style.count || 0;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <button class="filter-button" data-category="art-styles" data-subfilter="${style.value}">
+        ${style.label} (${countDisplay})
+      </button>
+    `;
+    menu.appendChild(li);
+  });
+
+  // Add event listeners to the buttons
+  const buttons = menu.querySelectorAll(".filter-button");
+  buttons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const filterCategory = event.target.dataset.category;
+      const filterValue = event.target.dataset.subfilter;
+
+      // Update filters
+      activeFilters[filterCategory] = filterValue;
+      console.log("Updated Filters:", activeFilters);
+
+      // Apply filters
+      applyFilters();
+    });
+  });
+}
+
+
+
+
+      
+function populateAIStyleDropdown() {
+  //const dropdown = document.getElementById("style-select-modal");
+  const dropdown = document.getElementById("style-select");    
+    
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="" disabled selected>Choose a style</option>'; // Reset options
+    styles.forEach((style) => {
+      const option = document.createElement("option");
+      option.value = style.value;
+      option.textContent = style.label;
+      dropdown.appendChild(option);
+    });
+  } 
+}
+
+function populateSearchStyles() {
+  const dropdown = document.getElementById("category-select");
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="" disabled selected>Choose a category</option>'; // Reset options
+    styles.forEach((style) => {
+      const option = document.createElement("option");
+      option.value = style.value;
+      option.textContent = style.label;
+      dropdown.appendChild(option);
+    });
+  }
+}
+      
+
+// Map each style to its default model
+const styleToModelMap = {
+  "abstract": "animagine-xl-v-3-1", // Artistic and flexible
+  "anime": "sdvn7-niji-style-xl-v1", // Specialized for anime
+  "balloon-art": "real-cartoon-xl-v6", // Best for cartoon-like visuals
+  "cartoon": "real-cartoon-xl-v6", // Good for cartoon styles
+  "ceramic": "stable-diffusion-xl-v1-0", // Use SD XL for versatility
+  "chibi": "sdvn7-niji-style-xl-v1", // Specialized for anime and chibi
+  "claymation": "animagine-xl-v-3-1", // Works great for claymation
+  "comic": "real-cartoon-xl-v6", // Comic book-like visuals
+  "crystal": "reproduction-v3-31", // Specialized for crystal-like details
+  "cubist": "animagine-xl-v-3-1", // Works well for artistic styles
+  "cyberpunk": "stable-diffusion-xl-v1-0", // Reliable alternative for cyberpunk
+  "digital-art": "animagine-xl-v-3-1", // Good for digital art styles
+  "dreamscape": "animagine-xl-v-3-1", // Artistic and dream-like
+  "felted": "stable-diffusion-xl-v1-0", // SD XL works well for felted textures
+  "graffiti": "real-cartoon-xl-v6", // Cartoonish and bold visuals
+  "impressionist": "animagine-xl-v-3-1", // Works well for impressionist art
+  "knitted-wool": "stable-diffusion-xl-v1-0", // Use SD XL for photorealistic knitting
+  "metal-sculpture": "stable-diffusion-xl-v1-0", // Best for 3D textures
+  "minimalist": "stable-diffusion-xl-v1-0", // SD XL for simplicity
+  "mosaic": "animagine-xl-v-3-1", // Good for artistic mosaic-like visuals
+  "neon-light": "real-cartoon-xl-v6", // Works for bright and cartoonish neon effects
+  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
+  "origami": "reproduction-v3-31", // Best for delicate details
+  "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs
+  "photorealistic": "stable-diffusion-xl-v1-0", // Best for photorealism
+  "photo": "stable-diffusion-xl-v1-0", // Reliable for photographic styles
+  "pixar": "animagine-xl-v-3-1", // Best for Pixar-like effects
+  "plant-based": "animagine-xl-v-3-1", // Flexible for plant-based styles
+  "plush-toy": "animagine-xl-v-3-1", // Perfect for soft, plush visuals
+  "quilted-fabric": "stable-diffusion-xl-v1-0", // SD XL for texture
+  "sand-art": "animagine-xl-v-3-1", // Works for sand-like artistic visuals
+  "stained-glass": "reproduction-v3-31", // Best for stained glass visuals
+  "steampunk": "stable-diffusion-xl-v1-0", // SD XL for steampunk aesthetics
+  "vaporwave": "real-cartoon-xl-v6", // Works for bold, vaporwave designs
+  "vintage-poster": "real-cartoon-xl-v6", // Best for retro/vintage looks
+  "watercolor": "animagine-xl-v-3-1", // Artistic and soft for watercolor
+  "woodcarving": "stable-diffusion-xl-v1-0", // Best for 3D wood textures
+};
+
+
+
+      
+      
+
+
+
+
+
+
+// Helper function to retrieve model name from ID
+// Helper function to retrieve model name from ID
+function getModelLabel(modelId) {
+  const modelList = {
+    "sdvn7-niji-style-xl-v1": "SDVN7 NijiStyle XL", // Good
+    "real-cartoon-xl-v6": "RealCartoonXL v6", // Good
+    "animagine-xl-v-3-1": "Animagine XL v3.1", // Good
+    "reproduction-v3-31": "Reproduction v3.31", // Good
+    "stable-diffusion-xl-v1-0": "Stable Diffusion XL v1", // Good for oil painting
+  };
+  return modelList[modelId] || "Unknown Model";
+}
+
+       
+
+
+
+
+
+function populateInitialModelDropdown() {
+  const modelDropdown = document.getElementById("model-select");
+
+  if (modelDropdown) {
+    modelDropdown.innerHTML = ""; // Reset the dropdown
+
+    // Add higher-quality models at the top
+    const topQualityModels = [
+      { id: "flux-schnell", label: "FLUX Schnell (High Quality)" },
+      { id: "stable-diffusion-xl-v1-0", label: "Stable Diffusion XL (General)" },
+      { id: "realistic-vision-v5-1", label: "Realistic Vision v5.1 (Photorealistic)" },
+      { id: "dream-shaper-v8", label: "DreamShaper v8 (Fantasy/Artistic)" },
+    ];
+
+    // Populate the dropdown with the top-quality models
+    topQualityModels.forEach((model, index) => {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = model.label;
+
+      // Auto-select the first model as default
+      if (index === 0) {
+        option.selected = true;
+      }
+
+      modelDropdown.appendChild(option);
+    });
+  }
+}
+
+
+function populateModelDropdownForImageSelection(selectedStyle) {
+  const modelDropdown = document.getElementById('model-select');
+
+  if (!modelDropdown) {
+    console.error('Model dropdown not found.');
+    return;
+  }
+
+  modelDropdown.innerHTML = ""; // Clear the dropdown
+
+  // Add the recommended model for the selected style
+  const defaultModelId = styleToModelMap[selectedStyle];
+  if (defaultModelId) {
+    const defaultOption = document.createElement("option");
+    defaultOption.value = defaultModelId;
+    defaultOption.textContent = getModelLabel(defaultModelId) + " (Recommended)";
+    defaultOption.selected = true; // Auto-select the recommended model
+    modelDropdown.appendChild(defaultOption);
+  }
+
+  // Add models that support image-to-image operations
+  const imageToImageCompatibleModels = [
+    { id: "stable-diffusion-xl-v1-0", label: "Stable Diffusion XL (General)" },
+    { id: "real-cartoon-xl-v6", label: "RealCartoonXL v6 (Cartoon/Artistic)" },
+    { id: "sdvn7-niji-style-xl-v1", label: "SDVN7 NijiStyle XL (Anime)" },
+    { id: "animagine-xl-v-3-1", label: "Animagine XL v3.1 (Claymation/Artistic)" },
+    { id: "reproduction-v3-31", label: "Reproduction v3.31 (Crystal/Origami)" },
+  ];
+
+  imageToImageCompatibleModels.forEach((model) => {
+    if (model.id !== defaultModelId) { // Avoid duplicating the recommended model
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = model.label;
+      modelDropdown.appendChild(option);
+    }
+  });
+}
+
+
+
+      
+      
     document.addEventListener('DOMContentLoaded', () => {
+        
+      populateMenuStyles();       
+      populateAIStyleDropdown();
+      populateInitialModelDropdown();
+      populateSearchStyles();
+        
       // Fetch user data on page load
       fetchUserData();
 
       // Initialize character dropdown
       populateCharacterDropdown();
-
-      // Load public posts by default
-      loadPublicPosts();
+      
+      const apiEndpoint = `/api/public-posts?type=ai-generated`;
+        
+      loadImages( apiEndpoint, 'public');
 
       // Set up event listeners
       setupEventListeners();
     });
 
       
+      
+// Function to show the image upload prompt box
+function hideAllSections() {
+  const sections = ['image-upload', 'ai-creation', 'image-search'];
+  sections.forEach(section => {
+    const element = document.getElementById(section);
+    element.classList.remove('visible');
+    element.classList.add('hidden');
+  });
+}
+
+      
+
+function toggleActionBar(hide = true) {
+  const actionBar = document.querySelector('.fixed-prompt.bottom-action-bar');
+  if (hide) {
+    actionBar.classList.add('hidden');
+  } else {
+    actionBar.classList.remove('hidden');
+  }
+}
+
+function showUploadImage() {
+  hideAllSections();
+  toggleActionBar(true); // Hide the action bar
+  const imageUploadDiv = document.getElementById("image-upload");
+  imageUploadDiv.classList.remove('hidden');
+  imageUploadDiv.classList.add('visible');
+}
+
+function showCreateImage() {
+  hideAllSections();
+  toggleActionBar(true); // Hide the action bar
+  const imageUploadDiv = document.getElementById("ai-creation");
+  imageUploadDiv.classList.remove('hidden');
+  imageUploadDiv.classList.add('visible');
+}
+
+function showSearchImages() {
+  hideAllSections();
+  toggleActionBar(true); // Hide the action bar
+  const imageUploadDiv = document.getElementById("image-search");
+  imageUploadDiv.classList.remove('hidden');
+  imageUploadDiv.classList.add('visible');
+}
+
+function returnToMain() {
+  hideAllSections();
+  toggleActionBar(false); // Show the action bar
+}
+
+
     
+async function toggleLike(imageId, likeButton) {
+  const isLiked = likeButton.classList.contains('liked'); // Check current like status
+  const isPublic = likeButton.dataset.isPublic === 'true'; // Read isPublic from data attribute
+
+  try {
+    const response = await fetch(`/api/like/${imageId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        liked: !isLiked, // Pass the opposite of current status
+        isPublic: isPublic, // Include the isPublic value
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Toggle the "liked" class based on response
+      likeButton.classList.toggle('liked', !isLiked);
+
+      // Update the like count
+      const likeCountElement = likeButton.nextElementSibling; // Assuming like count is next to the heart icon
+      if (likeCountElement && data.likes !== undefined) {
+        likeCountElement.textContent = `${data.likes}`; // Update with the new likes count
+      }
+
+      // Show success message
+      showToast(!isLiked ? 'Liked!' : 'Unliked!', 'success');
+    } else {
+      const errorData = await response.json();
+      console.error('Failed to like the image:', errorData);
+      showToast(errorData.error || 'Failed to like the image.', 'error');
+    }
+  } catch (error) {
+    console.error('Error liking the image:', error);
+    showToast('An error occurred while liking the image.', 'error');
+  }
+}
+
+
+
+
    
 
 
@@ -968,17 +1978,42 @@ async function loadUserProfile(userId) {
       downloadButton.download = `image-${imageId}.jpg`;
 
       fetch(`/api/image-details/${imageId}`)
-        .then(response => response.json())
-        .then(data => {
-          modalPrompt.textContent = data.prompt || 'No prompt available.';
-          modalUserProfile.textContent = data.username;
-          modalUserProfile.href = `/user-profile/${data.userId}`;
-          modalUserProfile.dataset.userId = data.userId; // Using dataset
-        })
-        .catch(error => {
-          console.error('Error fetching image details:', error);
-          showToast('Failed to load image details.', 'error');
-        });
+          .then(response => response.json())
+          .then(data => {
+            modalPrompt.textContent = data.prompt || 'No prompt available.';
+            modalUserProfile.textContent = data.username || 'Unknown User';
+            modalUserProfile.href = `/user-profile/${data.userId}`;
+            document.getElementById('like-count').textContent = data.likes || 0;
+
+            const likeButton = document.getElementById('like-button-modal');
+            if (data.isLiked) likeButton.classList.add('liked');
+
+            // Attach click event
+            likeButton.addEventListener('click', () => {
+              const liked = !likeButton.classList.contains('liked');
+              likeButton.classList.toggle('liked', liked);
+
+              // Send like toggle request
+              fetch(`/api/like/${imageId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ liked, isPublic: data.isPublic }),
+              })
+                .then(response => response.json())
+                .then(update => {
+                  document.getElementById('like-count').textContent = update.likes;
+                })
+                .catch(error => {
+                  console.error('Error toggling like:', error);
+                });
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching image details:', error);
+            showToast('Failed to load image details.', 'error');
+          });
+
+
 
       updateShareLinks(imageId, source);
       updateBrowserHistory(imageId, source);
@@ -1048,11 +2083,95 @@ async function loadUserProfile(userId) {
         showToast('An error occurred while fetching user data.', 'error');
       }
     }
+      
+    function applyFilter(type, style, sort) {
+      const apiEndpoint = `/api/public-posts?type=${type}&style=${style}&sort=${sort}`;
+      page = 1; // Reset pagination
+      hasMoreImages = true;
+      document.getElementById('image-list').innerHTML = ''; // Clear previous results
+      loadImages(apiEndpoint, 'public');
+    }
+
+  
 
     // Function to set up all event listeners
     function setupEventListeners() {
           
-          const modalImage = document.getElementById('modal-image');
+        const modalImage = document.getElementById('modal-image');
+    
+
+        // Handle style selection      
+        document.getElementById('style-select').addEventListener('change', (event) => {
+          const selectedStyle = event.target.value;
+
+          if (!selectedStyle || selectedStyle === "all-styles" || selectedStyle === "select-a-style") {
+            // Default back to Flux model when no specific style is selected
+            populateModelDropdown("flux-schnell");
+          } else {
+            // Populate the model dropdown based on the selected style
+            populateModelDropdownForImageSelection(selectedStyle);
+          }
+        });
+
+        
+    
+        document.getElementById('filter-toggle').addEventListener('click', () => {
+          const sidebar = document.getElementById('filter-sidebar');
+          sidebar.classList.toggle('hidden');
+          sidebar.classList.toggle('open');
+        });
+        
+        document.getElementById('open-filters-button').addEventListener('click', () => {
+          const sidebar = document.getElementById('filter-sidebar');
+          sidebar.classList.toggle('hidden');
+          sidebar.classList.toggle('open');
+        });
+        
+
+        document.getElementById('close-sidebar').addEventListener('click', () => {
+          const sidebar = document.getElementById('filter-sidebar');
+          sidebar.classList.add('hidden');
+          sidebar.classList.remove('open');
+        });
+
+        // Add functionality for filter buttons
+   document.querySelectorAll('.filter-button').forEach((button) => {
+  button.addEventListener('click', (event) => {
+    const filterCategory = event.target.dataset.category; // e.g., "image-source", "art-styles", "advanced"
+    const filterValue = event.target.dataset.filter; // Value of the filter clicked, e.g., "ai-generated"
+
+    // Update the selectedFilters object
+    if (filterCategory === 'image-source') {
+      selectedFilters.type = filterValue;
+    } else if (filterCategory === 'art-styles') {
+      selectedFilters.style = filterValue;
+    } else if (filterCategory === 'advanced') {
+      selectedFilters.sort = filterValue;
+    }
+
+    // Highlight the selected menu item
+    document.querySelectorAll(`.filter-button[data-category="${filterCategory}"]`).forEach((btn) => {
+      btn.classList.remove('selected');
+    });
+    event.target.classList.add('selected');
+
+    console.log('Updated Filters:', selectedFilters);
+
+    // Call applyFilters() to update the images
+    applyFilters();
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
         
           document.getElementById("enhance-prompt-button").addEventListener("click", async () => {
               const promptInput = document.getElementById("prompt-input");
@@ -1173,164 +2292,210 @@ async function loadUserProfile(userId) {
         
         
 
+document.getElementById('generate-button').addEventListener('click', async () => {
+  console.log('Generate button clicked');
 
-          // Handle Generate Image Button Click
-          document.getElementById('generate-button').addEventListener('click', async () => {
-            const prompt = document.getElementById('prompt-input').value.trim();
-            const characterIndex = document.getElementById('character-select').value;
-            const options = JSON.parse(localStorage.getItem('options')) || {};
-            const dimensions = {
-              width: parseInt(options.width) || 800,
-              height: parseInt(options.height) || 600
-            };
-            const style = options.style || '';
+  // Ensure the user is logged in
+  if (!window.isLoggedIn) {
+    showToast('Please log in to generate images.', 'error');
+    console.error('User is not logged in');
+    return;
+  }
 
-            // Clear previous error message
-            document.getElementById('error-message').textContent = '';
+  // Get the prompt and options
+  const prompt = document.getElementById('prompt-input').value.trim();
+  const options = JSON.parse(localStorage.getItem('options')) || {};
+  const dimensions = {
+    width: parseInt(options.width) || 800,
+    height: parseInt(options.height) || 600,
+  };
+  const guidanceScale = parseFloat(options.guidanceScale) || 10;
+  const inferenceSteps = parseInt(options.inferenceSteps) || 25;
 
-            // Fetch user data to check authentication
-            let userData;
-            try {
-              const response = await fetch('/user-data');
-              userData = await response.json();
-            } catch (error) {
-              console.error('Error fetching user data:', error);
-              showToast('An error occurred. Please try again.', 'error');
-              return;
-            }
+  // Get selected style and model
+  const styleSelect = document.getElementById('style-select');
+  const modelSelect = document.getElementById('model-select');
+  const style = styleSelect ? styleSelect.value : ''; // Get selected style
+  const model = modelSelect ? modelSelect.value : ''; // Get selected model
 
-            if (!userData.loggedIn) {
-              // Prompt user to log in
-              showToast('Please log in to generate images.', 'error');
-              return;
-            }
+  console.log('Selected style:', style);
+  console.log('Selected model:', model);
 
-            // Check Token Availability
-            let currentTokens = parseInt(userData.tokens) || 0;
-            if (currentTokens <= 0) {
-              showToast('You have no tokens left. Please buy more tokens to generate images.', 'error');
-              return;
-            }
+  // Check for selected image
+  const selectedThumbnailContainer = document.getElementById('selected-thumbnail-container');
+  const selectedImage = selectedThumbnailContainer && selectedThumbnailContainer.dataset.imagePath;
+    
+   // Get the currently selected image ID
+  const selectedImageId = [...selectedImages][0]; // Get the first selected image ID (from the Set)
+  if (!selectedImageId) {
+    showToast('Please select an image.', 'error');
+    console.error('No image selected.');
+    return;
+  }  
+  
+  const selectedImageCard = document.querySelector(`[data-image-id="${selectedImageId}"]`);
+  if (!selectedImageCard) {
+    showToast('An error occurred. Please try again.', 'error');
+    console.error('Selected image card not found.');
+    return;
+  }
 
-            if (!prompt) {
-              showToast('Please enter a prompt.', 'error');
-              return;
-            }
+  // Query the toggle buttons for the selected image
+  const keepStyle = selectedImageCard.querySelector(`#toggle-style-${selectedImageId}`)?.classList.contains('active') || false;
+  
+  const keepFace = selectedImageCard.querySelector(`#toggle-face-${selectedImageId}`)?.classList.contains('active') || false;
 
-            // Add Placeholder
-            const imageList = document.getElementById('image-list');
-            if (!imageList) {
-              console.error('Image List container not found in the DOM.');
-              showToast('An error occurred. Please try again.', 'error');
-              return;
-            }
+  const keepPose = selectedImageCard.querySelector(`#toggle-pose-${selectedImageId}`)?.classList.contains('active') || false;
 
-            // Create a container for both placeholder and image
-            const imageContainer = document.createElement('div');
-            imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+  console.log('Keep Style:', keepStyle);
+  console.log('Keep Face:', keepFace);
+  console.log('Keep Pose:', keepPose);
+  
+    
+    
+  // Validate the style and model
+  if (!style && !selectedImage) {
+    showToast('Please select a style before generating an image.', 'error');
+    console.error('No style selected for image-to-image generation.');
+    return;
+  }
 
-            // Style the placeholder to be slightly lighter
-            imageContainer.style.backgroundColor = '#2d2d2d'; // Adjust as needed
+  if (!model) {
+    showToast('Please select a model before generating an image.', 'error');
+    console.error('No model selected.');
+    return;
+  }
 
-            // Use Flexbox to center the spinner
-            imageContainer.innerHTML = `
-              <div class="flex justify-center items-center h-full">
-                <div class="spinner"></div>
-              </div>
-            `;
+  // Validate the prompt
+  if (!prompt) {
+    showToast('Please enter a prompt.', 'error');
+    console.error('No prompt entered.');
+    return;
+  }
 
-            imageList.prepend(imageContainer);          
+  
 
-            let finalPrompt = prompt;
+  console.log('Selected image:', selectedImage);
 
-            // Append character description if a character is selected
-            if (characterIndex !== "") {
-              const characters = JSON.parse(localStorage.getItem('characters')) || [];
-              const selectedCharacter = characters[characterIndex];
-              if (selectedCharacter) {
-                finalPrompt = `${selectedCharacter.description}. ${prompt}`;
-              }
-            }
+  // Add Placeholder
+  const imageList = document.getElementById('image-list');
+  if (!imageList) {
+    console.error('Image List container not found in the DOM.');
+    showToast('An error occurred. Please try again.', 'error');
+    return;
+  }
 
-            // Append style if selected
-            if (style) {
-              finalPrompt = `${finalPrompt} Style: ${style}.`;
-            }
+  const imageContainer = document.createElement('div');
+  imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+  imageContainer.style.backgroundColor = '#2d2d2d'; // Adjust as needed
+  imageContainer.innerHTML = `
+    <div class="flex justify-center items-center h-full">
+      <div class="spinner"></div>
+    </div>
+  `;
+  imageList.prepend(imageContainer);
 
-            try {
-              // Show loading state
-              const generateButton = document.getElementById('generate-button');
-              generateButton.textContent = 'Generating...';
-              generateButton.disabled = true;              
+  try {
+    // Show loading state
+    const generateButton = document.getElementById('generate-button');
+    generateButton.textContent = 'Processing...';
+    generateButton.disabled = true;
+    const adapter = keepFace ? 'face' : keepStyle ? 'style' : keepPose ? 'content' : 'default';
+    
+    // Decide whether to generate a new image or edit an existing one
+    const url = selectedImage ? '/edit-image' : '/generate-image';
+    const payload = selectedImage
+      ? {
+          imagePath: selectedImage,
+          prompt: prompt,
+          strength: 0.75,
+          steps: inferenceSteps,
+          guidance: guidanceScale,
+          style,
+          model,
+          keepStyle,
+          keepFace,
+          keepPose,
+          adapter,
+        }
+      : {
+          prompt: prompt,
+          isPublic: options.isPublic || false,
+          width: dimensions.width,
+          height: dimensions.height,
+          guidanceScale,
+          inferenceSteps,
+          style,
+          model,
+          keepStyle,
+          keepFace,
+          keepPose,
+          adapter,
+        };
 
-              
-              // Send data to backend for image generation
-              const response = await fetch('/generate-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  prompt: finalPrompt,
-                  isPublic: isPublic,
-                  width: dimensions.width,
-                  height: dimensions.height,
-                  guidanceScale: parseFloat(options.guidanceScale) || 3.5,
-                  inferenceSteps: parseInt(options.inferenceSteps) || 4
-                })
-              });
 
-              const data = await response.json();
-              if (response.ok && data.imageUrl) {
-                // Create image element
-                const imgElement = document.createElement('img');
-                imgElement.src = data.imageUrl;
-                imgElement.alt = 'Generated Image';
-                imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
+    console.log('Sending request to:', url);
+    console.log('Payload:', payload);
 
-                // Hide image initially until it's fully loaded
-                imgElement.style.display = 'none';
-                imageContainer.appendChild(imgElement);
+    // Send data to the backend
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-                // Listen for image load event
-                imgElement.addEventListener('load', () => {
-                  imgElement.style.display = 'block'; // Show image
-                  // Remove spinner
-                  const spinner = imageContainer.querySelector('.spinner');
-                  if (spinner) {
-                    spinner.remove();
-                  }
+    const data = await response.json();
+    console.log('Response from server:', data);
 
-                  // Update Tokens Count in Navbar
-                  updateTokenCount(-data.tokensUsed); // Subtract tokens
+    if (response.ok && data.imageUrl) {
+      // Create image element
+      const imgElement = document.createElement('img');
+      imgElement.src = data.imageUrl;
+      imgElement.alt = selectedImage ? 'Edited Image' : 'Generated Image';
+      imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
+      imgElement.style.display = 'none'; // Hide image initially
+      imageContainer.appendChild(imgElement);
 
-                  // Switch to Profile Posts after a short delay to ensure the image is visible
-                  setTimeout(() => {
-                    document.getElementById('profile-toggle').click();
-                  }, 500);
+      // Show image on load
+      imgElement.addEventListener('load', () => {
+        imgElement.style.display = 'block';
+        const spinner = imageContainer.querySelector('.spinner');
+        if (spinner) spinner.remove();
 
-                  showToast('Image generated successfully!', 'success');
-                });
+        // Update Tokens Count in Navbar
+        updateTokenCount(-data.tokensUsed);
 
-                // Handle image load error
-                imgElement.addEventListener('error', () => {
-                  showToast('Failed to load image.', 'error');
-                  imageList.removeChild(imageContainer); // Remove the placeholder on error
-                });
-              } else {
-                // Handle error message from backend
-                showToast(data.error || 'Failed to generate image.', 'error');
-                imageList.removeChild(imageContainer); // Remove the placeholder on failure
-              }
-            } catch (error) {
-              console.error('Error generating image:', error);
-              showToast('An error occurred while generating the image.', 'error');
-              imageList.removeChild(imageContainer); // Remove the placeholder on error
-            } finally {
-              // Reset button state
-              const generateButton = document.getElementById('generate-button');
-              generateButton.textContent = 'Generate Image';
-              generateButton.disabled = false;
-            }
-          });
+        // Switch to Profile Posts after a short delay
+        setTimeout(() => {
+          document.getElementById('profile-toggle').click();
+        }, 500);
+
+        showToast('Image processed successfully!', 'success');
+      });
+
+      // Handle image load error
+      imgElement.addEventListener('error', () => {
+        showToast('Failed to load image.', 'error');
+        imageList.removeChild(imageContainer);
+      });
+    } else {
+      showToast(data.error || 'Failed to process image.', 'error');
+      imageList.removeChild(imageContainer);
+    }
+  } catch (error) {
+    console.error('Error processing image:', error);
+    showToast('An error occurred while processing the image.', 'error');
+    imageList.removeChild(imageContainer);
+  } finally {
+    const generateButton = document.getElementById('generate-button');
+    generateButton.textContent = selectedImage ? 'Modify Image' : 'Generate Image';
+    generateButton.disabled = false;
+  }
+});
+
+
+
+
         
         
         
@@ -1350,28 +2515,37 @@ async function loadUserProfile(userId) {
         'buy-tokens-modal': document.getElementById('buy-tokens-modal'),
       };
 
-      // Function to open a modal
-      function openModal(modalId) {
-        if (modals[modalId]) {
-          modals[modalId].classList.remove('hidden');
-          document.body.classList.add('modal-open');    
-          document.body.classList.add('overflow-hidden'); // Prevent background scrolling
-        }
-      }
+   // Function to open a modal
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.body.classList.add('modal-open');    
+    document.body.classList.add('overflow-hidden'); // Prevent background scrolling
+  }
+}
 
-      // Function to close a modal
-      function closeModal(modalId) {
-        if (modals[modalId]) {
-          modals[modalId].classList.add('hidden');
-          document.body.classList.remove('modal-open');       
-          document.body.classList.remove('overflow-hidden');
-        }
-      }
+// Function to close a modal
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    document.body.classList.remove('overflow-hidden');
+  }
+}
 
-      // Event Listeners for Opening Modals
-      document.getElementById('options-button').addEventListener('click', () => openModal('options-modal'));
-      //document.getElementById('setup-character-button').addEventListener('click', () => openModal('setup-character-modal'));
-      //document.getElementById('tokens-button').addEventListener('click', () => openModal('buy-tokens-modal'));
+
+       document.getElementById('options-button').addEventListener('click', () => {
+      const optionsModal = document.getElementById('options-modal');
+      if (optionsModal.classList.contains('hidden')) {
+        openModal('options-modal');
+      } else {
+        closeModal('options-modal');
+      }
+    });
+
+
 
       document.getElementById('tokens-button').addEventListener('click', async () => {
           try {
@@ -1395,21 +2569,37 @@ async function loadUserProfile(userId) {
 
 
       document.getElementById('buy-tokens-form').addEventListener('submit', async (e) => {
-          e.preventDefault();
+  e.preventDefault();
+
           const bundle = document.getElementById('token-bundle');
           const tokens = bundle.value;
           const price = bundle.options[bundle.selectedIndex].dataset.price;
+
+          // Predefined bundles for validation
+          const validBundles = {
+            "500": "5.00",
+            "1200": "10.00",
+            "3000": "20.00",
+            "5000": "30.00",
+            "20000": "100.00",
+          };
+
+          // Validate token-price pair
+          if (!validBundles[tokens] || validBundles[tokens] !== price) {
+            alert("Invalid token bundle selected. Please try again.");
+            return;
+          }
 
           try {
             const response = await fetch('/create-checkout-session', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tokens, price }),
+              body: JSON.stringify({ tokens, price }), // Send tokens and price to the server
             });
 
             const session = await response.json();
             if (response.ok) {
-              // Replace with your actual publishable key
+              // Replace with your actual Stripe publishable key
               const stripe = Stripe('pk_live_51QNNomGgZQx5JKvIyEzYuHbqZRdugWTVlseapCphcAL3gYdrXfSIN8R6toeaReScar1gFyxRODHv0XG1cf54xUsM00zJcyWw8j');
               await stripe.redirectToCheckout({ sessionId: session.id });
             } else {
@@ -1420,6 +2610,7 @@ async function loadUserProfile(userId) {
             alert('An error occurred while processing your payment');
           }
         });
+
 
 
         
@@ -1446,36 +2637,59 @@ async function loadUserProfile(userId) {
       });
 
       // Handle Options Form Submission
-      document.getElementById('options-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const style = document.getElementById('style-select-modal').value;
-        const width = document.getElementById('width-modal').value;
-        const height = document.getElementById('height-modal').value;
-        const guidanceScale = document.getElementById('guidance-scale-modal').value;
-        const inferenceSteps = document.getElementById('inference-steps-modal').value;
+        document.getElementById('options-form').addEventListener('submit', (e) => {
+          e.preventDefault();
 
-        // Validate inputs
-        if (!width || !height || !guidanceScale || !inferenceSteps) {
-          showToast('Please fill in all option fields.', 'error');
-          return;
-        }
+          const width = parseInt(document.getElementById('width-modal').value, 10);
+          const height = parseInt(document.getElementById('height-modal').value, 10);
+          const guidanceScale = parseFloat(document.getElementById('guidance-scale-modal').value);
+          const inferenceSteps = parseInt(document.getElementById('inference-steps-modal').value, 10);
 
-        // Save options to LocalStorage
-        const options = {
-          style,
-          width,
-          height,
-          guidanceScale,
-          inferenceSteps,
-        };
+          // Validate inputs
+          if (!width || !height || !guidanceScale || !inferenceSteps) {
+            showToast('Please fill in all option fields.', 'error');
+            return;
+          }
 
-        localStorage.setItem('options', JSON.stringify(options));
+          // Calculate aspect ratio
+          const ratioMap = {
+            '1:1': 1,
+            '4:3': 4 / 3,
+            '3:4': 3 / 4,
+            '16:9': 16 / 9,
+            '9:16': 9 / 16,
+          };
+          const currentAspectRatio = width / height;
+          let selectedRatio = 'custom'; // Default to custom if no match
 
-        // Close the Options Modal
-        closeModal('options-modal');
+          for (const [key, ratio] of Object.entries(ratioMap)) {
+            if (Math.abs(currentAspectRatio - ratio) < 0.01) { // Allow for small rounding differences
+              selectedRatio = key;
+              break;
+            }
+          }
 
-        showToast('Options saved successfully!', 'success');
-      });
+          // Update the aspect ratio dropdown
+          document.getElementById('aspect-ratio-select').value = selectedRatio;
+
+          // Save options to localStorage
+          const options = {
+            width,
+            height,
+            guidanceScale,
+            inferenceSteps,
+          };
+          localStorage.setItem('options', JSON.stringify(options));
+          console.log('Saved Options:', options);
+
+          showToast('Options saved successfully!', 'success');
+
+          // Close the modal
+          closeModal('options-modal');
+        });
+
+
+
 
       // Handle Setup Character Form Submission
       document.getElementById('setup-character-form').addEventListener('submit', (e) => {
@@ -1505,47 +2719,7 @@ async function loadUserProfile(userId) {
         }
       });
 
-        /*
-      // Handle Enhance Prompt Button Click
-      document.getElementById('enhance-prompt-button').addEventListener('click', async () => {
-        const prompt = document.getElementById('prompt-input').value.trim();
-        if (!prompt) {
-          showToast('Please enter a prompt to enhance.', 'error');
-          return;
-        }
-
-        try {
-          // Show loading state
-          const enhanceButton = document.getElementById('enhance-prompt-button');
-          enhanceButton.textContent = 'Enhancing...';
-          enhanceButton.disabled = true;
-
-          // Send prompt to backend for enhancement
-          const response = await fetch('/api/enhance-prompt', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-          });
-
-          const data = await response.json();
-          if (data.enhancedPrompt) {
-            document.getElementById('prompt-input').value = data.enhancedPrompt;
-            showToast('Prompt enhanced successfully!', 'success');
-          } else {
-            showToast('Failed to enhance the prompt.', 'error');
-          }
-        } catch (error) {
-          console.error('Error enhancing prompt:', error);
-          showToast('An error occurred while enhancing the prompt.', 'error');
-        } finally {
-          // Reset button state
-          const enhanceButton = document.getElementById('enhance-prompt-button');
-          enhanceButton.textContent = 'Enhance Prompt';
-          enhanceButton.disabled = false;
-        }
-      });*/
-
-     
+    
 
       // Function to update the token count in the navbar
       function updateTokenCount(amount) {
@@ -1560,68 +2734,85 @@ async function loadUserProfile(userId) {
         }
       }
 
-      // Handle Public/Profile Toggle Buttons
-      document.getElementById('public-toggle').addEventListener('click', () => {
-          // Hide or clear the user profile elements
-          const profileUsername = document.getElementById('profile-username');
-          const profileAvatar = document.getElementById('profile-avatar');
-          profileUsername.textContent = ''; // Clear username
-          profileAvatar.src = ''; // Clear avatar
-          profileAvatar.classList.add('hidden'); // Hide avatar
+      // Handle Public Posts Toggle Button
+document.getElementById('public-toggle').addEventListener('click', () => {
+  // Hide or clear the user profile elements
+  const profileUsername = document.getElementById('profile-username');
+  const profileAvatar = document.getElementById('profile-avatar');
+  if (profileUsername) profileUsername.textContent = ''; // Clear username
+  if (profileAvatar) {
+    profileAvatar.src = ''; // Clear avatar
+    profileAvatar.classList.add('hidden'); // Hide avatar
+  }
 
-          // Reset pagination state when switching to Public Posts
-          page = 1; // Reset the page number
-          hasMoreImages = true; // Ensure hasMoreImages is set to true
+  // Reset pagination state when switching to Public Posts
+  page = 1; // Reset the page number
+  hasMoreImages = true; // Ensure hasMoreImages is set to true
 
-          // Toggle button styles
-          document.getElementById('public-toggle').classList.add('selected-toggle');
-          document.getElementById('profile-toggle').classList.remove('selected-toggle');
+  // Toggle button styles
+  document.getElementById('public-toggle').classList.add('selected-toggle');
+  document.getElementById('profile-toggle').classList.remove('selected-toggle');
+  document.getElementById('search-results-toggle').classList.remove('selected-toggle'); // Deactivate Search Results toggle
+  document.getElementById('search-results-toggle').classList.add('hidden'); // Hide Search Results toggle
 
-          // Clear existing images from the list if needed
-          const imageList = document.getElementById('image-list');
-          if (imageList) {
-            imageList.innerHTML = ''; // Clear current images to load new ones
-          }
+  // Reset filters to default for Public Posts
+  activeFilters['image-source'] = 'ai-generated';
+  activeFilters['art-styles'] = 'all-styles';
+  activeFilters['advanced'] = 'newest';
+  console.log("Reset Filters:", activeFilters);
 
-          // Load public posts
-          loadPublicPosts();
-          history.pushState(null, '', '/');
-        });
+  // Apply filters for Public Posts
+  applyFilters();
+});
 
+// Handle Profile Posts Toggle Button
+document.getElementById('profile-toggle').addEventListener('click', async () => {
+  // Hide or clear the user profile elements
+  const profileUsername = document.getElementById('profile-username');
+  const profileAvatar = document.getElementById('profile-avatar');
+  if (profileUsername) profileUsername.textContent = ''; // Clear username
+  if (profileAvatar) {
+    profileAvatar.src = ''; // Clear avatar
+    profileAvatar.classList.add('hidden'); // Hide avatar
+  }
 
+  // Fetch user data to check authentication
+  let userData;
+  try {
+    const response = await fetch('/user-data');
+    userData = await response.json();
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    showToast('An error occurred. Please try again.', 'error');
+    return;
+  }
 
-       document.getElementById('profile-toggle').addEventListener('click', async () => {
-          // Hide or clear the user profile elements
-          const profileUsername = document.getElementById('profile-username');
-          const profileAvatar = document.getElementById('profile-avatar');
-          profileUsername.textContent = ''; // Clear username
-          profileAvatar.src = ''; // Clear avatar
-          profileAvatar.classList.add('hidden'); // Hide avatar
+  if (!userData.loggedIn) {
+    // Display a message prompting the user to log in
+    showToast('Please log in to view your posts.', 'error');
+    return;
+  }
 
-          // Fetch user data to check authentication
-          let userData;
-          try {
-            const response = await fetch('/user-data');
-            userData = await response.json();
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-            showToast('An error occurred. Please try again.', 'error');
-            return;
-          }
+  // Toggle button styles
+  document.getElementById('profile-toggle').classList.add('selected-toggle');
+  document.getElementById('public-toggle').classList.remove('selected-toggle');
+  document.getElementById('search-results-toggle').classList.remove('selected-toggle'); // Deactivate Search Results toggle
+  document.getElementById('search-results-toggle').classList.add('hidden'); // Hide Search Results toggle
 
-          if (!userData.loggedIn) {
-            // Display a message prompting the user to log in
-            showToast('Please log in to view your posts.', 'error');
-            return;
-          }
+  // Load private/profile posts
+  loadPrivatePosts();
+});
 
-          // Toggle button styles
-          document.getElementById('profile-toggle').classList.add('selected-toggle');
-          document.getElementById('public-toggle').classList.remove('selected-toggle');
+// Handle Search Results Toggle Button Visibility
+document.getElementById('search-results-toggle').addEventListener('click', () => {
+  // Toggle button styles
+  document.getElementById('search-results-toggle').classList.add('selected-toggle');
+  document.getElementById('public-toggle').classList.remove('selected-toggle');
+  document.getElementById('profile-toggle').classList.remove('selected-toggle');
 
-          // Load private/profile posts
-          loadPrivatePosts();
-        });
+  // No need to reload results, as the search results are already displayed
+});
+
 
 
       // Handle Buy Tokens Selection
@@ -1751,75 +2942,148 @@ async function loadComments(imageId) {
   }
 }
 
+  
+      
+      
+      
+    //////////////////////////////////  
+      
+   
 
+    /**
+     * General function to load images for public posts or search results.
+     * @param {string} apiEndpoint - The API endpoint for fetching images.
+     * @param {string} mode - "public" for public posts, "search" for search results.
+     */
+    async function loadImages(apiEndpoint, mode) {
+  console.log('Sending API request to:', apiEndpoint);
 
-    
-    // Function to load public posts with infinite scrolling support
-    let page = 1; // Initial page number for pagination
-    let isLoading = false; // Prevent multiple simultaneous requests
-    let hasMoreImages = true; // Track if there are more images to load
+  // Prevent multiple requests if already loading or if there are no more images to load
+  if (isLoading || !hasMoreImages) {
+    console.log('isLoading:', isLoading);
+    console.log('hasMoreImages:', hasMoreImages);
+    return;
+  }
+  isLoading = true;
 
-
-    async function loadPublicPosts() {
-      if (isLoading || !hasMoreImages) return;
-      isLoading = true;
-
-      try {
-        const response = await fetch(`/api/public-posts?page=${page}&limit=10`);
-        if (!response.ok) {
-          throw new Error('Failed to load public posts');
-        }
-        const data = await response.json();
-        const images = data.images;
-        hasMoreImages = data.hasMore; // Update the hasMore flag based on server response
-
-        const imageList = document.getElementById('image-list');
-        if (!imageList) {
-          console.error('Image List container not found in the DOM.');
-          return;
-        }
-
-        images.forEach(image => {
-          const imageCard = document.createElement('div');
-          imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
-
-            
-          imageCard.innerHTML = `<img src="${image.thumbnailUrl}" alt="Public Image" class="w-full h-auto rounded-lg" loading="lazy" />`;
-            
-          imageList.appendChild(imageCard);
-
-          // Ensure the event listener is correctly attached to the image
-          imageCard.querySelector('img').addEventListener('click', () => {              
-              openCommentsModal(image.id, image.imageUrl, 'public'); // For public images
-            });
-
-        });
-
-        page++; // Increment page number for the next load
-      } catch (error) {
-        console.error('Error loading public posts:', error);
-        showToast('An error occurred while loading public posts.', 'error');
-      } finally {
-        isLoading = false;
-      }
+  try {
+    // Fetch data from the API endpoint
+    const response = await fetch(apiEndpoint);
+    if (!response.ok) {
+      console.error('Failed response:', await response.text());
+      throw new Error('Failed to load images.');
     }
 
+    // Parse the JSON response
+    const data = await response.json();
+    console.log('API Response:', data);
 
-    // Infinite scrolling logic
-    window.addEventListener('scroll', () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !isLoading && hasMoreImages) {
-        loadPublicPosts();
+    const images = data.images;
+
+    // Validate if "images" is an array
+    if (!Array.isArray(images)) {
+      throw new Error('Invalid data format: "images" is not an array.');
+    }
+
+    const imageList = document.getElementById('image-list');
+    if (!imageList) {
+      console.error('Image List container not found in the DOM.');
+      return;
+    }
+
+    // Handle empty search results
+    if (images.length === 0 && page === 1) {
+      imageList.innerHTML = '<p class="text-white text-center mt-4">No images found. Try a different search query.</p>';
+      hasMoreImages = false;
+      return;
+    }
+
+    // Append new images to the existing list (do not clear it)
+    images.forEach((image) => {
+      if (!image.imageUrl) {
+        console.error('Invalid image data:', image);
+        return;
       }
+
+      // Create a container for the image card
+      const imageCard = document.createElement('div');
+      imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+
+      // Build the like button
+      const likeButton = document.createElement('button');
+      likeButton.classList.add(
+        'like-button',
+        'absolute',
+        'top-2',
+        'right-2',
+        'bg-gray-700',
+        'text-white',
+        'p-2',
+        'rounded-full',
+        'flex',
+        'items-center',
+        'justify-center'
+      );
+      likeButton.innerHTML = `<i class="fas fa-heart"></i>`;
+
+      // Highlight the like button if the image is already liked
+      if (image.likedByUser) {
+        likeButton.classList.add('liked');
+      }
+
+      // Add metadata to the like button
+      likeButton.dataset.isPublic = image.isPublic;
+
+      // Add click event listener to toggle like
+      likeButton.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent triggering the parent click event
+        toggleLike(image.id, likeButton);
+      });
+
+      // Build the card content
+      imageCard.innerHTML = `
+        <div class="relative">
+          <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full h-auto rounded-lg object-cover">
+        </div>
+      `;
+
+      // Append the like button to the card
+      imageCard.querySelector('.relative').appendChild(likeButton);
+
+      // Append the image card to the image list
+      imageList.appendChild(imageCard);
+
+      // Add click event listener for opening a modal/popup
+      imageCard.querySelector('img').addEventListener('click', () => {
+        openCommentsModal(image.id, image.imageUrl, mode);
+      });
     });
 
+    // Update pagination and loading state
+    hasMoreImages = data.hasMore;
+    if (hasMoreImages) {
+      page++; // Increment the page for the next request
+    }
+  } catch (error) {
+    console.error(`Error loading images from ${apiEndpoint}:`, error);
+    showToast('An error occurred while loading images.', 'error');
+  } finally {
+    isLoading = false; // Reset the loading state
+  }
+}
 
-   // Function to load private/profile posts
+
+// Define selectedImages as a global variable
+const selectedImages = new Set(); // Track selected images globally
+      
+      
 async function loadPrivatePosts() {
   try {
     const response = await fetch('/api/private-posts');
     if (!response.ok) {
       throw new Error('Failed to load profile posts');
     }
+
     const images = await response.json();
     const imageList = document.getElementById('image-list');
     if (!imageList) {
@@ -1828,62 +3092,180 @@ async function loadPrivatePosts() {
     }
     imageList.innerHTML = ''; // Clear current images
 
-    images.forEach(image => {
+    
+
+    images.forEach((image) => {
       const imageCard = document.createElement('div');
-      imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+      imageCard.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+      imageCard.dataset.imageId = image.id;
 
-      // Badge indicating public or private
-      const badge = image.isPublic 
-        ? '<span class="badge-public">Public</span>'
-        : '<span class="badge-private">Private</span>';
+      // Add Public/Private Badge
+      const badge = document.createElement('span');
+      badge.classList.add(
+        'badge',
+        image.isPublic ? 'badge-public' : 'badge-private',
+        'absolute',
+        'top-2',
+        'left-2',
+        'px-2',
+        'py-1',
+        'rounded',
+        'text-sm',
+        'font-bold',
+        'text-white',
+        image.isPublic ? 'bg-green-500' : 'bg-red-500'
+      );
+      badge.textContent = image.isPublic ? 'Public' : 'Private';
 
-      // Choose the appropriate icon and tooltip for the toggle button
-      const toggleIcon = image.isPublic ? '<i class="fas fa-lock"></i>' : '<i class="fas fa-globe"></i>';
-      const toggleTooltip = image.isPublic ? 'Make Private' : 'Make Public';
+      // Build card content
+      imageCard.innerHTML = `
+        <div class="relative">
+          <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
+               class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+          <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
+            <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
+              Keep Style
+            </button>
+            <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
+              Keep Face
+            </button>
+            <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
+              Keep Pose
+            </button>
+          </div>
+          <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
+            <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
+              <i class="fas fa-download"></i>
+            </a>
 
-      // Create a container for all action buttons
-      const actionButtons = `
-        <div class="action-buttons absolute top-2 right-2 flex space-x-2">
-          <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
-            <i class="fas fa-download"></i>
-          </a>
-          <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-gray-100" data-id="${image.id}" title="Delete">
-            <i class="fas fa-trash"></i>
-          </button>
-          <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${toggleTooltip}">
-            ${toggleIcon}
-          </button>
+ <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
+    <i class="fas fa-info-circle"></i>
+  </button>
+
+            <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-gray-100" data-id="${image.id}" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+            <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
+              <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
+            </button>
+          </div>
         </div>
       `;
-      
-      imageCard.innerHTML = `
-        ${badge}
-        <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" class="w-full h-auto rounded-lg" loading="lazy" />
-        ${actionButtons}
-      `;
 
-      imageList.appendChild(imageCard);
+      // Append the badge to the card
+      imageCard.appendChild(badge);
 
-      // Add click event listener for full-size view
-      imageCard.querySelector('img').addEventListener('click', () => {
-          //showFullSizeImage(image.imageUrl);
-          //showImagePopup(image);
-          openCommentsModal(image.id, image.imageUrl, 'personal'); // For personal images
-      });
+      // Add the image card to the image list
+      imageList.prepend(imageCard);
 
-      // Add click event listener for the delete button
-      imageCard.querySelector('.delete-button').addEventListener('click', async (event) => {
-        event.stopPropagation(); // Prevent triggering the full-size image view
+      // Add event listeners for buttons and actions (same as your current implementation)
+      const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
+      const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
+      const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
+      const imgElement = imageCard.querySelector('img');
+      const actionButtons = imageCard.querySelector('.action-buttons');
+
+      const infoButton = imageCard.querySelector('.info-button');
+        infoButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+        });
+
+      styleButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          styleButton.classList.toggle('active');
+          console.log(`Style button ${image.id} active:`, styleButton.classList.contains('active'));
+        });
+
+        faceButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          faceButton.classList.toggle('active');
+          console.log(`Face button ${image.id} active:`, faceButton.classList.contains('active'));
+        });
+
+        poseButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          poseButton.classList.toggle('active');
+          console.log(`Pose button ${image.id} active:`, poseButton.classList.contains('active'));
+        });
+        
+        // Add a double-click event to open the comments modal
+        imgElement.addEventListener('dblclick', (event) => {
+          event.stopPropagation();
+          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+        });
+
+
+      imgElement.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const toggleButtons = imageCard.querySelector('.toggle-buttons');
+          const thumbnailContainer = document.getElementById('selected-thumbnail-container'); // Use the existing ID
+          const generateButton = document.getElementById('generate-button');
+
+          if (selectedImages.has(image.id)) {
+            selectedImages.delete(image.id);
+            imageCard.style.border = 'none';
+            imageCard.style.backgroundColor = 'transparent';
+            actionButtons.classList.add('hidden'); // Hide action buttons
+            if (toggleButtons) toggleButtons.classList.add('hidden'); // Hide toggle buttons
+
+            if (selectedImages.size === 0) {
+              // No images selected
+              // Clear and hide the thumbnail container
+
+              generateButton.textContent = 'Generate Image';             
+               // Clear and reset the thumbnail container
+              if (thumbnailContainer) {
+                thumbnailContainer.innerHTML = '';
+                thumbnailContainer.style.display = 'none';
+                delete thumbnailContainer.dataset.imagePath; // Clear dataset
+              }
+
+
+            }
+          } else {
+            const allCards = document.querySelectorAll('.image-card');
+            allCards.forEach((card) => {
+              card.style.border = 'none';
+              card.style.backgroundColor = 'transparent';
+              card.querySelector('.action-buttons')?.classList.add('hidden');
+              card.querySelector('.toggle-buttons')?.classList.add('hidden');
+            });
+            selectedImages.clear();
+            selectedImages.add(image.id);
+            imageCard.style.border = '2px solid red';
+            imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+
+
+
+
+            actionButtons.classList.remove('hidden'); // Show action buttons
+            if (toggleButtons) toggleButtons.classList.remove('hidden'); // Show toggle buttons
+            showCreateImage();
+            updatePromptBox(image);
+
+            // Update the thumbnail container when an image is selected
+            if (thumbnailContainer) {
+              thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="w-16 h-16 rounded-lg border border-gray-600">`;
+              thumbnailContainer.style.display = 'block'; // Make the container visible
+            }
+          }
+          // Update the dropdown with appropriate models
+          populateModelDropdownForImageSelection(image.style);   
+              
+        });
+
+
+      const deleteButton = imageCard.querySelector('.delete-button');
+      deleteButton.addEventListener('click', async (event) => {
+        event.stopPropagation();
         const imageId = event.target.closest('button').getAttribute('data-id');
-
         try {
-          const response = await fetch(`/delete-private-image/${imageId}`, {
-            method: 'DELETE',
-          });
-
+          const response = await fetch('/delete-private-image/' + imageId, { method: 'DELETE' });
           if (response.ok) {
             showToast('Image deleted successfully!', 'success');
-            imageCard.remove(); // Remove the card from the DOM
+            imageCard.remove();
+            selectedImages.delete(imageId);
           } else {
             showToast('Failed to delete image', 'error');
           }
@@ -1893,39 +3275,110 @@ async function loadPrivatePosts() {
         }
       });
 
-      // Add click event listener for the toggle visibility button
-      imageCard.querySelector('.toggle-visibility-button').addEventListener('click', async (event) => {
-          event.stopPropagation(); // Prevent triggering the full-size image view
-          const imageId = event.target.closest('button').getAttribute('data-id');
-
-          try {
-            const response = await fetch(`/update-image-visibility/${imageId}`, {
-              method: 'PUT', 
-              headers: { 'Content-Type': 'application/json' },
-            });
-
-
-            if (response.ok) {
-              const data = await response.json();
-              showToast('Image visibility updated!', 'success');
-              // Optionally, refresh the view to reflect changes
-              loadPrivatePosts();
-            } else {
-              showToast('Failed to update visibility', 'error');
-            }
-          } catch (error) {
-            console.error('Error updating image visibility:', error);
-            showToast('An error occurred while updating visibility', 'error');
+      const toggleVisibilityButton = imageCard.querySelector('.toggle-visibility-button');
+      toggleVisibilityButton.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const imageId = event.target.closest('button').getAttribute('data-id');
+        try {
+          const response = await fetch(`/update-image-visibility/${imageId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+          if (response.ok) {
+            const data = await response.json();
+            showToast('Image visibility updated!', 'success');
+            loadPrivatePosts();
+          } else {
+            showToast('Failed to update visibility', 'error');
           }
-        });
-
-        
-        
+        } catch (error) {
+          console.error('Error updating image visibility:', error);
+          showToast('An error occurred while updating visibility', 'error');
+        }
+      });
     });
   } catch (error) {
     console.error('Error loading private posts:', error);
     showToast('An error occurred while loading your posts.', 'error');
   }
+}
+
+
+ 
+      
+/**
+ * Handles the state of the toggle buttons for style, face, and pose.
+ * @param {string} toggleType - The type of toggle ("style", "face", "pose").
+ * @param {string} imageId - The ID of the image being modified.
+ * @param {boolean} isActive - Whether the toggle is active or not.
+ */
+function handleToggleState(toggleType, imageId, isActive) {
+  console.log('Toggle changed: ${toggleType}, Image ID: ${imageId}, Active: ${isActive}');
+
+  // Example: Update some global state or local storage
+  if (!window.toggleStates) {
+    window.toggleStates = {}; // Initialize if not already done
+  }
+
+  if (!window.toggleStates[imageId]) {
+    window.toggleStates[imageId] = { style: false, face: false, pose: false };
+  }
+
+  // Update the state for the specific toggle type
+  window.toggleStates[imageId][toggleType] = isActive;
+
+  console.log('Updated Toggle States:', window.toggleStates);
+ 
+  /*
+  // Example: Disable style selection in the prompt box if "Keep Style" is active
+  if (toggleType === 'style') {
+    const styleSelect = document.getElementById('style-select');
+    if (styleSelect) {
+      styleSelect.disabled = isActive;
+    }
+  }*/
+}
+      
+      
+      
+
+// Helper Functions
+function updatePromptBox(image) {
+  const promptInput = document.getElementById('prompt-input');
+  const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+  const generateButton = document.getElementById('generate-button');
+
+  // Ensure the thumbnail container exists
+  if (!thumbnailContainer) {
+    console.error('Thumbnail container not found in the DOM.');
+    return;
+  }
+
+  // Clear the thumbnail container to avoid duplicates
+  thumbnailContainer.innerHTML = '';
+
+  // Add the selected image thumbnail
+  const thumbnail = document.createElement('img');
+  thumbnail.src = image.thumbnailUrl;
+  thumbnail.alt = 'Selected Image';
+  thumbnail.classList.add('selected-thumbnail', 'w-20', 'h-20', 'rounded-lg', 'object-cover', 'ml-4'); // Tailwind classes for styling
+
+  thumbnailContainer.appendChild(thumbnail);
+
+  // Set the image path in the dataset
+  thumbnailContainer.dataset.imagePath = image.imageUrl;
+
+  // Change the button text to "Modify Image"
+  generateButton.textContent = 'Modify Image';
+}
+
+
+
+function hideCreateImagePrompt() {
+  const imageUploadDiv = document.getElementById('ai-creation');
+  imageUploadDiv.classList.add('hidden');
+  imageUploadDiv.classList.remove('visible');
+
+  // Clear the prompt input
+  const promptInput = document.getElementById('prompt-input');
+  promptInput.value = '';
 }
 
 
@@ -1981,53 +3434,55 @@ async function loadPrivatePosts() {
     }
 
       document.addEventListener('DOMContentLoaded', () => {
-          const visibilityButton = document.getElementById('post-visibility-button');
-          const visibilityIcon = document.getElementById('post-visibility-icon');
-          const visibilityText = document.getElementById('post-visibility-text');
-          const tooltip = document.getElementById('post-visibility-tooltip');
+  let isPublic = false; // Default to private
 
-          visibilityButton.addEventListener('mouseover', () => {
-            if (tooltip) {
-              tooltip.classList.remove('hidden');
-            }
-          });
+  const visibilityButton = document.getElementById('post-visibility-button');
+  const visibilityIcon = document.getElementById('post-visibility-icon');
+  const tooltip = document.getElementById('post-visibility-tooltip');
 
-          visibilityButton.addEventListener('mouseout', () => {
-            if (tooltip) {
-              tooltip.classList.add('hidden');
-            }
-          });
+  if (!visibilityButton || !visibilityIcon || !tooltip) {
+    console.error('Visibility button or related elements not found!');
+    return;
+  }
+
+  // Tooltip Hover Events
+  visibilityButton.addEventListener('mouseover', () => {
+    tooltip.classList.remove('hidden');
+  });
+
+  visibilityButton.addEventListener('mouseout', () => {
+    tooltip.classList.add('hidden');
+  });
+
+  // Toggle Visibility on Click
+  visibilityButton.addEventListener('click', () => {
+    isPublic = !isPublic; // Toggle the state
+    updateVisibility();
+  });
+
+  function updateVisibility() {
+    if (isPublic) {
+      // Public state
+      visibilityIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
+      `;
+      tooltip.textContent = 'Create in public';
+    } else {
+      // Private state
+      visibilityIcon.innerHTML = `
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+      `;
+      tooltip.textContent = 'Create privately';
+    }
+  }
+
+  // Initial state
+  updateVisibility();
+});
 
 
-          // Initial state: private (false)  
-          updateVisibility();
-
-
-          visibilityButton.addEventListener('click', () => {
-            isPublic = !isPublic; // Toggle the state
-            updateVisibility();
-          });
-
-          function updateVisibility() {
-            if (isPublic) {
-              // Public state
-              visibilityIcon.innerHTML = `
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-              `;
-              visibilityText.textContent = 'Post Public';
-              if (tooltip) tooltip.textContent = 'Create in public'; // Check if tooltip exists
-            } else {
-              // Private state
-              visibilityIcon.innerHTML = `
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-              `;
-              visibilityText.textContent = 'Post Private';
-              if (tooltip) tooltip.textContent = 'Create privately'; // Check if tooltip exists
-            }
-          }
-    });
 
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -2169,7 +3624,7 @@ async function loadPrivatePosts() {
             loadUserProfile(userId);
           } else {
             // Handle other routes (e.g., load public posts)
-            loadPublicPosts();
+            loadImages('/api/public-posts', 'public');
           }
     });
     
@@ -2182,36 +3637,6 @@ async function loadPrivatePosts() {
         loadUserProfile(userId); // Fetch and display the profile
     }
 
-    document.getElementById('logo').addEventListener('click', () => {
-      // Hide or clear the user profile elements
-      const profileUsername = document.getElementById('profile-username');
-      const profileAvatar = document.getElementById('profile-avatar');
-      profileUsername.textContent = ''; // Clear username
-      profileAvatar.src = ''; // Clear avatar
-      profileAvatar.classList.add('hidden'); // Hide avatar
-
-      // Reset UI state for Public Posts
-      const publicToggle = document.getElementById('public-toggle');
-      const profileToggle = document.getElementById('profile-toggle');
-      publicToggle.classList.add('selected-toggle'); // Highlight "Public Posts"
-      profileToggle.classList.remove('selected-toggle'); // Unhighlight "Profile Posts"
-
-      // Clear existing images from the list
-      const imageList = document.getElementById('image-list');
-      if (imageList) {
-        imageList.innerHTML = ''; // Clear the image grid
-      }
-
-      // Reset pagination state for public posts
-      page = 1; // Reset the page number
-      hasMoreImages = true; // Ensure hasMoreImages is set to true
-
-      // Load public posts
-      loadPublicPosts();
-
-      // Update the URL to the root path
-      history.pushState(null, '', '/'); // Use '/' or the desired default path
-    });
 
    const urlParams = new URLSearchParams(window.location.search);
   const imageId = urlParams.get('image');
@@ -2278,6 +3703,383 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Add placeholder text to indicate the user must log in
     promptInput.placeholder = "Please log in to create images.";
   }
+});
+
+
+                
+// Event listener for the search button
+document.getElementById('search-button').addEventListener('click', () => {
+  triggerSearch();
+});
+
+// Event listener for the "Enter" key in the search input field
+document.getElementById('search-query').addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault(); // Prevent the default behavior of the Enter key
+    triggerSearch();
+  }
+});
+
+// Function to trigger the search
+function triggerSearch() {  
+  const query = document.getElementById('search-query').value.trim();
+
+  if (!query) {
+    showToast('Please enter a search query.', 'warning');
+    return;
+  }
+
+  // Reset state for new search
+  page = 1; // Start from the first page
+  hasMoreImages = true; // Allow fetching of additional results
+  isLoading = false; // Reset loading state
+
+  // Clear the image list container
+  const imageList = document.getElementById('image-list');
+  if (imageList) {
+    imageList.innerHTML = ''; // Clear previous results
+  }
+
+  // Construct the API endpoint for the search query
+  const apiEndpoint = `/api/search?query=${encodeURIComponent(query)}&type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
+
+  // Make the search-results-toggle tab visible and active
+  const searchResultsToggle = document.getElementById('search-results-toggle');
+  const publicToggle = document.getElementById('public-toggle');
+  const profileToggle = document.getElementById('profile-toggle');
+
+  // Update toggle button visibility and active state
+  publicToggle.classList.remove('selected-toggle');
+  profileToggle.classList.remove('selected-toggle');
+  searchResultsToggle.classList.remove('hidden');
+  searchResultsToggle.classList.add('selected-toggle');
+
+  // Log the query and API endpoint for debugging
+  console.log('Performing search with query:', query);
+  console.log('API endpoint:', apiEndpoint);
+
+  // Load search results into the image list
+  loadImages(apiEndpoint, 'search');
+}
+
+
+// Handle Search Results Toggle Button
+document.getElementById('search-results-toggle').addEventListener('click', () => {
+  // Make sure the search tab is active
+  const searchResultsToggle = document.getElementById('search-results-toggle');
+  const publicToggle = document.getElementById('public-toggle');
+  const profileToggle = document.getElementById('profile-toggle');
+
+  publicToggle.classList.remove('selected-toggle');
+  profileToggle.classList.remove('selected-toggle');
+  searchResultsToggle.classList.add('selected-toggle');
+});
+
+
+
+
+
+function simulateProgress(progressBar) {
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 10; // Increment progress
+    progressBar.style.width = `${progress}%`;
+
+    if (progress >= 100) {
+      clearInterval(interval); // Stop simulation once complete
+    }
+  }, 200); // Update every 200ms
+}
+
+
+      
+document.getElementById('image-upload-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  if (!window.isLoggedIn) {
+    showToast('Please log in to upload an image.', 'error');
+    return;
+  }
+
+  const fileInput = document.getElementById('image-file');
+  const descriptionInput = document.getElementById('image-description');
+
+  const formData = new FormData();
+  formData.append('image', fileInput.files[0]);
+  formData.append('description', descriptionInput.value || '');
+
+  try {
+    await uploadImageWithProgress(formData);
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    showToast('An error occurred while uploading the image.', 'error');
+  }
+});
+
+
+
+
+
+
+async function uploadImageWithProgress(formData) {
+  const progressBar = document.getElementById('upload-progress-bar');
+  const status = document.getElementById('upload-status');
+
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload-image', true);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        progressBar.style.width = `${percentComplete}%`;
+        status.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        status.textContent = 'Upload successful!';
+        console.log('[DEBUG] Upload complete:', xhr.responseText);
+        loadPrivatePosts(); // Refresh the private posts to display the new image
+      } else {
+        status.textContent = 'Upload failed.';
+        console.error('[ERROR] Upload failed:', xhr.statusText);
+      }
+    };
+
+    xhr.onerror = () => {
+      status.textContent = 'Upload error.';
+      console.error('[ERROR] Upload error.');
+    };
+
+    xhr.send(formData);
+  } catch (error) {
+    console.error('[ERROR] Upload handler failed:', error);
+    status.textContent = 'Upload failed.';
+  }
+}
+      
+      
+      
+// Track active selections for each category
+const activeFilters = {
+  'image-source': 'ai-generated',
+  'art-styles': 'all-styles',
+  'advanced': 'newest',
+};
+
+// Handle filter button clicks
+document.querySelectorAll('.filter-button').forEach(button => {
+  button.addEventListener('click', () => {
+    const category = button.dataset.category;
+    const filter = button.dataset.filter || button.dataset.subfilter || button.dataset.advanced;
+
+    // Update activeFilters for the current category
+    activeFilters[category] = filter;
+
+    // Update UI: Clear selected class from other buttons in the same category
+    document.querySelectorAll(`.filter-button[data-category="${category}"]`).forEach(btn => {
+      btn.classList.remove('selected');
+    });
+
+    // Mark the clicked button as selected
+    button.classList.add('selected');
+
+    // Apply all active filters
+    applyFilters();
+  });
+});
+
+// Function to apply all active filters
+function applyFilters() {
+  console.log('Updated Filters:', activeFilters);
+
+  // Map the active filters correctly
+  const type = activeFilters['image-source'] || 'ai-generated'; // Default to "ai-generated"
+  const style = activeFilters['art-styles'] || 'all-styles'; // Default to "All Styles"
+  const sort = activeFilters['advanced'] || 'newest'; // Default to "Newest"
+
+  // Reset flags for a new query
+  isLoading = false;
+  hasMoreImages = true;
+  page = 1;
+  
+  // Clear the image list for the new filter results
+  const imageList = document.getElementById('image-list');
+  if (imageList) {
+    imageList.innerHTML = '';
+  }
+
+  // Construct the API endpoint
+  const apiEndpoint = `/api/public-posts?type=${type}&style=${style}&sort=${sort}`;
+  console.log('API Endpoint:', apiEndpoint);
+
+  // Trigger loading images with the new filters
+  loadImages(apiEndpoint, 'public');
+}
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default selections
+  const imageSourceButton = document.querySelector('[data-category="image-source"][data-filter="ai-generated"]');
+  if (imageSourceButton) imageSourceButton.classList.add('selected');
+
+  const artStylesButton = document.querySelector('[data-category="art-styles"][data-subfilter="all-styles"]');
+  if (artStylesButton) artStylesButton.classList.add('selected');
+
+  const advancedButton = document.querySelector('[data-category="advanced"][data-advanced="newest"]');
+  if (advancedButton) advancedButton.classList.add('selected');
+
+  // Apply default filters
+  applyFilters();
+});
+
+      
+      
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleButton = document.getElementById('filter-toggle');
+  const sidebar = document.getElementById('filter-sidebar');
+
+  if (!toggleButton) {
+    console.error('Filter toggle button not found.');
+    return;
+  }
+
+  if (!sidebar) {
+    console.error('Filter sidebar not found.');
+    return;
+  }
+
+  // Toggle sidebar open/close on button click
+  toggleButton.addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    sidebar.classList.toggle('open');
+  });
+
+  // Close sidebar when mouse leaves it
+  sidebar.addEventListener('mouseleave', () => {
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('open');
+  });
+});
+      
+let closeTimeout;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleButton = document.getElementById('filter-toggle');
+  const sidebar = document.getElementById('filter-sidebar');
+
+  if (!toggleButton) {
+    console.error('Filter toggle button not found.');
+    return;
+  }
+
+  if (!sidebar) {
+    console.error('Filter sidebar not found.');
+    return;
+  }
+
+  // Toggle sidebar open/close on button click
+  toggleButton.addEventListener('click', () => {
+    clearTimeout(closeTimeout); // Clear any pending timeout
+    sidebar.classList.toggle('hidden');
+    sidebar.classList.toggle('open');
+  });
+
+  // Close sidebar with delay when mouse leaves
+  sidebar.addEventListener('mouseleave', () => {
+    closeTimeout = setTimeout(() => {
+      sidebar.classList.add('hidden');
+      sidebar.classList.remove('open');
+    }, 300); // Delay in milliseconds
+  });
+
+  // Cancel close if mouse re-enters quickly
+  sidebar.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimeout);
+  });
+});
+      
+      
+      
+
+
+
+
+// Handle aspect ratio selection
+const aspectRatioSelect = document.getElementById('aspect-ratio-select');
+const widthInput = document.getElementById('width-modal'); // Width field from options modal
+const heightInput = document.getElementById('height-modal'); // Height field from options modal
+
+aspectRatioSelect.addEventListener('change', (event) => {
+  const selectedRatio = event.target.value;
+
+  const dimensions = {
+    '1:1': [800, 800],
+    '4:3': [800, 600],
+    '3:4': [600, 800],
+    '16:9': [1280, 720],
+    '9:16': [720, 1280],
+  };
+
+  if (dimensions[selectedRatio]) {
+    const [width, height] = dimensions[selectedRatio];
+
+    // Update the width and height inputs
+    widthInput.value = width;
+    heightInput.value = height;
+
+    // Update the modal inputs
+    document.getElementById('width-modal').value = width;
+    document.getElementById('height-modal').value = height;
+
+    // Save the updated dimensions to localStorage
+    const options = JSON.parse(localStorage.getItem('options')) || {};
+    options.width = width;
+    options.height = height;
+    localStorage.setItem('options', JSON.stringify(options));
+
+    console.log('Aspect ratio updated:', selectedRatio, { width, height });
+  }
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const options = JSON.parse(localStorage.getItem('options')) || {
+    width: 800,
+    height: 600,
+    guidanceScale: 10,
+    inferenceSteps: 25,
+  };
+
+  // Sync width, height, and other inputs
+  document.getElementById('width-modal').value = options.width;
+  document.getElementById('height-modal').value = options.height;
+  document.getElementById('guidance-scale-modal').value = options.guidanceScale;
+  document.getElementById('inference-steps-modal').value = options.inferenceSteps;
+
+  // Sync aspect ratio dropdown
+  const aspectRatioSelect = document.getElementById('aspect-ratio-select');
+  const ratioMap = {
+    '1:1': 1,
+    '4:3': 4 / 3,
+    '3:4': 3 / 4,
+    '16:9': 16 / 9,
+    '9:16': 9 / 16,
+  };
+  const currentAspectRatio = options.width / options.height;
+
+  let selectedRatio = 'custom'; // Default to custom if no match
+  for (const [key, ratio] of Object.entries(ratioMap)) {
+    if (Math.abs(currentAspectRatio - ratio) < 0.01) {
+      selectedRatio = key;
+      break;
+    }
+  }
+  aspectRatioSelect.value = selectedRatio;
 });
 
 
