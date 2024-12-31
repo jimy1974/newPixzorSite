@@ -1115,7 +1115,7 @@ app.post('/api/like/:imageId', ensureAuthenticated, async (req, res) => {
 
     await image.save();
 
-    console.log(`[DEBUG] Likes updated successfully for Image ID ${imageId}, new likes: ${image.likes}`);
+    console.log(`[DEBUG] likes updated successfully for Image ID ${imageId}, new likes: ${image.likes}`);
     res.json({ likes: image.likes, liked });
   } catch (error) {
     console.error('[ERROR] Failed to toggle like:', error);
@@ -1284,7 +1284,7 @@ app.get('/personal-images', ensureAuthenticated, async (req, res) => {
         'prompt',
         'likes',
         [
-          sequelize.literal(`EXISTS (SELECT 1 FROM Likes WHERE Likes.imageId = PersonalImage.id AND Likes.userId = ${req.user.id})`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.imageId = PersonalImage.id AND likes.userId = ${req.user.id})`),
           'likedByUser',
         ],
       ],
@@ -1343,7 +1343,7 @@ app.get('/api/public-posts', async (req, res) => {
         'prompt',
         'likes',
         [
-          sequelize.literal(`EXISTS (SELECT 1 FROM Likes WHERE Likes.imageId = PublicImage.id AND Likes.userId = ${req.user ? req.user.id : 0})`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.imageId = PublicImage.id AND likes.userId = ${req.user ? req.user.id : 0})`),
           'likedByUser',
         ],
       ],
