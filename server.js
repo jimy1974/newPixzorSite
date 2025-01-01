@@ -1074,55 +1074,61 @@ if (isPublic) {
 */
 
 
-app.post('/api/like/:imageId', ensureAuthenticated, async (req, res) => {
+app.post('/api/like/:publicImageId', ensureAuthenticated, async (req, res) => {
   try {
-    const { imageId } = req.params;
+    const { publicImageId } = req.params;
     const { liked } = req.body;
 
-    console.log(`[DEBUG] Toggling like for Image ID: ${imageId}, liked: ${liked}, userId: ${req.user.id}`);
+    console.log(`[DEBUG] Toggling like for Public Image ID: ${publicImageId}, liked: ${liked}, userId: ${req.user.id}`);
 
     if (typeof liked !== 'boolean') {
-      console.error('[ERROR] Invalid "liked" value:', liked);
       return res.status(400).json({ error: '"liked" must be a boolean.' });
     }
 
-    const image = await PublicImage.findByPk(imageId);
-
+    // 1. Look up the PublicImage
+    const image = await PublicImage.findByPk(publicImageId);
     if (!image) {
-      console.error(`[ERROR] Public image ID ${imageId} not found.`);
+      console.error(`[ERROR] Public image ID ${publicImageId} not found.`);
       return res.status(404).json({ error: 'Public image not found.' });
     }
 
+    // 2. Extract the personalImageId from the public image
+    const personalImageId = image.personalImageId;
+    if (!personalImageId) {
+      return res.status(400).json({ error: 'This public image is not linked to a personal image.' });
+    }
+
+    // 3. Check if user already liked this personal image
     const alreadyLiked = await db.Like.findOne({
-      where: { userId: req.user.id, imageId },
+      where: { userId: req.user.id, personalImageId },
     });
 
     if (liked && alreadyLiked) {
       return res.status(400).json({ error: 'You have already liked this image.' });
     }
-
     if (!liked && !alreadyLiked) {
       return res.status(400).json({ error: 'You have not liked this image.' });
     }
 
+    // 4. Adjust the 'likes' count on the PublicImage (and/or PersonalImage if you wish)
     if (liked) {
       image.likes = (image.likes || 0) + 1;
-      await db.Like.create({ userId: req.user.id, imageId });
+      await db.Like.create({ userId: req.user.id, personalImageId });
     } else {
       image.likes = Math.max((image.likes || 0) - 1, 0);
       await alreadyLiked.destroy();
     }
 
+    await image.save(); // Save updated likes count on the public image
 
-    await image.save();
-
-    console.log(`[DEBUG] likes updated successfully for Image ID ${imageId}, new likes: ${image.likes}`);
+    console.log(`[DEBUG] likes updated successfully for Public Image ID ${publicImageId}, new likes: ${image.likes}`);
     res.json({ likes: image.likes, liked });
   } catch (error) {
     console.error('[ERROR] Failed to toggle like:', error);
     res.status(500).json({ error: 'Failed to toggle like.' });
   }
 });
+
 
 
 
@@ -1285,7 +1291,7 @@ app.get('/personal-images', ensureAuthenticated, async (req, res) => {
         'prompt',
         'likes',
         [
-          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.imageId = PersonalImage.id AND likes.userId = ${req.user.id})`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.personalImageId = PersonalImage.id AND likes.userId = ${req.user.id})`),
           'likedByUser',
         ],
       ],
@@ -1344,7 +1350,7 @@ app.get('/api/public-posts', async (req, res) => {
         'prompt',
         'likes',
         [
-          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.imageId = PublicImage.id AND likes.userId = ${req.user ? req.user.id : 0})`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.personalImageId = PublicImage.id AND likes.userId = ${req.user ? req.user.id : 0})`),
           'likedByUser',
         ],
       ],
