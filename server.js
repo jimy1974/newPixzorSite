@@ -1473,7 +1473,7 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
           prompt: image.prompt,
           userId: image.userId,
           type,
-          style: image.style || null,  // <-- Add this
+          style: image.style || null,
         });
       } else {
         publicImage.imageUrl = image.imageUrl;
@@ -1482,20 +1482,21 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
         publicImage.description = image.description || '';
         publicImage.prompt = image.prompt;
         publicImage.type = image.type || 'ai-generated';
-        publicImage.style = image.style || null; // <-- Add this
+        publicImage.style = image.style || null;
         await publicImage.save();
       }
     } else {
       await PublicImage.destroy({ where: { personalImageId: imageId } });
     }
 
-
     res.json({ message: 'Image visibility updated successfully', isPublic: image.isPublic });
   } catch (error) {
-    console.error('Error updating image visibility:', error);
+    console.error('Error updating image visibility:', error.message); // Add detailed logging
+    console.error(error.stack); // Log the full stack trace for debugging
     res.status(500).json({ error: 'Failed to update image visibility' });
   }
 });
+
 
 
 app.get('/api/public-image-details/:id', async (req, res) => {
