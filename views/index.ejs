@@ -2325,13 +2325,14 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const selectedThumbnailContainer = document.getElementById('selected-thumbnail-container');
   const selectedImage = selectedThumbnailContainer && selectedThumbnailContainer.dataset.imagePath;
     
+  /*
    // Get the currently selected image ID
   const selectedImageId = [...selectedImages][0]; // Get the first selected image ID (from the Set)
   if (!selectedImageId) {
     showToast('Please select an image.', 'error');
     console.error('No image selected.');
     return;
-  }  
+  } */ 
   
   const selectedImageCard = document.querySelector(`[data-image-id="${selectedImageId}"]`);
   if (!selectedImageCard) {
