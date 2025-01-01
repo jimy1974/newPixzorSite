@@ -1113,6 +1113,7 @@ app.post('/api/like/:imageId', ensureAuthenticated, async (req, res) => {
       await alreadyLiked.destroy();
     }
 
+
     await image.save();
 
     console.log(`[DEBUG] likes updated successfully for Image ID ${imageId}, new likes: ${image.likes}`);

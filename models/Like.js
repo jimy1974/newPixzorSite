@@ -1,4 +1,3 @@
-// models/Like.js
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
@@ -13,19 +12,11 @@ module.exports = (sequelize) => {
           key: 'id',
         },
       },
-      publicImageId: {
+      imageId: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: false,
         references: {
-          model: 'publicimages', // Refers to the 'publicimages' table
-          key: 'id',
-        },
-      },
-      personalImageId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-          model: 'personalimages', // Refers to the 'personalimages' table
+          model: 'images', // This assumes you're using a single `images` table for both public and personal images
           key: 'id',
         },
       },
@@ -39,8 +30,7 @@ module.exports = (sequelize) => {
   // Define associations
   Like.associate = (models) => {
     Like.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    Like.belongsTo(models.PublicImage, { foreignKey: 'publicImageId', as: 'publicImage', constraints: false });
-    Like.belongsTo(models.PersonalImage, { foreignKey: 'personalImageId', as: 'personalImage', constraints: false });
+    Like.belongsTo(models.Image, { foreignKey: 'imageId', as: 'image' }); // Assuming all images are stored in a single `Image` model
   };
 
   return Like;
