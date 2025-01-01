@@ -2312,55 +2312,13 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
 
-  // Get selected style and model
-  const styleSelect = document.getElementById('style-select');
+  // Get selected model
   const modelSelect = document.getElementById('model-select');
-  const style = styleSelect ? styleSelect.value : ''; // Get selected style
   const model = modelSelect ? modelSelect.value : ''; // Get selected model
 
-  console.log('Selected style:', style);
   console.log('Selected model:', model);
 
-  // Check for selected image
-  const selectedThumbnailContainer = document.getElementById('selected-thumbnail-container');
-  const selectedImage = selectedThumbnailContainer && selectedThumbnailContainer.dataset.imagePath;
-    
-  /*
-   // Get the currently selected image ID
-  const selectedImageId = [...selectedImages][0]; // Get the first selected image ID (from the Set)
-  if (!selectedImageId) {
-    showToast('Please select an image.', 'error');
-    console.error('No image selected.');
-    return;
-  } */ 
-  
-  const selectedImageCard = document.querySelector(`[data-image-id="${selectedImageId}"]`);
-  if (!selectedImageCard) {
-    showToast('An error occurred. Please try again.', 'error');
-    console.error('Selected image card not found.');
-    return;
-  }
-
-  // Query the toggle buttons for the selected image
-  const keepStyle = selectedImageCard.querySelector(`#toggle-style-${selectedImageId}`)?.classList.contains('active') || false;
-  
-  const keepFace = selectedImageCard.querySelector(`#toggle-face-${selectedImageId}`)?.classList.contains('active') || false;
-
-  const keepPose = selectedImageCard.querySelector(`#toggle-pose-${selectedImageId}`)?.classList.contains('active') || false;
-
-  console.log('Keep Style:', keepStyle);
-  console.log('Keep Face:', keepFace);
-  console.log('Keep Pose:', keepPose);
-  
-    
-    
-  // Validate the style and model
-  if (!style && !selectedImage) {
-    showToast('Please select a style before generating an image.', 'error');
-    console.error('No style selected for image-to-image generation.');
-    return;
-  }
-
+  // Validate the model
   if (!model) {
     showToast('Please select a model before generating an image.', 'error');
     console.error('No model selected.');
@@ -2373,10 +2331,6 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     console.error('No prompt entered.');
     return;
   }
-
-  
-
-  console.log('Selected image:', selectedImage);
 
   // Add Placeholder
   const imageList = document.getElementById('image-list');
@@ -2401,45 +2355,23 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     const generateButton = document.getElementById('generate-button');
     generateButton.textContent = 'Processing...';
     generateButton.disabled = true;
-    const adapter = keepFace ? 'face' : keepStyle ? 'style' : keepPose ? 'content' : 'default';
-    
-    // Decide whether to generate a new image or edit an existing one
-    const url = selectedImage ? '/edit-image' : '/generate-image';
-    const payload = selectedImage
-      ? {
-          imagePath: selectedImage,
-          prompt: prompt,
-          strength: 0.75,
-          steps: inferenceSteps,
-          guidance: guidanceScale,
-          style,
-          model,
-          keepStyle,
-          keepFace,
-          keepPose,
-          adapter,
-        }
-      : {
-          prompt: prompt,
-          isPublic: options.isPublic || false,
-          width: dimensions.width,
-          height: dimensions.height,
-          guidanceScale,
-          inferenceSteps,
-          style,
-          model,
-          keepStyle,
-          keepFace,
-          keepPose,
-          adapter,
-        };
 
+    // Prepare payload for the request
+    const payload = {
+      prompt: prompt,
+      isPublic: options.isPublic || false,
+      width: dimensions.width,
+      height: dimensions.height,
+      guidanceScale,
+      inferenceSteps,
+      model,
+    };
 
-    console.log('Sending request to:', url);
+    console.log('Sending request to: /generate-image');
     console.log('Payload:', payload);
 
     // Send data to the backend
-    const response = await fetch(url, {
+    const response = await fetch('/generate-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -2452,7 +2384,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
       // Create image element
       const imgElement = document.createElement('img');
       imgElement.src = data.imageUrl;
-      imgElement.alt = selectedImage ? 'Edited Image' : 'Generated Image';
+      imgElement.alt = 'Generated Image';
       imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
       imgElement.style.display = 'none'; // Hide image initially
       imageContainer.appendChild(imgElement);
@@ -2489,10 +2421,12 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     imageList.removeChild(imageContainer);
   } finally {
     const generateButton = document.getElementById('generate-button');
-    generateButton.textContent = selectedImage ? 'Modify Image' : 'Generate Image';
+    generateButton.textContent = 'Generate Image';
     generateButton.disabled = false;
   }
 });
+
+
 
 
 
