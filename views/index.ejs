@@ -2890,32 +2890,27 @@ async function loadComments(imageId) {
      * @param {string} apiEndpoint - The API endpoint for fetching images.
      * @param {string} mode - "public" for public posts, "search" for search results.
      */
-    async function loadImages(apiEndpoint, mode) {
+  async function loadImages(apiEndpoint, mode) {
   console.log('Sending API request to:', apiEndpoint);
 
-  // Prevent multiple requests if already loading or if there are no more images to load
   if (isLoading || !hasMoreImages) {
-    console.log('isLoading:', isLoading);
-    console.log('hasMoreImages:', hasMoreImages);
+    console.log(`Duplicate request prevented. isLoading: ${isLoading}, hasMoreImages: ${hasMoreImages}`);
     return;
   }
   isLoading = true;
 
   try {
-    // Fetch data from the API endpoint
     const response = await fetch(apiEndpoint);
     if (!response.ok) {
       console.error('Failed response:', await response.text());
       throw new Error('Failed to load images.');
     }
 
-    // Parse the JSON response
     const data = await response.json();
-    console.log('API Response:', data);
+    console.log('API Response Images:', data.images.map((img) => img.id));
 
     const images = data.images;
 
-    // Validate if "images" is an array
     if (!Array.isArray(images)) {
       throw new Error('Invalid data format: "images" is not an array.');
     }
@@ -2926,84 +2921,66 @@ async function loadComments(imageId) {
       return;
     }
 
-    // Handle empty search results
+    if (page === 1) {
+      imageList.innerHTML = ''; // Clear existing images on the first page
+    }
+
     if (images.length === 0 && page === 1) {
       imageList.innerHTML = '<p class="text-white text-center mt-4">No images found. Try a different search query.</p>';
       hasMoreImages = false;
       return;
     }
 
-    // Append new images to the existing list (do not clear it)
     images.forEach((image) => {
+      console.log(`Appending image with ID: ${image.id}`);
+
       if (!image.imageUrl) {
         console.error('Invalid image data:', image);
         return;
       }
 
-      // Create a container for the image card
       const imageCard = document.createElement('div');
       imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
 
-      // Build the like button
       const likeButton = document.createElement('button');
-      likeButton.classList.add(
-        'like-button',
-        'absolute',
-        'top-2',
-        'right-2',
-        'bg-gray-700',
-        'text-white',
-        'p-2',
-        'rounded-full',
-        'flex',
-        'items-center',
-        'justify-center'
-      );
+      likeButton.classList.add('like-button', 'absolute', 'top-2', 'right-2', 'bg-gray-700', 'text-white', 'p-2', 'rounded-full', 'flex', 'items-center', 'justify-center');
       likeButton.innerHTML = `<i class="fas fa-heart"></i>`;
 
-      // Highlight the like button if the image is already liked
       if (image.likedByUser) {
         likeButton.classList.add('liked');
       }
 
-      // Add metadata to the like button
       likeButton.dataset.isPublic = image.isPublic;
 
-      // Add click event listener to toggle like
       likeButton.addEventListener('click', (event) => {
-        event.stopPropagation(); // Prevent triggering the parent click event
+        event.stopPropagation();
         toggleLike(image.id, likeButton);
       });
 
-      // Build the card content
       imageCard.innerHTML = `
         <div class="relative">
           <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full h-auto rounded-lg object-cover">
         </div>
       `;
 
-      // Append the like button to the card
       imageCard.querySelector('.relative').appendChild(likeButton);
 
-      // Append the image card to the image list
       imageList.appendChild(imageCard);
 
-      // Add click event listener for opening a modal/popup
       imageCard.querySelector('img').addEventListener('click', () => {
         openCommentsModal(image.id, image.imageUrl, mode);
       });
     });
 
-    // Update pagination and loading state
     hasMoreImages = data.hasMore;
     if (hasMoreImages) {
-      page++; // Increment the page for the next request
+      page++;
     }
   } catch (error) {
     console.error(`Error loading images from ${apiEndpoint}:`, error);
     showToast('An error occurred while loading images.', 'error');
   } finally {
-    isLoading = false; // Reset the loading state
+    isLoading = false;
   }
 }
 
