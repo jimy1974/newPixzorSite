@@ -1103,20 +1103,19 @@ app.post('/api/like/:publicImageId', ensureAuthenticated, async (req, res) => {
       where: { userId: req.user.id, personalImageId },
     });
 
-    if (liked && alreadyLiked) {
-      return res.status(400).json({ error: 'You have already liked this image.' });
-    }
-    if (!liked && !alreadyLiked) {
-      return res.status(400).json({ error: 'You have not liked this image.' });
-    }
-
-    // 4. Adjust the 'likes' count on the PublicImage (and/or PersonalImage if you wish)
+    // 4. Adjust the 'likes' count on the PublicImage
     if (liked) {
-      image.likes = (image.likes || 0) + 1;
-      await db.Like.create({ userId: req.user.id, personalImageId });
+      if (!alreadyLiked) {
+        // Like the image
+        image.likes = (image.likes || 0) + 1;
+        await db.Like.create({ userId: req.user.id, personalImageId });
+      }
     } else {
-      image.likes = Math.max((image.likes || 0) - 1, 0);
-      await alreadyLiked.destroy();
+      if (alreadyLiked) {
+        // Unlike the image
+        image.likes = Math.max((image.likes || 0) - 1, 0);
+        await alreadyLiked.destroy();
+      }
     }
 
     await image.save(); // Save updated likes count on the public image
@@ -1306,7 +1305,6 @@ app.get('/personal-images', ensureAuthenticated, async (req, res) => {
 
 app.get('/api/public-posts', async (req, res) => {
   try {
-
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
@@ -1350,11 +1348,13 @@ app.get('/api/public-posts', async (req, res) => {
         'prompt',
         'likes',
         [
-          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.personalImageId = PublicImage.id AND likes.userId = ${req.user ? req.user.id : 0})`),
+          sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.personalImageId = PublicImage.personalImageId AND likes.userId = ${req.user ? req.user.id : 0})`),
           'likedByUser',
         ],
       ],
     });
+
+    console.log('Public Images:', JSON.stringify(publicImages, null, 2)); // Debugging
 
     const totalImages = await PublicImage.count({ where });
     const hasMore = offset + limit < totalImages;
@@ -1365,8 +1365,6 @@ app.get('/api/public-posts', async (req, res) => {
     res.status(500).json({ error: 'Failed to load public posts' });
   }
 });
-
-
 
 
 

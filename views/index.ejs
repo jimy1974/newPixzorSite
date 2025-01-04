@@ -149,12 +149,7 @@
       color: white;
     }
 
-    /* Make images take full width of the container */
-    #image-list img {
-      width: 100%;
-      height: auto;
-      object-fit: cover;
-    }
+ 
 
     /* Adjust padding or margin as needed */
     .image-card {
@@ -330,7 +325,8 @@
   transition: transform 0.2s ease;
   cursor: zoom-in;      
 }
-      .fullscreen-modal {
+      
+.fullscreen-modal {
   z-index: 1100; /* A value higher than #comments-modal */
 }
 /* Magnifying glass visibility */
@@ -459,12 +455,15 @@ textarea#comment-input {
 .like-button i {
   color: white; /* Set the heart color */
   font-size: 1.2rem; /* Adjust size */
+  transition: color 0.2s ease-in-out;
 }
 
 .like-button.liked i {
   color: #f00; /* Highlighted heart color for liked state */
 }
-
+.like-button i.liked {
+  color: red; /* Liked heart color */
+}
   .liked {
     color: red; /* Red when liked */
   }
@@ -528,22 +527,33 @@ textarea#comment-input {
   border-radius: 12px 12px 0 0; /* Match rounded style */
 }
 
+/* General styles for buttons */
 .large-button {
   background-color: #4b5563; /* Tailwind's bg-gray-600 equivalent */
   color: white;
   font-size: 1rem;
-  padding: 12px 20px;
-  margin: 0 8px; /* Add spacing between buttons */
+  padding: 8px 16px; /* Slightly smaller padding */
+  margin: 0 4px; /* Reduce margin */
   border: none;
   border-radius: 8px; /* Rounded corners */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Space between icon and text */
   transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover effects */
   cursor: pointer;
 }
 
+.large-button i {
+  font-size: 1.2rem; /* Icon size */
+}
+
+/* Hover effects */
 .large-button:hover {
   background-color: #10b981; /* Tailwind's green-500 equivalent for hover */
   transform: scale(1.05); /* Slightly larger on hover */
 }
+
 
 
 .hidden {
@@ -557,10 +567,7 @@ textarea#comment-input {
   visibility: visible;
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
-.large-button.active {
-  background-color: #10b981; /* Green */
-  color: white;
-}
+
       
 .upload-container, .search-container {
   padding: 20px;
@@ -628,11 +635,10 @@ h2 {
   background-color: #2d3748;
   padding: 20px;
   box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
-  max-height: 20vh; /* Prevent unnecessary scrollbars */
-  overflow-y: hidden; /* Hide scrollbars unless necessary */
+  overflow-y: auto; /* Allow vertical scrolling if content exceeds height */
   display: flex;
-  flex-wrap: wrap; /* Allow flexible layout with wrapping */
-  gap: 10px; /* Add space between input and dropdown */
+  flex-direction: column; /* Stack children vertically */
+  gap: 10px; /* Add space between elements */
 }
 
 .search-container h2 {
@@ -643,6 +649,7 @@ h2 {
   margin-top: 0; /* Remove extra margin at the top of the input container */
 }
 
+/* Replace this section */
 #filter-sidebar {
   /* Layout & Position */
   position: fixed;
@@ -667,6 +674,9 @@ h2 {
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out; /* Smooth sliding animation */
   padding: 16px; /* Add padding around content */
+  pointer-events: auto;    
+  transform: translateX(-100%);
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out; /* Smooth transition */    
 }
 
 /* Scrollbar styling for Webkit-based browsers (Chrome, Edge, Safari) */
@@ -690,12 +700,34 @@ h2 {
 
 /* Sidebar when open (slide-in effect) */
 #filter-sidebar.open {
-  transform: translateX(0); /* Slide in */
+  transform: translateX(0); /* Slide in */    
   animation: bounce-in 0.5s ease-in-out; /* Optional bounce effect */
 }
 
+/* Optional: Add a backdrop to block clicks when the sidebar is open */
+#filter-sidebar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  z-index: 999; /* Below the sidebar */
+  pointer-events: none; /* Allow clicks to pass through */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
 
-
+#filter-sidebar.open::before {
+  opacity: 1;
+  pointer-events: auto; /* Block clicks when the sidebar is open */
+}
+      
+#filter-sidebar.hidden {
+  transform: translateX(-100%);
+}
+      
 /* Add bounce animation for slide-in (optional) */
 @keyframes bounce-in {
   0% {
@@ -708,9 +740,33 @@ h2 {
     transform: translateX(0);
   }
 }
-
   
-      
+/* Close Button */
+#close-sidebar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+}
+
+#close-sidebar:hover {
+  color: #ccc;
+}
+
+/* Swipeable Area (Optional) */
+#filter-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -20px;
+  width: 20px;
+  height: 100%;
+  background: transparent;
+}      
       
 #filter-toggle {
   margin-right: 8px; /* Adjust spacing between hamburger and logo */
@@ -895,7 +951,18 @@ button.active {
    
       
 
+
+
+
 @media (max-width: 640px) {
+    
+  .large-button {
+    font-size: 0.8rem; /* Smaller text */
+    padding: 6px 12px; /* Less padding */
+    margin: 0 2px; /* Reduce spacing further */
+    gap: 0.3rem; /* Smaller gap between icon and text */
+  }
+    
    /* Custom styles for the fixed prompt box */
   .fixed-prompt {
       position: fixed;
@@ -908,6 +975,9 @@ button.active {
       padding-top: 4px;
       padding: 2px;    
     }  
+  .fixed-prompt .flex-col {
+    gap: 0.5rem;
+  }
       
   .content-padding {
     padding-bottom: 200px;
@@ -924,9 +994,7 @@ button.active {
     border-radius: 6px;
   }
   
-  .fixed-prompt .flex-col {
-    gap: 0.5rem;
-  }
+
   
   select {
     height: 32px;
@@ -960,6 +1028,94 @@ button.active {
   pointer-events: auto !important; /* Ensure it's always clickable */
 }
 
+      
+/* Ensure images fill their container and maintain aspect ratio */
+#image-list img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px; /* Add rounded corners for a modern look */
+}
+
+/* Image container styles */
+#image-list {
+  display: grid;
+  gap: 8px; /* Add spacing between images */
+}
+
+/* Smallest screens (< 480px) should still have thumbnails (2 columns) */
+@media (max-width: 479px) {
+  #image-list {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  }
+}
+
+/* Slightly larger screens (480px to 767px): 3 columns */
+@media (min-width: 480px) and (max-width: 767px) {
+  #image-list {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  }
+}
+
+/* Medium screens (768px to 1023px): 4 columns */
+@media (min-width: 768px) and (max-width: 1023px) {
+  #image-list {
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+  }
+}
+
+/* Large screens (≥ 1024px): 5 or more columns */
+@media (min-width: 1024px) {
+  #image-list {
+    grid-template-columns: repeat(5, 1fr); /* 5 columns */
+  }
+}
+
+/* Image styles */
+#image-list img {
+  width: 100%; /* Make images fill their container */
+  height: auto; /* Maintain aspect ratio */
+  object-fit: cover; /* Ensure images cover the grid cell */
+  border-radius: 8px; /* Optional: Add rounded corners */
+}
+
+      //////////////////////////
+      
+      /* Ensure the fullscreen modal fills the viewport */
+.fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* Higher than your comments modal */
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  padding: 1rem;
+}
+
+.fullscreen-image {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.5);
+}
+
+/* Add smooth transition for the close button */
+.fullscreen-modal button {
+  opacity: 0.8;
+  transition: all 0.2s ease;
+}
+
+.fullscreen-modal button:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+      
+ 
+
 </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -970,10 +1126,6 @@ button.active {
     
     <!-- Left Section: Hamburger Menu and Logo -->
     <div class="flex items-center space-x-4">
-      <!-- Hamburger Menu Button -->
-      <button id="filter-toggle" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-600">
-        <i class="fas fa-bars"></i>
-      </button>
       
       <!-- Logo -->
       <div id="logo" class="flex items-center space-x-2">
@@ -1005,45 +1157,52 @@ button.active {
 
 <!-- Filter Sidebar -->
 <div id="filter-sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white p-4 hidden">
+  <!-- Close Button -->
+  <button id="close-sidebar" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl" aria-label="Close">
+    &times;
+  </button>
 
   <h2 class="text-lg font-bold mb-4">Filters</h2>
   
   <!-- Image Source -->
-<h3 class="text-md font-semibold mb-2">Image Source</h3>
-<ul class="mb-4">
-  <li>
-    <button class="filter-button" data-category="image-source" data-filter="ai-generated">Ai Generated</button>
-  </li>
-  <li>
-    <button class="filter-button" data-category="image-source" data-filter="user-uploaded">User Uploaded</button>
-  </li>
-  <li>
-    <button class="filter-button" data-category="image-source" data-filter="stylized-photo">Stylized Photos</button>
-  </li>
-</ul>
+  <h3 class="text-md font-semibold mb-2">Image Source</h3>
+  <ul class="mb-4">
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="ai-generated">AI Generated</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="user-uploaded">User Uploaded</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="stylized-photo">Stylized Photos</button>
+    </li>
+  </ul>
     
-<!-- Advanced Filters -->
-<h3 class="text-md font-semibold mb-2">Advanced Filters</h3>
-<ul>
-  <li>
-    <button class="filter-button" data-category="advanced" data-advanced="newest">Newest</button>
-  </li>
-  <li>
-    <button class="filter-button" data-category="advanced" data-advanced="most-liked">Most Liked</button>
-  </li>
-  <li>
-    <button class="filter-button" data-category="advanced" data-advanced="most-commented">Most Commented</button>
-  </li>
-  <li>
-    <button class="filter-button" data-category="advanced" data-advanced="trending">Trending</button>
-  </li>
-</ul>    
+  <!-- Advanced Filters -->
+  <h3 class="text-md font-semibold mb-2">Advanced Filters</h3>
+  <ul>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="newest">Newest</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="most-liked">Most Liked</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="most-commented">Most Commented</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="trending">Trending</button>
+    </li>
+  </ul>    
 
-<!-- AI Subcategories -->
-<h3 class="text-md font-semibold mb-2">ai-generated - Art Styles</h3>
-<ul class="menu-style-list mb-4"></ul>  
-  <!-- Close Button -->
-  <button id="close-sidebar" class="mt-8 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded">Close</button>
+  <!-- AI Subcategories -->
+  <h3 class="text-md font-semibold mb-2">Styles</h3>
+  <ul class="menu-style-list mb-4"></ul>  
+    
+  <!-- Close Button at the Bottom (Optional) -->
+  <button id="close-sidebar-bottom" class="mt-8 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded">
+    Close
+  </button>
 </div>
 
     
@@ -1111,10 +1270,17 @@ button.active {
     
     
 <div class="fixed-prompt bottom-action-bar">
-  <button class="large-button" onclick="showUploadImage()">Upload Image</button>
-  <button class="large-button" onclick="showCreateImage()">Create Image</button>
-  <button class="large-button" onclick="showSearchImages()">Search Images</button>
+  <button class="large-button" onclick="showUploadImage()">
+    <i class="fas fa-upload"></i> Upload
+  </button>
+  <button class="large-button" onclick="showCreateImage()">
+    <i class="fas fa-paint-brush"></i> Create
+  </button>
+  <button class="large-button" onclick="showSearchImages()">
+    <i class="fas fa-search"></i> Search
+  </button>
 </div>
+
     
 
 <!-- Image Upload Section -->
@@ -1261,21 +1427,21 @@ button.active {
   <div class="search-container">
     <div class="flex justify-between items-center w-full">
       <h2 class="text-white text-lg">Search for Images</h2>
-      <button onclick="returnToMain()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600">Back</button>
+      <button onclick="returnToMain()" class="bg-gray-700 text-white px-3 py-1.5 rounded hover:bg-gray-600 text-sm">
+        Back
+      </button>
     </div>
     <!-- Search Input and Dropdown -->
-    <div class="flex flex-grow gap-4 items-center mt-2"> <!-- Adjusted mt-4 to mt-2 -->
+    <div class="flex flex-col sm:flex-row gap-2 items-center mt-2 w-full">
       <input
         type="text"
         id="search-query"
-        class="flex-grow bg-gray-700 text-white rounded-lg py-2 px-3 border border-gray-300"
-        placeholder="Enter keywords to search for images"
+        class="w-full sm:flex-grow bg-gray-700 text-white rounded-lg py-1.5 px-2 border border-gray-300 placeholder:text-sm"
+        placeholder="Enter keywords to search"
       />
-      
-
       <button
         id="search-button"
-        class="bg-blue-700 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-lg text-sm"
+        class="w-full sm:w-auto bg-green-700 hover:bg-green-600 text-white font-medium px-3 py-1.5 rounded-lg text-sm"
       >
         Search
       </button>
@@ -1869,8 +2035,7 @@ function returnToMain() {
 
     
 async function toggleLike(imageId, likeButton) {
-  const isLiked = likeButton.classList.contains('liked'); // Check current like status
-  const isPublic = likeButton.dataset.isPublic === 'true'; // Read isPublic from data attribute
+  const isLiked = likeButton.querySelector('i').classList.contains('liked');
 
   try {
     const response = await fetch(`/api/like/${imageId}`, {
@@ -1879,24 +2044,22 @@ async function toggleLike(imageId, likeButton) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        liked: !isLiked, // Pass the opposite of current status
-        isPublic: isPublic, // Include the isPublic value
+        liked: !isLiked, // Toggle the liked state
       }),
     });
 
     if (response.ok) {
       const data = await response.json();
 
-      // Toggle the "liked" class based on response
-      likeButton.classList.toggle('liked', !isLiked);
+      // Toggle the "liked" class
+      likeButton.querySelector('i').classList.toggle('liked', !isLiked);
 
-      // Update the like count
-      const likeCountElement = likeButton.nextElementSibling; // Assuming like count is next to the heart icon
+      // Update the like count (if applicable)
+      const likeCountElement = likeButton.nextElementSibling;
       if (likeCountElement && data.likes !== undefined) {
-        likeCountElement.textContent = `${data.likes}`; // Update with the new likes count
+        likeCountElement.textContent = `${data.likes}`;
       }
 
-      // Show success message
       showToast(!isLiked ? 'Liked!' : 'Unliked!', 'success');
     } else {
       const errorData = await response.json();
@@ -2144,27 +2307,7 @@ async function loadUserProfile(userId) {
         });
 
 
-
-        
     
-        document.getElementById('filter-toggle').addEventListener('click', () => {
-          const sidebar = document.getElementById('filter-sidebar');
-          sidebar.classList.toggle('hidden');
-          sidebar.classList.toggle('open');
-        });
-        
-        document.getElementById('open-filters-button').addEventListener('click', () => {
-          const sidebar = document.getElementById('filter-sidebar');
-          sidebar.classList.toggle('hidden');
-          sidebar.classList.toggle('open');
-        });
-        
-
-        document.getElementById('close-sidebar').addEventListener('click', () => {
-          const sidebar = document.getElementById('filter-sidebar');
-          sidebar.classList.add('hidden');
-          sidebar.classList.remove('open');
-        });
 
         // Add functionality for filter buttons
    document.querySelectorAll('.filter-button').forEach((button) => {
@@ -2286,41 +2429,42 @@ async function loadUserProfile(userId) {
               }
             });
 
-          modalImage.addEventListener('click', () => {
-            const fullScreenModal = document.createElement('div');
-            fullScreenModal.classList.add(
-              'fixed',
-              'inset-0',
-              'bg-black',
-              'bg-opacity-90',
-              'flex',
-              'justify-center',
-              'items-center',
-              'fullscreen-modal'
-            );
-            fullScreenModal.innerHTML = `
-              <div class="relative">
-                <img src="${modalImage.src}" alt="Full Image" class="max-w-full max-h-screen rounded-lg">
-                <button class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full" id="close-fullscreen-modal">&times;</button>
-              </div>
-            `;
 
-            // Append fullscreen modal to the document body
-            document.body.appendChild(fullScreenModal);
 
-            // Add event listener to close the modal
-            const closeButton = fullScreenModal.querySelector('#close-fullscreen-modal');
-            closeButton.addEventListener('click', () => {
-              fullScreenModal.remove();
-            });
+           
 
-            // Close the modal when clicking outside the image
-            fullScreenModal.addEventListener('click', (e) => {
-              if (e.target === fullScreenModal) {
-                fullScreenModal.remove();
-              }
-            });
+
+
+        modalImage.addEventListener('click', () => {
+          // Create fullscreen modal
+          const fullScreenModal = document.createElement('div');
+          fullScreenModal.classList.add(
+            'fixed',
+            'inset-0',
+            'bg-black',
+            'bg-opacity-90',
+            'flex',
+            'justify-center',
+            'items-center',
+            'fullscreen-modal'
+          );
+
+          // Add the image to the fullscreen modal
+          fullScreenModal.innerHTML = `
+            <img src="${modalImage.src}" alt="Full Image" class="fullscreen-image rounded-lg">
+          `;
+
+          // Append the modal to the body
+          document.body.appendChild(fullScreenModal);
+
+          // Close the modal when clicking anywhere (image or background)
+          fullScreenModal.addEventListener('click', () => {
+            fullScreenModal.remove();
           });
+        });
+
+
+
         
         
 
@@ -2481,7 +2625,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     imageList.removeChild(imageContainer);
   } finally {
     const generateButton = document.getElementById('generate-button');
-    generateButton.textContent = selectedImage ? 'Modify Image' : 'Generate Image';
+    generateButton.textContent = selectedImage ? 'Modify' : 'Generate';
     generateButton.disabled = false;
   }
 });
@@ -2992,7 +3136,7 @@ async function loadComments(imageId) {
     }
 
     images.forEach((image) => {
-      console.log(`Appending image with ID: ${image.id}`);
+      console.log(`Appending image with ID: ${image.id}, likedByUser: ${image.likedByUser}`);
 
       if (!image.imageUrl) {
         console.error('Invalid image data:', image);
@@ -3004,11 +3148,15 @@ async function loadComments(imageId) {
 
       const likeButton = document.createElement('button');
       likeButton.classList.add('like-button', 'absolute', 'top-2', 'right-2', 'bg-gray-700', 'text-white', 'p-2', 'rounded-full', 'flex', 'items-center', 'justify-center');
-      likeButton.innerHTML = `<i class="fas fa-heart"></i>`;
 
+      const heartIcon = document.createElement('i');
+      heartIcon.classList.add('fas', 'fa-heart');
       if (image.likedByUser) {
-        likeButton.classList.add('liked');
+        heartIcon.classList.add('liked'); // Apply the "liked" class
+        console.log(`Image ${image.id} is liked by the user.`); // Debugging
       }
+
+      likeButton.appendChild(heartIcon);
 
       likeButton.dataset.isPublic = image.isPublic;
 
@@ -3187,7 +3335,7 @@ async function loadPrivatePosts() {
               resetStylesToAllStyles();
                 
               // Clear and hide the thumbnail container
-              generateButton.textContent = 'Generate Image';             
+              generateButton.textContent = 'Generate';             
                // Clear and reset the thumbnail container
               if (thumbnailContainer) {
                 thumbnailContainer.innerHTML = '';
@@ -3464,179 +3612,195 @@ function hideCreateImagePrompt() {
     });
 
     document.addEventListener('DOMContentLoaded', () => {
-  const commentsModal = document.getElementById('comments-modal');
+          
+          document.getElementById('post-comment').addEventListener('click', async () => {
+              const commentInput = document.getElementById('comment-input');
+              const commentText = commentInput.value.trim();
+              const imageId = window.currentImageId;
+
+              if (!commentText) {
+                showToast('Please enter a comment.', 'error');
+                return;
+              }
+
+              try {
+
+                const response = await fetch(`/images/${imageId}/comments`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ content: commentText }),
+                });
+
+                if (!response.ok) {
+                  throw new Error('Failed to post comment.');
+                }
+
+                const newComment = await response.json();
+
+                const commentsList = document.getElementById('comments-list');
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-start', 'space-x-2');
+                li.innerHTML = `
+                  <img src="${newComment.avatar}" alt="${newComment.username}" class="w-8 h-8 rounded-full" />
+                  <div>
+                    <p class="font-bold text-black">${newComment.username}</p>
+                    <p class="text-gray-600">${newComment.content}</p>
+                  </div>
+                `;
+                commentsList.appendChild(li);
+
+
+                // Clear the comment input field
+                commentInput.value = '';
+                showToast('Comment posted successfully!', 'success');
+              } catch (error) {
+                console.error('Error posting comment:', error);
+                showToast('Failed to post your comment. Please try again.', 'error');
+              }
+            });
+
+            document.addEventListener('keydown', (event) => {
+              if (event.key === 'Escape') {
+                commentsModal.classList.add('hidden'); // Hide the modal
+              }
+            });
+
+          
+          const commentsModal = document.getElementById('comments-modal');
   const closeModalButton = document.getElementById('close-comments-modal');
+  const modalImage = document.getElementById('modal-image');
+  const fullscreenIcon = document.getElementById('fullscreen-icon');
 
-  // Close the modal when the "x" button is clicked
-  closeModalButton.addEventListener('click', () => {
-    commentsModal.classList.add('hidden'); // Hide the modal
+  let scrollPosition = 0; // Store the scroll position globally
+
+  // Function to disable scrolling
+  const disableScrolling = () => {
+    scrollPosition = window.scrollY; // Save current scroll position
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${scrollPosition}px`;
+  };
+
+  // Function to enable scrolling
+  const enableScrolling = () => {
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.top = '';
+    window.scrollTo(0, scrollPosition); // Restore the saved scroll position
+  };
+
+  // Close the comments modal
+  const closeCommentsModal = () => {
+    commentsModal.classList.add('hidden');
+    enableScrolling(); // Re-enable scrolling
     history.pushState(null, '', window.location.origin);
-  });
+  };
 
-  // Close the modal when clicking outside the modal content
+  // Close the comments modal when "x" is clicked
+  closeModalButton.addEventListener('click', closeCommentsModal);
+
+  // Close the comments modal when clicking outside it
   commentsModal.addEventListener('click', (event) => {
     if (event.target === commentsModal) {
-      commentsModal.classList.add('hidden'); // Hide the modal
-      history.pushState(null, '', window.location.origin);    
+      closeCommentsModal();
     }
   });
-        
-  document.getElementById('post-comment').addEventListener('click', async () => {
-      const commentInput = document.getElementById('comment-input');
-      const commentText = commentInput.value.trim();
-      const imageId = window.currentImageId;
 
-      if (!commentText) {
-        showToast('Please enter a comment.', 'error');
-        return;
-      }
-
-      try {
-                
-        const response = await fetch(`/images/${imageId}/comments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: commentText }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to post comment.');
-        }
-
-        const newComment = await response.json();
-
-        const commentsList = document.getElementById('comments-list');
-        const li = document.createElement('li');
-        li.classList.add('flex', 'items-start', 'space-x-2');
-        li.innerHTML = `
-          <img src="${newComment.avatar}" alt="${newComment.username}" class="w-8 h-8 rounded-full" />
-          <div>
-            <p class="font-bold text-black">${newComment.username}</p>
-            <p class="text-gray-600">${newComment.content}</p>
-          </div>
-        `;
-        commentsList.appendChild(li);
-
-
-        // Clear the comment input field
-        commentInput.value = '';
-        showToast('Comment posted successfully!', 'success');
-      } catch (error) {
-        console.error('Error posting comment:', error);
-        showToast('Failed to post your comment. Please try again.', 'error');
-      }
-    });
-        
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        commentsModal.classList.add('hidden'); // Hide the modal
-      }
-    });
-        
-    const modalImage = document.getElementById('modal-image');
-  const fullscreenIcon = document.getElementById('fullscreen-icon');
-  
+  // Add escape key functionality for the comments modal
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !commentsModal.classList.contains('hidden')) {
+      closeCommentsModal();
+    }
+  });
 
   // Fullscreen Modal Function
   const showFullscreenModal = () => {
+    disableScrolling(); // Disable scrolling when entering fullscreen
+
+    // Create fullscreen container
     const fullScreenModal = document.createElement('div');
-    fullScreenModal.classList.add(
-      'fixed',
-      'inset-0',
-      'bg-black',
-      'bg-opacity-90',
-      'flex',
-      'justify-center',
-      'items-center',
-      'fullscreen-modal'
+    fullScreenModal.classList.add('fullscreen-modal');
+
+    // Create the image container with close button
+    const imageContainer = document.createElement('div');
+    imageContainer.classList.add('relative');
+
+    // Create the fullscreen image
+    const fullscreenImage = document.createElement('img');
+    fullscreenImage.src = modalImage.src;
+    fullscreenImage.alt = "Full Image";
+    fullscreenImage.classList.add('fullscreen-image');
+
+    // Create close button
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '&times;';
+    closeButton.classList.add(
+      'absolute',
+      'top-4',
+      'right-4',
+      'bg-red-500',
+      'hover:bg-red-600',
+      'text-white',
+      'text-2xl',
+      'px-3',
+      'py-1',
+      'rounded-full',
+      'shadow-lg',
+      'transition-colors'
     );
-    fullScreenModal.innerHTML = `
-      <div class="relative">
-        <img src="${modalImage.src}" alt="Full Image" class="max-w-full max-h-screen rounded-lg">
-        <button class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full" id="close-fullscreen-modal">&times;</button>
-      </div>
-    `;
+
+    // Assemble the modal
+    imageContainer.appendChild(fullscreenImage);
+    imageContainer.appendChild(closeButton);
+    fullScreenModal.appendChild(imageContainer);
     document.body.appendChild(fullScreenModal);
 
+    // Handle closing the fullscreen view
+    const closeFullscreen = () => {
+      enableScrolling(); // Re-enable scrolling when exiting fullscreen
+      fullScreenModal.classList.add('opacity-0');
+      setTimeout(() => fullScreenModal.remove(), 300);
+    };
+
+    // Close on button click
+    closeButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeFullscreen();
+    });
+
+    // Close on background click
     fullScreenModal.addEventListener('click', (e) => {
-      if (e.target.id === 'close-fullscreen-modal' || e.target === fullScreenModal) {
-        fullScreenModal.remove();
+      if (e.target === fullScreenModal) {
+        closeFullscreen();
       }
     });
+
+    // Close on escape key
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeFullscreen();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   };
 
-  // Attach Fullscreen Modal Event Listeners
-  modalImage.addEventListener('click', showFullscreenModal);
-  fullscreenIcon.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent triggering image click
+  // Attach event listeners
+  modalImage.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent closing the comments modal
     showFullscreenModal();
   });
 
- 
-    // Handle profile link click
-  document.getElementById('modal-user-profile').addEventListener('click', (e) => {
-    e.preventDefault();
-    const userId = e.currentTarget.getAttribute('data-user-id'); // Use e.currentTarget
-
-    if (userId) {
-      history.pushState(null, '', `/user-profile/${userId}`);
-      loadUserProfile(userId);
-    } else {
-      console.error('User ID is null or undefined.');
-      showToast('Unable to load user profile.', 'error');
-    }
+  fullscreenIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showFullscreenModal();
   });
-    // Listen for navigation changes
-    window.addEventListener('popstate', (event) => {
-          const url = new URL(window.location.href);
-          const path = url.pathname;
-
-          if (path.startsWith('/user-profile/')) {
-            const userId = path.split('/').pop(); // Extract user ID from the path
-            loadUserProfile(userId);
-          } else {
-            // Handle other routes (e.g., load public posts)
-            loadImages('/api/public-posts', 'public');
-          }
-    });
-    
-    
-    const currentPath = window.location.pathname;
-    const profileMatch = currentPath.match(/^\/user-profile\/(\d+)$/);
-
-    if (profileMatch) {
-        const userId = profileMatch[1];
-        loadUserProfile(userId); // Fetch and display the profile
-    }
-
-
-   const urlParams = new URLSearchParams(window.location.search);
-  const imageId = urlParams.get('image');
-
-  if (imageId) {
-    // Fetch image details from the unified endpoint
-    fetch(`/api/image-details/${imageId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Image not found');
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (data) {
-          // Open the comments modal with the fetched image details
-          openCommentsModal(imageId, data.imageUrl, data.isPublic ? 'public' : 'personal');
-        } else {
-          console.error('Image details could not be found.');
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching image details:', error);
-        showToast('The requested image could not be found or is no longer available.', 'error');
-      });
-  }
-        
 });
+
+      
+      
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -3911,69 +4075,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       
       
-document.addEventListener('DOMContentLoaded', () => {
-  const toggleButton = document.getElementById('filter-toggle');
-  const sidebar = document.getElementById('filter-sidebar');
 
-  if (!toggleButton) {
-    console.error('Filter toggle button not found.');
-    return;
-  }
-
-  if (!sidebar) {
-    console.error('Filter sidebar not found.');
-    return;
-  }
-
-  // Toggle sidebar open/close on button click
-  toggleButton.addEventListener('click', () => {
-    sidebar.classList.toggle('hidden');
-    sidebar.classList.toggle('open');
-  });
-
-  // Close sidebar when mouse leaves it
-  sidebar.addEventListener('mouseleave', () => {
-    sidebar.classList.add('hidden');
-    sidebar.classList.remove('open');
-  });
-});
-      
-let closeTimeout;
-
-document.addEventListener('DOMContentLoaded', () => {
-  const toggleButton = document.getElementById('filter-toggle');
-  const sidebar = document.getElementById('filter-sidebar');
-
-  if (!toggleButton) {
-    console.error('Filter toggle button not found.');
-    return;
-  }
-
-  if (!sidebar) {
-    console.error('Filter sidebar not found.');
-    return;
-  }
-
-  // Toggle sidebar open/close on button click
-  toggleButton.addEventListener('click', () => {
-    clearTimeout(closeTimeout); // Clear any pending timeout
-    sidebar.classList.toggle('hidden');
-    sidebar.classList.toggle('open');
-  });
-
-  // Close sidebar with delay when mouse leaves
-  sidebar.addEventListener('mouseleave', () => {
-    closeTimeout = setTimeout(() => {
-      sidebar.classList.add('hidden');
-      sidebar.classList.remove('open');
-    }, 300); // Delay in milliseconds
-  });
-
-  // Cancel close if mouse re-enters quickly
-  sidebar.addEventListener('mouseenter', () => {
-    clearTimeout(closeTimeout);
-  });
-});
       
       
       
@@ -4055,7 +4157,84 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Open/Close Sidebar
+  const sidebar = document.getElementById('filter-sidebar');
+  const openSidebarButton = document.getElementById('open-filters-button');
+  const closeSidebarButton = document.getElementById('close-sidebar');
+  const closeSidebarBottomButton = document.getElementById('close-sidebar-bottom');
 
+  let closeTimeout;
+
+  // Open Sidebar
+  openSidebarButton.addEventListener('click', (event) => {
+    event.stopPropagation(); // Stop event propagation
+    sidebar.classList.remove('hidden');
+    sidebar.classList.add('open');
+  });
+
+  // Close Sidebar
+  function closeSidebar(event) {
+    if (event) event.stopPropagation(); // Stop event propagation
+    sidebar.classList.remove('open');
+    sidebar.classList.add('hidden');
+  }
+
+  closeSidebarButton.addEventListener('click', closeSidebar);
+  closeSidebarBottomButton.addEventListener('click', closeSidebar);
+
+  // Swipe Gestures
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  sidebar.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  });
+
+  sidebar.addEventListener('touchmove', (e) => {
+    touchEndX = e.touches[0].clientX;
+  });
+
+  sidebar.addEventListener('touchend', () => {
+    const swipeDistance = touchEndX - touchStartX;
+
+    // Swipe Right to Open
+    if (swipeDistance > 50 && !sidebar.classList.contains('open')) {
+      sidebar.classList.remove('hidden');
+      sidebar.classList.add('open');
+    }
+
+    // Swipe Left to Close
+    if (swipeDistance < -50 && sidebar.classList.contains('open')) {
+      closeSidebar();
+    }
+  });
+
+  // Prevent clicks inside the sidebar from propagating to elements beneath it
+  sidebar.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+
+  // Close sidebar when clicking outside (on the backdrop)
+  document.addEventListener('click', (event) => {
+    if (sidebar.classList.contains('open') && !sidebar.contains(event.target)) {
+      closeSidebar(event);
+    }
+  });
+
+  // Close sidebar with delay when mouse leaves
+  sidebar.addEventListener('mouseleave', () => {
+    closeTimeout = setTimeout(() => {
+      sidebar.classList.remove('open');
+      sidebar.classList.add('hidden');
+    }, 600); // Increased delay to 1000ms (1 second)
+  });
+
+  // Cancel close if mouse re-enters quickly
+  sidebar.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimeout);
+  });
+});
   </script>
 </body>
 </html>
