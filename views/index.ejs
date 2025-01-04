@@ -649,97 +649,7 @@ h2 {
   margin-top: 0; /* Remove extra margin at the top of the input container */
 }
 
-/* Replace this section */
-#filter-sidebar {
-  /* Layout & Position */
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 250px; /* Sidebar width */
-  height: 100%; /* Full height */
-  z-index: 1000; /* Ensure it appears above most content */
 
-  /* Styling */
-  background-color: #1a202c; /* Darker gray for blending */
-  border-right: 1px solid #2d3748; /* Subtle border for separation */
-  color: white; /* Text color */
-  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5); /* Shadow for depth */
-
-  /* Scroll & Overflow */
-  overflow-y: auto; /* Enable scrolling if content overflows */
-  scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: #4b5563 #1a202c; /* Thumb and track colors */
-
-  /* Hidden by default (slide out) */
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out; /* Smooth sliding animation */
-  padding: 16px; /* Add padding around content */
-  pointer-events: auto;    
-  transform: translateX(-100%);
-  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out; /* Smooth transition */    
-}
-
-/* Scrollbar styling for Webkit-based browsers (Chrome, Edge, Safari) */
-#filter-sidebar::-webkit-scrollbar {
-  width: 8px; /* Scrollbar width */
-}
-
-#filter-sidebar::-webkit-scrollbar-thumb {
-  background-color: #4b5563; /* Dark gray thumb */
-  border-radius: 8px; /* Rounded edges for thumb */
-}
-
-#filter-sidebar::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280; /* Lighter gray on hover */
-}
-
-#filter-sidebar::-webkit-scrollbar-track {
-  background-color: #1a202c; /* Dark track matching sidebar */
-  border-radius: 8px; /* Rounded edges for track */
-}
-
-/* Sidebar when open (slide-in effect) */
-#filter-sidebar.open {
-  transform: translateX(0); /* Slide in */    
-  animation: bounce-in 0.5s ease-in-out; /* Optional bounce effect */
-}
-
-/* Optional: Add a backdrop to block clicks when the sidebar is open */
-#filter-sidebar::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
-  z-index: 999; /* Below the sidebar */
-  pointer-events: none; /* Allow clicks to pass through */
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-}
-
-#filter-sidebar.open::before {
-  opacity: 1;
-  pointer-events: auto; /* Block clicks when the sidebar is open */
-}
-      
-#filter-sidebar.hidden {
-  transform: translateX(-100%);
-}
-      
-/* Add bounce animation for slide-in (optional) */
-@keyframes bounce-in {
-  0% {
-    transform: translateX(-100%);
-  }
-  40% {
-    transform: translateX(10px); /* Slight bounce */
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
   
 /* Close Button */
 #close-sidebar {
@@ -757,20 +667,6 @@ h2 {
   color: #ccc;
 }
 
-/* Swipeable Area (Optional) */
-#filter-sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -20px;
-  width: 20px;
-  height: 100%;
-  background: transparent;
-}      
-      
-#filter-toggle {
-  margin-right: 8px; /* Adjust spacing between hamburger and logo */
-}
 
 
 /* Default filter button style */
@@ -1115,7 +1011,121 @@ button.active {
 }
       
  
+/* Buy Tokens Modal */
+#buy-tokens-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
+}
 
+
+/* Ensure the dropdown menu is fully visible */
+/* Adjust the dropdown height and text alignment */
+#token-bundle {
+  height: 48px; /* Increase the height */
+  padding: 12px 8px; /* Add more padding for better spacing */
+  line-height: 1.5; /* Ensure text is vertically centered */
+  font-size: 16px; /* Adjust font size if needed */
+  border: 1px solid #ccc; /* Ensure the border is visible */
+  border-radius: 8px; /* Match your design */
+  appearance: none; /* Remove default arrow */
+  
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+/* Adjust modal content for smaller screens */
+@media (max-width: 640px) {
+  #buy-tokens-modal > div {
+    width: 95%; /* Use more screen width on small devices */
+    padding: 16px; /* Reduce padding for better fit */
+  }
+
+  #token-bundle {
+    font-size: 14px; /* Smaller font size for dropdown */
+  }
+}
+      
+/* Ensure the dropdown menu appears above the modal */
+.dropdown-menu {
+  z-index: 1001; /* Higher than the modal's z-index */
+  position: relative; /* Ensure it respects the z-index */
+}
+
+/* Adjust the modal's overflow property */
+#buy-tokens-modal {
+  overflow: visible; /* Allow dropdown to overflow */
+}
+
+#buy-tokens-modal > div {
+  overflow: visible; /* Ensure the modal content doesn't clip the dropdown */
+}      
+      
+      
+      
+/* Update the sidebar styles */
+#filter-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  z-index: 5000;
+  background-color: #1a202c;
+  border-right: 1px solid #2d3748;
+  color: white;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1a202c;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  padding: 16px;
+}
+
+/* Backdrop styling */
+#sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 4999;
+  display: none; /* Hide by default */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Show backdrop when sidebar is open */
+#filter-sidebar.open ~ #sidebar-backdrop {
+  display: block;
+  opacity: 1;
+}
+
+/* Ensure the sidebar is above the backdrop */
+#filter-sidebar.open {
+  transform: translateX(0);
+  animation: bounce-in 0.5s ease-in-out;
+}
+
+/* Keep existing animations and other styles */
+@keyframes bounce-in {
+  0% { transform: translateX(-100%); }
+  40% { transform: translateX(10px); }
+  100% { transform: translateX(0); }
+}
+      
+      
 </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -1154,14 +1164,17 @@ button.active {
 
 
   
-
 <!-- Filter Sidebar -->
 <div id="filter-sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white p-4 hidden">
+  <!-- Backdrop -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-4999 hidden"></div>
+
   <!-- Close Button -->
   <button id="close-sidebar" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl" aria-label="Close">
     &times;
   </button>
 
+  <!-- Sidebar Content -->
   <h2 class="text-lg font-bold mb-4">Filters</h2>
   
   <!-- Image Source -->
@@ -1452,6 +1465,7 @@ button.active {
 
 
 <!-- Buy Tokens Modal -->
+<!-- Buy Tokens Modal -->
 <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
@@ -1466,7 +1480,7 @@ button.active {
       <!-- Token Purchase Form -->
       <form id="buy-tokens-form" class="mb-6">
         <label for="token-bundle" class="block mb-2">Select a Token Bundle:</label>
-        <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4">
+        <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4 dropdown-menu">
           <!-- Adjusted Token Options -->
           <option value="500" data-price="5.00">500 Tokens - $5.00</option>
           <option value="1000" data-price="10.00">1,000 Tokens - $10.00</option>
@@ -2706,6 +2720,11 @@ function closeModal(modalId) {
           }
         });
 
+        document.getElementById('buy-tokens-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('buy-tokens-modal')) {
+    document.getElementById('buy-tokens-modal').classList.add('hidden');
+  }
+});
 
       document.getElementById('buy-tokens-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -3136,8 +3155,7 @@ async function loadComments(imageId) {
     }
 
     images.forEach((image) => {
-      console.log(`Appending image with ID: ${image.id}, likedByUser: ${image.likedByUser}`);
-
+      
       if (!image.imageUrl) {
         console.error('Invalid image data:', image);
         return;
@@ -3152,8 +3170,7 @@ async function loadComments(imageId) {
       const heartIcon = document.createElement('i');
       heartIcon.classList.add('fas', 'fa-heart');
       if (image.likedByUser) {
-        heartIcon.classList.add('liked'); // Apply the "liked" class
-        console.log(`Image ${image.id} is liked by the user.`); // Debugging
+        heartIcon.classList.add('liked'); // Apply the "liked" class        
       }
 
       likeButton.appendChild(heartIcon);
@@ -4158,32 +4175,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Open/Close Sidebar
   const sidebar = document.getElementById('filter-sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
   const openSidebarButton = document.getElementById('open-filters-button');
   const closeSidebarButton = document.getElementById('close-sidebar');
   const closeSidebarBottomButton = document.getElementById('close-sidebar-bottom');
-
   let closeTimeout;
+  let mousePosition = { x: 0, y: 0 };
+  let isMouseNearSidebar = false;
 
   // Open Sidebar
-  openSidebarButton.addEventListener('click', (event) => {
-    event.stopPropagation(); // Stop event propagation
+  function openSidebar(event) {
+    if (event) event.stopPropagation();
     sidebar.classList.remove('hidden');
     sidebar.classList.add('open');
-  });
+    backdrop.style.display = 'block';
+    setTimeout(() => {
+      backdrop.style.opacity = '1';
+    }, 0);
+  }
 
   // Close Sidebar
   function closeSidebar(event) {
-    if (event) event.stopPropagation(); // Stop event propagation
+    if (event) event.stopPropagation();
     sidebar.classList.remove('open');
-    sidebar.classList.add('hidden');
+    backdrop.style.opacity = '0';
+    setTimeout(() => {
+      sidebar.classList.add('hidden');
+      backdrop.style.display = 'none';
+    }, 300);
   }
 
+  // Track mouse position
+  document.addEventListener('mousemove', (e) => {
+    mousePosition.x = e.clientX;
+    mousePosition.y = e.clientY;
+    
+    // Consider the mouse "near" the sidebar if it's within 50px of the left edge
+    isMouseNearSidebar = mousePosition.x <= (sidebar.offsetWidth + 50);
+  });
+
+  // Only start close timer if mouse is not near sidebar
+  sidebar.addEventListener('mouseleave', (e) => {
+    // Check if the mouse is moving towards the right (away from sidebar)
+    if (e.clientX > sidebar.offsetWidth && !isMouseNearSidebar) {
+      closeTimeout = setTimeout(() => {
+        // Double check mouse position before closing
+        if (!isMouseNearSidebar) {
+          closeSidebar();
+        }
+      }, 2000); // Increased to 2 seconds
+    }
+  });
+
+  // Cancel close if mouse re-enters
+  sidebar.addEventListener('mouseenter', () => {
+    clearTimeout(closeTimeout);
+  });
+
+  openSidebarButton.addEventListener('click', openSidebar);
   closeSidebarButton.addEventListener('click', closeSidebar);
   closeSidebarBottomButton.addEventListener('click', closeSidebar);
+  backdrop.addEventListener('click', closeSidebar);
 
-  // Swipe Gestures
+  // Prevent clicks inside the sidebar from propagating
+  sidebar.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+
+  // Handle swipe gestures
   let touchStartX = 0;
   let touchEndX = 0;
 
@@ -4197,42 +4257,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sidebar.addEventListener('touchend', () => {
     const swipeDistance = touchEndX - touchStartX;
-
-    // Swipe Right to Open
-    if (swipeDistance > 50 && !sidebar.classList.contains('open')) {
-      sidebar.classList.remove('hidden');
-      sidebar.classList.add('open');
-    }
-
-    // Swipe Left to Close
     if (swipeDistance < -50 && sidebar.classList.contains('open')) {
       closeSidebar();
     }
-  });
-
-  // Prevent clicks inside the sidebar from propagating to elements beneath it
-  sidebar.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
-
-  // Close sidebar when clicking outside (on the backdrop)
-  document.addEventListener('click', (event) => {
-    if (sidebar.classList.contains('open') && !sidebar.contains(event.target)) {
-      closeSidebar(event);
-    }
-  });
-
-  // Close sidebar with delay when mouse leaves
-  sidebar.addEventListener('mouseleave', () => {
-    closeTimeout = setTimeout(() => {
-      sidebar.classList.remove('open');
-      sidebar.classList.add('hidden');
-    }, 600); // Increased delay to 1000ms (1 second)
-  });
-
-  // Cancel close if mouse re-enters quickly
-  sidebar.addEventListener('mouseenter', () => {
-    clearTimeout(closeTimeout);
   });
 });
   </script>
