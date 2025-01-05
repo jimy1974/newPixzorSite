@@ -1268,9 +1268,12 @@ app.get('/profile', ensureAuthenticated, (req, res) => {
 });
 
 
-
 app.get('/personal-images', ensureAuthenticated, async (req, res) => {
   try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
     const images = await PersonalImage.findAll({
       where: { userId: req.user.id },
       attributes: [
@@ -1281,13 +1284,21 @@ app.get('/personal-images', ensureAuthenticated, async (req, res) => {
         'description',
         'prompt',
         'likes',
+        'isPublic', // Add this line to include the isPublic attribute
         [
           sequelize.literal(`EXISTS (SELECT 1 FROM likes WHERE likes.personalImageId = PersonalImage.id AND likes.userId = ${req.user.id})`),
           'likedByUser',
         ],
       ],
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']], // Order by newest first
     });
-    res.json(images);
+
+    const totalImages = await PersonalImage.count({ where: { userId: req.user.id } });
+    const hasMore = offset + limit < totalImages;
+
+    res.json({ images, hasMore });
   } catch (error) {
     console.error('Error fetching personal images:', error);
     res.status(500).json({ error: 'Failed to fetch personal images' });
@@ -1669,7 +1680,7 @@ app.post('/upload-image', ensureAuthenticated, upload.single('image'), async (re
     const thumbnailName = `thumb_${fileName}`;
     const thumbnailPath = path.join(thumbnailsFolderPath, thumbnailName);
 
-    await sharp(filePath).resize(408).toFile(thumbnailPath);
+    await sharp(filePath).resize(308).toFile(thumbnailPath);
 
     const imageUrl = `/personal-images/${userId}/${fileName}`;
     const thumbnailUrl = `/personal-images/${userId}/thumbnails/${thumbnailName}`;
