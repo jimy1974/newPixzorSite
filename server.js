@@ -206,7 +206,7 @@ function ensureAuthenticated(req, res, next) {
 
   // Check if the request is an API call
   if (req.originalUrl.startsWith('/api/')) {
-    return res.status(401).json({ error: 'Unauthorized: Please log in to perform this action.' });
+    return res.status(401).json({ error: 'Please log in to perform this action.' });
   }
 
  
@@ -312,62 +312,6 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 
-/*
-app.post('/create-checkout-session', async (req, res) => {
-  console.log('Request body:', req.body); // Log incoming data
-  const { tokens, price } = req.body;
-    
-  if (!tokens || !price) {
-    console.error('Invalid request body:', req.body);
-    return res.status(400).json({ error: 'Missing tokens or price' });
-  }
-    
-  
-  // Predefined valid bundles
-  const validBundles = {
-    "500": "5.00",
-    "1200": "10.00",
-    "3000": "20.00",
-    "5000": "30.00",
-    "20000": "100.00",
-  };
-
-  // Validate token-price pair
-  if (!validBundles[tokens] || validBundles[tokens] !== price) {
-    return res.status(400).json({ error: "Invalid token bundle selected" });
-  }    
-    
-  try {
-    const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card', 'link', 'paypal' ], //, 'link', 'paypal'
-        line_items: [{
-            price_data: {
-                currency: 'usd',
-                product_data: {
-                    name: `${tokens} Tokens for Pixzor`,
-                },
-                unit_amount: price * 100, // Convert dollars to cents
-            },
-            quantity: 1,
-        }],
-        mode: 'payment',
-        success_url: `${process.env.APP_BASE_URL}/success`,
-        cancel_url: `${process.env.APP_BASE_URL}/cancel`,
-        metadata: {
-            userId: req.user.id,
-            tokens: tokens,
-        },
-    });
-
-
-    res.json({ id: session.id });
-  } catch (error) {
-    console.error('Error creating checkout session:', error);
-    res.status(500).json({ error: 'Failed to create checkout session' });
-  }
-});*/
-
-
 
 app.get('/success', (req, res) => {
     res.redirect('/?status=success');
@@ -466,14 +410,14 @@ app.get('/user-data', (req, res) => {
       loggedIn: true,
       username: req.user.username,
       email: req.user.email,
-      photo: req.user.photo || '/images/avatar.png', // Updated path
-      tokens: req.user.tokens,    
+      photo: req.user.photo || '/images/avatar.png',
+      tokens: req.user.tokens,
+      isRegistered: true, // Authenticated users are considered registered
     });
   } else {
-    res.json({ loggedIn: false });
+    res.json({ loggedIn: false, isRegistered: false }); // Unauthenticated users are not registered
   }
 });
-
 
 
 
@@ -543,14 +487,14 @@ app.get('/', async (req, res) => {
       label: style.label || style.value.charAt(0).toUpperCase() + style.value.slice(1).replace(/-/g, ' '), // Default to formatted `value` if `label` is missing
       count: style.count || 0, // Default to 0 if `count` is missing
     }));
-      
-    console.log('Styles with Counts:', updatedStylesWithCounts);
-  
+
+    
 
     // Render the page with the fetched data
     res.render('index', {
       isLoggedIn: !!req.user, // True if user is logged in
       user: req.user || null, // Send user info if available
+      isRegistered: req.user ? true : false, // Pass isRegistered flag
       showProfile: false,
       profileUserId: 0,
       title,
@@ -653,6 +597,27 @@ app.get('/logout', (req, res, next) => {
 });
 
 
+function calculateTokenCost(width, height, model) {
+  const pixelCount = width * height;
+
+  // Define token cost per 1 million pixels for each model
+  const tokenCostPerMillionPixels = {
+    'flux-schnell': 1, // 1 Token per 1M pixels
+    'flux-dev': 1, // 1 Token per 1M pixels
+    'essential-v2': 20, // 20 Tokens per 1M pixels
+    // Stable Diffusion and other models: 0.1 Tokens per 1M pixels
+  };
+
+  // Get the token cost per 1M pixels for the selected model (default to 0.1 if not found)
+  const tokenRate = tokenCostPerMillionPixels[model] || 0.1;
+
+  // Calculate token cost: (pixelCount / 1,000,000) * tokenRate
+  const tokenCost = (pixelCount / 1000000) * tokenRate;
+
+  return tokenCost;
+}
+
+
 let consecutiveFailures = 0; // Track the number of consecutive failures for getimg.ai
 let useBackupAPI = false; // Flag to indicate if we should use the backup API
 const SWITCH_BACK_TIMEOUT = 5 * 60 * 60 * 1000; // 5-hour timeout for switching back
@@ -665,6 +630,20 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
     const { prompt, width, height, guidanceScale, inferenceSteps, isPublic, style, model } = req.body;
 
+     // Calculate token cost based on image size and model
+    const tokenCost = calculateTokenCost(width, height, model);
+
+    // Check if the user has enough tokens
+    if (req.user.tokens < tokenCost) {
+      return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
+    }
+
+    // Deduct tokens based on image size and model
+    req.user.tokens -= tokenCost;
+    await req.user.save();
+      
+      
+      
     // Debugging input parameters
     console.log('Generate Image API Called');
     console.log('Input Parameters:');
@@ -750,9 +729,6 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       return res.status(500).json({ error: 'Failed to generate image.' });
     }
 
-    // Deduct a token
-    req.user.tokens -= 1;
-    await req.user.save();
 
     // Save the image to the user's folder
     const userFolderPath = path.join(personalImagesPath, req.user.id.toString());
@@ -855,6 +831,10 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Image file not found' });
     }
 
+    // Get the image dimensions
+    const imageMetadata = await sharp(resolvedImagePath).metadata();
+    const { width, height } = imageMetadata;
+
     // Load and convert the image to Base64
     const base64Image = fs.readFileSync(resolvedImagePath, { encoding: 'base64' });
 
@@ -941,6 +921,18 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     // Generate a thumbnail
     await sharp(savedImagePath).resize(408).toFile(thumbnailPath);
 
+    // Calculate token cost based on image size and model
+    const tokenCost = calculateTokenCost(width, height, model);
+
+    // Check if the user has enough tokens
+    if (req.user.tokens < tokenCost) {
+      return res.status(400).json({ error: 'You do not have enough tokens to edit this image.' });
+    }
+
+    // Deduct tokens based on image size and model
+    req.user.tokens -= tokenCost;
+    await req.user.save();
+
     const savedImageUrl = `/personal-images/${req.user.id}/${fileName}`;
     const savedThumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
 
@@ -969,7 +961,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: tokenCost });
   } catch (error) {
     console.error('Error in /edit-image:', error);
     res.status(500).json({ error: error.message || 'Failed to edit image' });

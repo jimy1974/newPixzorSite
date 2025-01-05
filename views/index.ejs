@@ -1,42 +1,64 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- Character Encoding -->
     <meta charset="UTF-8">
     
-    <!-- Viewport for Responsive Design -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    
-    
-  <title><%= title %></title>
-  <% if (imageUrl) { %>
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<%= title %>" />
-    <meta property="og:description" content="<%= description %>" />
-    <meta property="og:image" content="<%= imageUrl %>" />
-    <meta property="og:url" content="<%= url %>" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="628" />
+    <!-- Viewport for Responsive Design -->    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <!-- Page Title -->
+    <title><%= title %></title>
 
-    <!-- Twitter Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="<%= title %>" />
-    <meta name="twitter:description" content="<%= description %>" />
-    <meta name="twitter:image" content="<%= imageUrl %>" />
-  <% } %>
-    
-    <meta name="title" content="Pixzor - AI Image and Video Creation Platform">
-    <meta name="description" content="Create stunning AI-generated images and videos with advanced character consistency, face swap, and storytelling tools. Transform your creative vision into reality.">
-    <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools">
-    
-    <link rel="canonical" href="https://www.pixzor.com/">
-    
-  <!-- Tailwind CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://js.stripe.com/v3/"></script>
+    <!-- Meta Description and Keywords -->
+    <meta name="description" content="Create stunning AI-generated images with Pixzor. Transform your creative vision into reality with advanced tools for character consistency, face swap, and storytelling. Future plans include AI-powered video animation for subscribers.">
+    <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools, character consistency, AI animation">
+    <meta name="author" content="Pixzor">
+
+    <!-- Open Graph Meta Tags (for social sharing) -->
+    <% if (imageUrl) { %>
+        <meta property="og:title" content="<%= title %>" />
+        <meta property="og:description" content="<%= description %>" />
+        <meta property="og:image" content="<%= imageUrl %>" />
+        <meta property="og:url" content="<%= url %>" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="628" />
+    <% } %>
+
+    <!-- Twitter Meta Tags (for social sharing) -->
+    <% if (imageUrl) { %>
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="<%= title %>" />
+        <meta name="twitter:description" content="<%= description %>" />
+        <meta name="twitter:image" content="<%= imageUrl %>" />
+    <% } %>
+
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": "https://www.pixzor.com/",
+        "name": "Pixzor",
+        "description": "AI-powered platform for creating stunning images and videos. Transform your creative vision into reality with advanced tools for character consistency, face swap, and storytelling.",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "contact@pixzor.com",
+            "contactType": "customer support"
+        },
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.pixzor.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://js.stripe.com/v3/"></script>
+
 
   <style>
       
@@ -326,9 +348,6 @@
   cursor: zoom-in;      
 }
       
-.fullscreen-modal {
-  z-index: 1100; /* A value higher than #comments-modal */
-}
 /* Magnifying glass visibility */
 #modal-image:hover + span {
   opacity: 1; /* Makes magnifying glass visible on hover */
@@ -499,19 +518,46 @@ textarea#comment-input {
 }
 
       
-#prompt-input { 
-  box-sizing: border-box;
-  padding: 8px;
-  font-size: 1rem;
-  resize: none;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #1a1a1a;
+
+#prompt-input {
+  width: 100%;
+  background-color: #374151;
   color: white;
-}
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  padding: 0.5rem 4rem 0.5rem 0.5rem;
+  font-size: 0.875rem;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 2.5rem;
+  max-height: 10rem;
+  line-height: 1.25;
   
-      
-      
+  /* Add these properties */
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  box-sizing: border-box;
+  display: block;
+
+}
+
+.absolute.right-2.top-2 {
+  right: 0.5rem;
+  top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  #prompt-input {
+    max-height: 8rem;
+    padding-right: 3.5rem;
+  }
+
+  .absolute.right-2.top-2 {
+    right: 0.25rem;
+    top: 0.25rem;
+  }
+}
       
       
       
@@ -865,7 +911,7 @@ button.active {
       bottom: 0;
       
       width: 100%;
-      max-height: 35vh;
+      
       overflow-y: auto;
       z-index: 50;
       padding-top: 4px;
@@ -975,39 +1021,47 @@ button.active {
   border-radius: 8px; /* Optional: Add rounded corners */
 }
 
-      //////////////////////////
-      
-      /* Ensure the fullscreen modal fills the viewport */
-.fullscreen-modal {
+
+/* Ensure the fullscreen modal fills the viewport */
+#fullscreen-modal {
+  z-index: 1100; /* Higher than #comments-modal */
+}
+  
+#fullscreen-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  z-index: 1100; /* Higher than #comments-modal */
+  background-color: rgba(0, 0, 0, 0.9); /* Semi-transparent black background */
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 9999; /* Higher than your comments modal */
-  opacity: 1;
-  transition: opacity 0.3s ease;
-  padding: 1rem;
+  align-items: center;
 }
 
-.fullscreen-image {
-  max-width: 95vw;
-  max-height: 95vh;
+#fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  border-radius: 0.5rem;
-  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.5);
+  touch-action: pan-x pan-y; /* Enable pinch-to-zoom */
+  user-select: none; /* Prevent text selection */
+  transform-origin: center center; /* Zoom from the center */
+  transition: transform 0.2s ease; /* Smooth zoom transition */
 }
 
-/* Add smooth transition for the close button */
-.fullscreen-modal button {
-  opacity: 0.8;
-  transition: all 0.2s ease;
-}
-
-.fullscreen-modal button:hover {
-  opacity: 1;
-  transform: scale(1.1);
+#close-fullscreen-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
       
  
@@ -1125,7 +1179,79 @@ button.active {
   100% { transform: translateX(0); }
 }
       
+#welcome-modal {
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+#welcome-modal > div {
+  pointer-events: auto; /* Allow clicks within the modal */
+}      
       
+/* Adjust modal width for small screens */
+@media (max-width: 400px) {
+  #options-modal .max-w-md {
+    max-width: 90%; /* Reduce modal width on small screens */
+    padding: 1rem; /* Reduce padding for better spacing */
+  }
+
+  #options-modal input,
+  #options-modal select {
+    font-size: 14px; /* Reduce font size for better fit */
+  }
+
+  #options-modal .custom-button {
+    padding: 0.5rem 1rem; /* Adjust button padding */
+  }
+}
+/* Hide the icon by default */
+.generate-icon {
+  display: none;
+}
+
+/* On mobile screens, hide the text and show the icon */
+@media (max-width: 640px) {
+  .generate-text {
+    display: none;
+  }
+  .generate-icon {
+    display: inline-block;
+  }
+}
+
+#generate-button {
+  padding: 0.5rem 1rem; /* Adjust padding for smaller screens */
+  min-width: auto; /* Allow the button to shrink */
+}
+
+/* On mobile screens, reduce padding further */
+@media (max-width: 640px) {
+  #generate-button {
+    padding: 0.5rem; /* Smaller padding for mobile */
+  }
+}
+      
+/* Default thumbnail size */
+.thumbnail-image {
+  width: 5rem; /* w-20 in Tailwind (20 * 0.25rem = 5rem) */
+  height: 5rem; /* h-20 in Tailwind */
+  border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+}
+
+/* Reduce thumbnail size on mobile screens */
+@media (max-width: 640px) {
+  .thumbnail-image {
+    width: 2.5rem; /* Half the size (2.5rem) */
+    height: 2.5rem; /* Half the size (2.5rem) */
+    margin-left: 0.1rem; /* Reduce left margin for better spacing */
+  }
+}
+@media (max-width: 640px) {
+  #prompt-input {
+    font-size: 16px; /* Increase font size for better readability on mobile */
+    padding: 8px; /* Adjust padding for mobile */
+    min-height: 3rem; /* Increase minimum height for mobile */
+  }
+}
 </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -1138,10 +1264,11 @@ button.active {
     <div class="flex items-center space-x-4">
       
       <!-- Logo -->
-      <div id="logo" class="flex items-center space-x-2">
-        <img src="/images/logo.png" alt="Pixzor Logo"  >
-        <span class="text-lg sm:text-xl font-bold">Pixzor</span>
-      </div>
+      <!-- Logo as a Button -->
+        <button id="logo-button" class="flex items-center space-x-2 focus:outline-none">
+          <img src="/images/logo.png" alt="Pixzor Logo">
+          <span class="text-lg sm:text-xl font-bold">Pixzor</span>
+        </button>
     </div>
 
     <!-- Right Section: Mobile-friendly Buttons -->
@@ -1151,7 +1278,7 @@ button.active {
           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
           <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd" />
         </svg>
-        <span id="token-count" class="text-yellow-400">Tokens</span>
+        <span id="token-count" class="text-yellow-400">- Tokens</span>
       </button>
 
       <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
@@ -1346,50 +1473,55 @@ button.active {
       <!-- Main Content Area -->
       <div class="flex flex-col space-y-2">
         <!-- Down Arrow Button -->
-          
         <div class="flex justify-center">
-  <button onclick="returnToMain()" class="bg-gray-700 hover:bg-gray-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
-    <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-</div>
+          <button onclick="returnToMain()" class="bg-gray-700 hover:bg-gray-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
+            <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
 
         <!-- Thumbnail and Prompt Layout -->
-        <div class="flex flex-row space-x-2">
-          <div id="selected-thumbnail-container" >
+        <div class="flex flex-row space-x-2 w-full">
+          <div id="selected-thumbnail-container">
             <!-- Thumbnail will be inserted here -->
           </div>
-          <div class="flex-grow relative">
+
+          <!-- Textarea Container -->
+          <div class="flex-grow relative min-w-0">
             <textarea
               id="prompt-input"
-              class="w-full bg-gray-700 rounded-lg p-2 text-sm text-white border border-gray-600 resize-none"
+              class="w-full bg-gray-700 rounded-lg p-2 pr-24 text-sm text-white border border-gray-600 resize-none"
               rows="2"
               placeholder="Enter your prompt"
               aria-label="Prompt Input"
+              style="width: 100%; box-sizing: border-box;"
             ></textarea>
-              
-              
-              
-            <div class="absolute right-2 top-2 flex items-center space-x-2">
-  <!-- Visibility Button -->
-  <button id="post-visibility-button" class="bg-gray-700 p-1 rounded-lg hover:bg-gray-600 relative" >
-    <svg id="post-visibility-icon" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <!-- Default icon for private -->
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-    </svg>
-    <!-- Tooltip -->
-    <div id="post-visibility-tooltip" class="hidden absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-md">
-      Create privately
-    </div>
-  </button>
 
-  <!-- Generate Button -->
-  <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
-    Generate
-  </button>
-</div>
+            <!-- Buttons Container -->
+            <div class="absolute right-2 top-2 flex items-center space-x-2">
+              <!-- Visibility Button -->
+              <button id="post-visibility-button" class="bg-gray-700 p-1 rounded-lg hover:bg-gray-600 relative">
+                <svg id="post-visibility-icon" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                </svg>
+                <!-- Tooltip -->
+                <div id="post-visibility-tooltip" class="hidden absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-md">
+                  Create privately
+                </div>
+              </button>
+
+              <!-- Generate Button -->
+              <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
+                <span class="generate-text">Generate</span>
+                <span class="generate-icon">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1406,7 +1538,7 @@ button.active {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
           </button>
-            
+
           <select id="aspect-ratio-select" class="custom-select">
             <option value="1:1">Ratio</option>
             <option value="1:1">1:1</option>
@@ -1415,16 +1547,14 @@ button.active {
             <option value="16:9">16:9</option>
             <option value="9:16">9:16</option>
           </select>
-            
+
           <select id="style-select" class="custom-select">
             <option value="" disabled selected>Style</option>
           </select>
-          
+
           <select id="model-select" class="custom-select">
-            <option value="" disabled selected>Model</option>  
-            <!-- Automatically added below -->
-        </select>
-            
+            <option value="" disabled selected>Model</option>
+          </select>
         </div>
       </div>
     </div>
@@ -1465,7 +1595,6 @@ button.active {
 
 
 <!-- Buy Tokens Modal -->
-<!-- Buy Tokens Modal -->
 <div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
@@ -1502,33 +1631,54 @@ button.active {
 
 
 
-<!-- Options Modal -->
-<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden"  aria-modal="true" aria-labelledby="options-modal-title">
+<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-modal="true" aria-labelledby="options-modal-title">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
       <button id="close-options-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
       <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
-                         
-         
-                 
-      <form id="options-form">           
-  <!-- Set Variables -->
-  <div class="mb-4">
-    <label for="width-modal" class="block font-medium mb-1 text-gray-900">Width</label>
-    <input type="number" id="width-modal" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Width (e.g., 800)">
-    <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
-    <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
-    <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
-    <input type="number" step="0.1" id="guidance-scale-modal" value="10.0" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
-    <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
-    <input type="number" id="inference-steps-modal" value="25" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
-  </div>
 
-  <div class="flex justify-end">
-    <button type="submit" class="custom-button font-medium py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Save Options</button>
-  </div>
-</form>
+      <form id="options-form">
+        <!-- HD Toggle -->
+        <div class="mb-4">
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="hd-toggle" class="form-checkbox h-5 w-5 text-blue-600">
+            <span class="text-gray-900">Enable HD Resolution</span>
+          </label>
+        </div>
 
+        <!-- Width and Height Inputs -->
+        <div class="mb-4">
+          <label for="width-modal" class="block font-medium mb-1 text-gray-900">Width</label>
+          <input type="number" id="width-modal" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Width (e.g., 800)">
+          <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
+          <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
+          <div class="flex items-center mt-2">
+            <input type="checkbox" id="lock-aspect-ratio" class="mr-2" checked>
+            <label for="lock-aspect-ratio" class="text-sm text-gray-900">Lock Aspect Ratio</label>
+          </div>
+        </div>
+
+        <!-- Guidance Scale and Inference Steps -->
+        <div class="mb-4">
+          <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
+          <input type="number" step="0.1" id="guidance-scale-modal" value="10.0" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
+          <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
+          <input type="number" id="inference-steps-modal" value="25" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
+        </div>
+
+        <!-- Token Cost Display -->
+        <div class="mb-4">
+          <label class="block font-medium mb-1 text-gray-900">Token Cost</label>
+          <div id="token-cost-display" class="text-gray-900">
+            <!-- Token cost will be dynamically updated here -->
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+          <button type="submit" class="custom-button font-medium py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Save Options</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -1672,6 +1822,64 @@ button.active {
 </div>
 
 
+
+
+<!-- Welcome Modal -->
+<div id="welcome-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4">Welcome to Pixzor!</h2>
+    <p class="mb-4">
+      Register now to claim your <strong>50 free tokens</strong> and start creating stunning AI-generated images.
+    </p>
+    <div class="flex justify-end space-x-4">
+      <button id="close-welcome-modal" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+        Close
+      </button>
+      <button id="register-with-google" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg">
+        Register with Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- About Popup -->
+<div id="about-popup" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+  <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4">About Pixzor</h2>
+    <p class="mb-4">
+      Pixzor is an AI-powered platform designed to help you create stunning, personalized images. 
+      Upload a photo of yourself, and transform it into different styles or environments while maintaining 
+      your unique face and body pose. This ensures <strong>character consistency</strong>, making it perfect 
+      for storytelling, avatars, or creative projects.
+    </p>
+    <p class="mb-4">
+      Our goal is to make creativity accessible to everyone. In the near future, we plan to expand 
+      into <strong>AI-powered video animation</strong>, allowing subscribers to bring their characters 
+      to life in dynamic, animated stories. Stay tuned for updates!
+    </p>
+    <p class="mb-4">
+      For any inquiries, please contact us at: 
+      <a href="mailto:contact@pixzor.com" class="text-blue-400 hover:text-blue-300">contact@pixzor.com</a>
+    </p>
+    <button id="close-about-popup" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg">
+      Close
+    </button>
+  </div>
+</div>
+    
+<!-- Fullscreen Modal -->
+<div id="fullscreen-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
+  <div class="relative w-full h-full flex justify-center items-center">
+    <!-- Fullscreen Image -->
+    <img id="fullscreen-image" src="" alt="Full Image" class="max-w-full max-h-full object-contain">
+
+    <!-- Close Button -->
+    <button id="close-fullscreen-modal" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white text-2xl px-3 py-1 rounded-full shadow-lg">
+      &times;
+    </button>
+  </div>
+</div>
+    
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-20 right-20 z-50"></div>
@@ -1847,12 +2055,71 @@ const styleToModelMap = {
       
       
 
+// Open Fullscreen Modal
+function openFullscreenModal(imageUrl) {
+  const fullscreenModal = document.getElementById('fullscreen-modal');
+  const fullscreenImage = document.getElementById('fullscreen-image');
+
+  if (!fullscreenModal || !fullscreenImage) {
+    console.error('Fullscreen modal or image element not found.');
+    return;
+  }
+
+  // Set the image source
+  fullscreenImage.src = imageUrl;
+
+  // Show the modal
+  fullscreenModal.classList.remove('hidden');
+
+  // Reset zoom and position
+  scale = 1;
+  fullscreenImage.style.transform = `scale(${scale})`;
+
+  // Add event listeners for zoom and close
+  fullscreenImage.addEventListener('touchstart', handleTouchStart, { passive: false });
+  fullscreenImage.addEventListener('touchmove', handleTouchMove, { passive: false });
+  fullscreenImage.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+  // Close modal on button click
+  const closeButton = document.getElementById('close-fullscreen-modal');
+  closeButton.addEventListener('click', closeFullscreenModal);
+
+  // Close modal on background or image click
+  fullscreenModal.addEventListener('click', (event) => {
+    // Check if the click is on the modal background or the image itself
+    if (event.target === fullscreenModal || event.target === fullscreenImage) {
+      closeFullscreenModal();
+    }
+  });
+
+  // Handle orientation change
+  window.addEventListener('orientationchange', handleOrientationChange);
+}
+
+// Close Fullscreen Modal
+function closeFullscreenModal() {
+  const fullscreenModal = document.getElementById('fullscreen-modal');
+  const fullscreenImage = document.getElementById('fullscreen-image');
+
+  if (!fullscreenModal || !fullscreenImage) {
+    console.error('Fullscreen modal or image element not found.');
+    return;
+  }
+
+  // Hide the modal
+  fullscreenModal.classList.add('hidden');
+
+  // Remove event listeners
+  fullscreenImage.removeEventListener('touchstart', handleTouchStart);
+  fullscreenImage.removeEventListener('touchmove', handleTouchMove);
+  fullscreenImage.removeEventListener('touchend', handleTouchEnd);
+  window.removeEventListener('orientationchange', handleOrientationChange);
+}
 
 
 
 
 
-// Helper function to retrieve model name from ID
 // Helper function to retrieve model name from ID
 function getModelLabel(modelId) {
   const modelList = {
@@ -1864,11 +2131,6 @@ function getModelLabel(modelId) {
   };
   return modelList[modelId] || "Unknown Model";
 }
-
-       
-
-
-
 
 
 function populateInitialModelDropdown() {
@@ -1917,8 +2179,6 @@ function resetStylesToAllStyles() {
 
 
 function populateModelDropdownForImageSelection(selectedStyle) {
-    
-  
   const modelDropdown = document.getElementById('model-select');
 
   if (!modelDropdown) {
@@ -2249,7 +2509,7 @@ async function loadUserProfile(userId) {
 
       
       
-      
+    
     // Function to fetch user data
     async function fetchUserData() {
       try {
@@ -2260,8 +2520,12 @@ async function loadUserProfile(userId) {
         const googleAuthButton = document.getElementById('google-auth-button');
 
         if (data.loggedIn) {
-          // Update the token count
-          tokenCountElement.textContent = `Tokens: ${data.tokens}`;
+          // Format token count: show as integer unless there's a fractional part
+          const tokens = parseFloat(data.tokens);
+          const formattedTokens = tokens % 1 === 0 ? tokens.toFixed(0) : tokens.toFixed(1);
+
+          // Update the token count for logged-in users
+          tokenCountElement.textContent = `${formattedTokens} Tokens`;
 
           // Update the Google Auth button to show user info
           googleAuthButton.innerHTML = `
@@ -2275,8 +2539,8 @@ async function loadUserProfile(userId) {
           document.getElementById('generate-button').disabled = false;
         } else {
           // User is not logged in
-          tokenCountElement.textContent = `Tokens: 0`;
-          googleAuthButton.innerHTML = 'Login with Google';
+          tokenCountElement.textContent = `- Tokens`; // Show "- Tokens" for unauthenticated users
+          googleAuthButton.innerHTML = 'Login';
           googleAuthButton.classList.remove('bg-green-600');
           googleAuthButton.classList.add('bg-gray-700');
 
@@ -2288,7 +2552,7 @@ async function loadUserProfile(userId) {
         showToast('An error occurred while fetching user data.', 'error');
       }
     }
-      
+
     function applyFilter(type, style, sort) {
       const apiEndpoint = `/api/public-posts?type=${type}&style=${style}&sort=${sort}`;
       page = 1; // Reset pagination
@@ -2304,6 +2568,16 @@ async function loadUserProfile(userId) {
           
         const modalImage = document.getElementById('modal-image');
     
+        document.getElementById('logo-button').addEventListener('click', () => {
+          document.getElementById('about-popup').classList.remove('hidden');
+        });
+
+        // Close popup when clicking outside
+        document.getElementById('about-popup').addEventListener('click', (e) => {
+          if (e.target === document.getElementById('about-popup')) {
+            document.getElementById('about-popup').classList.add('hidden');
+          }
+        });
 
         // Handle style selection      
         document.getElementById('style-select').addEventListener('change', (event) => {
@@ -2320,8 +2594,7 @@ async function loadUserProfile(userId) {
           }
         });
 
-
-    
+ 
 
         // Add functionality for filter buttons
    document.querySelectorAll('.filter-button').forEach((button) => {
@@ -2447,40 +2720,11 @@ async function loadUserProfile(userId) {
 
            
 
-
-
-        modalImage.addEventListener('click', () => {
-          // Create fullscreen modal
-          const fullScreenModal = document.createElement('div');
-          fullScreenModal.classList.add(
-            'fixed',
-            'inset-0',
-            'bg-black',
-            'bg-opacity-90',
-            'flex',
-            'justify-center',
-            'items-center',
-            'fullscreen-modal'
-          );
-
-          // Add the image to the fullscreen modal
-          fullScreenModal.innerHTML = `
-            <img src="${modalImage.src}" alt="Full Image" class="fullscreen-image rounded-lg">
-          `;
-
-          // Append the modal to the body
-          document.body.appendChild(fullScreenModal);
-
-          // Close the modal when clicking anywhere (image or background)
-          fullScreenModal.addEventListener('click', () => {
-            fullScreenModal.remove();
-          });
-        });
-
-
-
-        
-        
+modalImage.addEventListener('click', (event) => {
+  event.stopPropagation(); // Prevent the click from propagating to parent elements
+  openFullscreenModal(modalImage.src); // Open the fullscreen modal with the current image URL
+});
+  
 
 document.getElementById('generate-button').addEventListener('click', async () => {
   console.log('Generate button clicked');
@@ -3363,6 +3607,7 @@ async function loadPrivatePosts() {
 
             }
           } else {
+             
             const allCards = document.querySelectorAll('.image-card');
             allCards.forEach((card) => {
               card.style.border = 'none';
@@ -3370,23 +3615,37 @@ async function loadPrivatePosts() {
               card.querySelector('.action-buttons')?.classList.add('hidden');
               card.querySelector('.toggle-buttons')?.classList.add('hidden');
             });
+            
             selectedImages.clear();
             selectedImages.add(image.id);
             imageCard.style.border = '2px solid red';
             imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
 
-
+             
             actionButtons.classList.remove('hidden'); // Show action buttons
             if (toggleButtons) toggleButtons.classList.remove('hidden'); // Show toggle buttons
             showCreateImage();
             updatePromptBox(image);
-            // Update the dropdown with appropriate models
-            populateModelDropdownForImageSelection(image.style);  
-            // Update the thumbnail container when an image is selected
-            if (thumbnailContainer) {
-              thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="w-16 h-16 rounded-lg border border-gray-600">`;
-              thumbnailContainer.style.display = 'block'; // Make the container visible
+            
+            // Update the model dropdown based on the selected style in the dropdown
+            const styleSelect = document.getElementById('style-select');
+            if (styleSelect) {
+              const selectedStyle = styleSelect.value;
+
+
+              // If "All Styles" is selected, default to a model that supports image-to-image
+              if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle  === "" ) {
+                populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0"); // Default to Stable Diffusion XL
+              } else {
+                populateModelDropdownForImageSelection(selectedStyle); // Use the selected style
+              }
             }
+            
+            // Update the thumbnail container when an image is selected
+             if (thumbnailContainer) {
+                thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`; // Use .thumbnail-image class
+                thumbnailContainer.style.display = 'block';
+              }
           }
            
               
@@ -3476,11 +3735,11 @@ function handleToggleState(toggleType, imageId, isActive) {
       
       
 
-// Helper Functions
 function updatePromptBox(image) {
   const promptInput = document.getElementById('prompt-input');
   const thumbnailContainer = document.getElementById('selected-thumbnail-container');
   const generateButton = document.getElementById('generate-button');
+  const generateText = generateButton.querySelector('.generate-text'); // Get the text span
 
   // Ensure the thumbnail container exists
   if (!thumbnailContainer) {
@@ -3495,7 +3754,7 @@ function updatePromptBox(image) {
   const thumbnail = document.createElement('img');
   thumbnail.src = image.thumbnailUrl;
   thumbnail.alt = 'Selected Image';
-  thumbnail.classList.add('selected-thumbnail', 'w-20', 'h-20', 'rounded-lg', 'object-cover', 'ml-4'); // Tailwind classes for styling
+  thumbnail.classList.add('selected-thumbnail', 'rounded-lg', 'object-cover', 'ml-4', 'thumbnail-image'); // Removed w-16 h-16
 
   thumbnailContainer.appendChild(thumbnail);
 
@@ -3503,9 +3762,10 @@ function updatePromptBox(image) {
   thumbnailContainer.dataset.imagePath = image.imageUrl;
 
   // Change the button text to "Modify Image"
-  generateButton.textContent = 'Modify Image';
+  if (generateText) {
+    generateText.textContent = 'Modify'; // Update the text span
+  }
 }
-
 
 
 function hideCreateImagePrompt() {
@@ -4100,60 +4360,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Handle aspect ratio selection
-const aspectRatioSelect = document.getElementById('aspect-ratio-select');
-const widthInput = document.getElementById('width-modal'); // Width field from options modal
-const heightInput = document.getElementById('height-modal'); // Height field from options modal
-
-aspectRatioSelect.addEventListener('change', (event) => {
-  const selectedRatio = event.target.value;
-
-  const dimensions = {
-    '1:1': [800, 800],
-    '4:3': [800, 600],
-    '3:4': [600, 800],
-    '16:9': [1280, 720],
-    '9:16': [720, 1280],
-  };
-
-  if (dimensions[selectedRatio]) {
-    const [width, height] = dimensions[selectedRatio];
-
-    // Update the width and height inputs
-    widthInput.value = width;
-    heightInput.value = height;
-
-    // Update the modal inputs
-    document.getElementById('width-modal').value = width;
-    document.getElementById('height-modal').value = height;
-
-    // Save the updated dimensions to localStorage
-    const options = JSON.parse(localStorage.getItem('options')) || {};
-    options.width = width;
-    options.height = height;
-    localStorage.setItem('options', JSON.stringify(options));
-
-    console.log('Aspect ratio updated:', selectedRatio, { width, height });
-  }
-});
-
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Default options with HD toggle support
   const options = JSON.parse(localStorage.getItem('options')) || {
     width: 800,
     height: 600,
     guidanceScale: 10,
     inferenceSteps: 25,
+    isHD: false, // Add HD toggle state
   };
 
   // Sync width, height, and other inputs
-  document.getElementById('width-modal').value = options.width;
-  document.getElementById('height-modal').value = options.height;
-  document.getElementById('guidance-scale-modal').value = options.guidanceScale;
-  document.getElementById('inference-steps-modal').value = options.inferenceSteps;
+  const widthInput = document.getElementById('width-modal');
+  const heightInput = document.getElementById('height-modal');
+  const guidanceScaleInput = document.getElementById('guidance-scale-modal');
+  const inferenceStepsInput = document.getElementById('inference-steps-modal');
+  const hdToggle = document.getElementById('hd-toggle');
+  const aspectRatioSelect = document.getElementById('aspect-ratio-select');
+  const tokenCostDisplay = document.getElementById('token-cost-display');
+  const styleSelect = document.getElementById('style-select');
+  const modelSelect = document.getElementById('model-select');
+
+  widthInput.value = options.width;
+  heightInput.value = options.height;
+  guidanceScaleInput.value = options.guidanceScale;
+  inferenceStepsInput.value = options.inferenceSteps;
+  hdToggle.checked = options.isHD;
 
   // Sync aspect ratio dropdown
-  const aspectRatioSelect = document.getElementById('aspect-ratio-select');
   const ratioMap = {
     '1:1': 1,
     '4:3': 4 / 3,
@@ -4171,8 +4406,131 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   aspectRatioSelect.value = selectedRatio;
-});
 
+  // Function to calculate token cost
+  function calculateTokenCost(width, height, model) {
+    const pixelCount = width * height;
+
+    // Define token cost per 1 million pixels for each model
+    const tokenCostPerMillionPixels = {
+      'flux-schnell': 1, // 1 Token per 1M pixels
+      'flux-dev': 1, // 1 Token per 1M pixels
+      'essential-v2': 20, // 20 Tokens per 1M pixels
+      // Stable Diffusion and other models: 0.1 Tokens per 1M pixels
+    };
+
+    // Get the token cost per 1M pixels for the selected model (default to 0.1 if not found)
+    const tokenRate = tokenCostPerMillionPixels[model] || 0.1;
+
+    // Calculate token cost: (pixelCount / 1,000,000) * tokenRate
+    const tokenCost = (pixelCount / 1000000) * tokenRate;
+
+    return tokenCost;
+  }
+
+  // Function to update token cost display
+  function updateTokenCost() {
+    const width = parseInt(widthInput.value, 10);
+    const height = parseInt(heightInput.value, 10);
+    const model = modelSelect.value;
+
+    const tokenCost = calculateTokenCost(width, height, model);
+    tokenCostDisplay.textContent = `${tokenCost.toFixed(2)} Tokens`;
+  }
+
+  // Function to update dimensions based on HD toggle and aspect ratio
+  function updateDimensions() {
+    const selectedRatio = aspectRatioSelect.value;
+    const dimensions = {
+      '1:1': { standard: [800, 800], hd: [2000, 2000] },
+      '4:3': { standard: [800, 600], hd: [2000, 1500] },
+      '3:4': { standard: [600, 800], hd: [1500, 2000] },
+      '16:9': { standard: [1280, 720], hd: [1920, 1080] },
+      '9:16': { standard: [720, 1280], hd: [1080, 1920] },
+    };
+
+    const [width, height] = hdToggle.checked ? dimensions[selectedRatio].hd : dimensions[selectedRatio].standard;
+
+    // Update width and height inputs in the modal
+    widthInput.value = width;
+    heightInput.value = height;
+
+    // Save updated dimensions and HD state to localStorage
+    options.width = width;
+    options.height = height;
+    options.isHD = hdToggle.checked;
+    localStorage.setItem('options', JSON.stringify(options));
+
+    // Update token cost display
+    updateTokenCost();
+
+    console.log('Dimensions updated:', { width, height, isHD: hdToggle.checked });
+  }
+
+  // Update token cost when width, height, or model changes
+  widthInput.addEventListener('input', updateTokenCost);
+  heightInput.addEventListener('input', updateTokenCost);
+  aspectRatioSelect.addEventListener('change', updateDimensions);
+  hdToggle.addEventListener('change', updateDimensions);
+
+  // Update token cost when style or model changes
+  styleSelect.addEventListener('change', () => {
+    const selectedStyle = styleSelect.value;
+
+    // Normalize the value to lowercase for comparison
+    if (!selectedStyle || selectedStyle.toLowerCase() === "all-styles" || selectedStyle.toLowerCase() === "select-a-style") {
+      // Default back to Flux model when no specific style is selected
+      populateModelDropdownForImageSelection(""); // Pass an empty string to trigger the Flux model
+    } else {
+      // Populate the model dropdown based on the selected style
+      populateModelDropdownForImageSelection(selectedStyle);
+    }
+
+    // Update token cost after changing the model
+    updateTokenCost();
+  });
+
+  modelSelect.addEventListener('change', updateTokenCost);
+
+  // Initial token cost calculation
+  updateTokenCost();
+});
+      
+// Function to check if the user is registered
+document.addEventListener('DOMContentLoaded', () => {
+  const welcomeModal = document.getElementById('welcome-modal');
+  const closeWelcomeModal = document.getElementById('close-welcome-modal');
+  const registerWithGoogleButton = document.getElementById('register-with-google');
+
+  // Check if the user has already seen the modal
+  const hasSeenWelcomeModal = localStorage.getItem('hasSeenWelcomeModal');
+
+  // Fetch user data to check if the user is registered
+  fetch('/user-data')
+    .then(response => response.json())
+    .then(data => {
+      if (!data.isRegistered && !hasSeenWelcomeModal) {
+        welcomeModal.classList.remove('hidden'); // Show the modal for unregistered users
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
+    });
+
+  // Close the modal and set a flag in localStorage
+  closeWelcomeModal.addEventListener('click', () => {
+    welcomeModal.classList.add('hidden');
+    localStorage.setItem('hasSeenWelcomeModal', 'true'); // Remember that the user has seen the modal
+  });
+
+  // Redirect to Google OAuth for registration
+  registerWithGoogleButton.addEventListener('click', () => {
+    localStorage.setItem('hasSeenWelcomeModal', 'true'); // Remember that the user has seen the modal
+    window.location.href = '/auth/google'; // Redirect to Google OAuth
+  });
+}); 
+    
+      
 
 document.addEventListener('DOMContentLoaded', () => {
   const sidebar = document.getElementById('filter-sidebar');
@@ -4262,6 +4620,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+      
+// Variables to track zoom state
+let scale = 1;
+let initialDistance = null;
+
+// Handle Touch Start (for pinch-to-zoom)
+function handleTouchStart(event) {
+  if (event.touches.length === 2) {
+    // Calculate the initial distance between two fingers
+    initialDistance = Math.hypot(
+      event.touches[0].clientX - event.touches[1].clientX,
+      event.touches[0].clientY - event.touches[1].clientY
+    );
+  }
+}
+
+// Handle Touch Move (for pinch-to-zoom)
+function handleTouchMove(event) {
+  if (event.touches.length === 2) {
+    event.preventDefault(); // Prevent default scrolling behavior
+
+    // Calculate the current distance between two fingers
+    const currentDistance = Math.hypot(
+      event.touches[0].clientX - event.touches[1].clientX,
+      event.touches[0].clientY - event.touches[1].clientY
+    );
+
+    // Calculate the scale factor
+    if (initialDistance !== null) {
+      scale = currentDistance / initialDistance;
+      const fullscreenImage = document.getElementById('fullscreen-image');
+      fullscreenImage.style.transform = `scale(${scale})`;
+    }
+  }
+}
+
+// Handle Touch End (reset initial distance)
+function handleTouchEnd() {
+  initialDistance = null;
+}
+
+// Handle Orientation Change
+function handleOrientationChange() {
+  const fullscreenImage = document.getElementById('fullscreen-image');
+  if (fullscreenImage) {
+    // Reset zoom and position on orientation change
+    scale = 1;
+    fullscreenImage.style.transform = `scale(${scale})`;
+  }
+}
+      
+function autoResizeTextarea(textarea) {
+  textarea.style.height = 'auto'; // Reset height to auto to calculate the new height
+  textarea.style.height = `${Math.min(textarea.scrollHeight, textarea.dataset.maxHeight || 160)}px`;
+}
+
+const promptInput = document.getElementById('prompt-input');
+if (promptInput) {
+  promptInput.dataset.maxHeight = 160; // Set a maximum height (optional)
+  promptInput.addEventListener('input', () => {
+    autoResizeTextarea(promptInput);
+  });
+  autoResizeTextarea(promptInput); // Initial resize
+}
+function adjustTextareaHeight() {
+  const promptInput = document.getElementById('prompt-input');
+  if (window.matchMedia("(orientation: landscape)").matches) {
+    // Landscape mode
+    promptInput.style.maxHeight = '100px'; // Smaller height for landscape
+  } else {
+    // Portrait mode
+    promptInput.style.maxHeight = '300px'; // Larger height for portrait
+  }
+}
+
+// Listen for orientation changes
+window.addEventListener('resize', adjustTextareaHeight);
+window.addEventListener('orientationchange', adjustTextareaHeight);
+
+// Initial adjustment
+adjustTextareaHeight();      
   </script>
 </body>
 </html>
