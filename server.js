@@ -787,7 +787,6 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
 
 
-
 app.post('/edit-image', ensureAuthenticated, async (req, res) => {
   console.log('Edit Image API called');
   console.log('Request body:', req.body);
@@ -831,29 +830,33 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       return res.status(404).json({ error: 'Image file not found' });
     }
 
-    // Get the image dimensions
-    const imageMetadata = await sharp(resolvedImagePath).metadata();
-    const { width, height } = imageMetadata;
-
     // Load and convert the image to Base64
     const base64Image = fs.readFileSync(resolvedImagePath, { encoding: 'base64' });
 
-    // Determine the control net adapter based on user options
+    // Determine the control net adapter(s) based on user options
     let adapter = '';
     if (keepFace) adapter = 'face';
+    else if (keepPose) adapter = 'content';
     else if (keepStyle) adapter = 'style';
-    else if (keepPose) adapter = 'content'; // Assuming 'content' is for pose control
 
-    if (!adapter) {
+    if (adapter) {
+      console.log('Selected Control Net Adapter:', adapter);
+    } else {
+      console.log('No control net adapter specified, proceeding without control net.');
+    }
+
+    if (adapters.length === 0) {
       console.log('No control net adapter specified, proceeding without control net.');
     } else {
-      console.log('Selected Control Net Adapter:', adapter);
+      console.log('Selected Control Net Adapter(s):', adapter);
     }
 
     // Select the correct API endpoint based on the presence of an adapter
-    const endpoint = adapter
+    const endpoint = adapters.length > 0
       ? 'https://api.getimg.ai/v1/stable-diffusion-xl/ip-adapter' // Adapter API
       : 'https://api.getimg.ai/v1/stable-diffusion-xl/image-to-image'; // Standard Image-to-Image API
+
+    console.log('Selected API Endpoint:', endpoint);
 
     // Prepare the body for the API request
     const apiPayload = {
@@ -861,20 +864,20 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       prompt: updatedPrompt, // Pass the updated prompt with the style
       negative_prompt: 'disfigured, blurry', // Add your negative prompts here
       image: base64Image,
-      strength: strength || 0.5, // Default strength if not provided
+      strength: strength || 0.3, // Lower default strength to preserve the original image
       steps: steps || 50, // Default steps
-      guidance: guidance || 7.5, // Default guidance scale
+      guidance: guidance || 10, // Higher default guidance to follow the prompt
       output_format: 'jpeg',
       response_format: 'url',
       scheduler: 'euler',
     };
 
-    // Include the adapter field only if it is set
-    if (adapter) {
+    // Include the adapter field only if adapters are specified
+    if (adapters.length > 0) {
       apiPayload.adapter = adapter;
     }
 
-    console.log('API Request Payload:', apiPayload);
+    console.log('API Request Payload:', JSON.stringify(apiPayload, null, 2));
 
     const options = {
       method: 'POST',
@@ -889,7 +892,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     const response = await fetch(endpoint, options);
     const data = await response.json();
 
-    console.log('Response from getimg.ai:', data);
+    console.log('Response from getimg.ai:', JSON.stringify(data, null, 2));
 
     if (!response.ok || !data.url) {
       console.error('Error editing image:', data);
@@ -921,18 +924,6 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     // Generate a thumbnail
     await sharp(savedImagePath).resize(408).toFile(thumbnailPath);
 
-    // Calculate token cost based on image size and model
-    const tokenCost = calculateTokenCost(width, height, model);
-
-    // Check if the user has enough tokens
-    if (req.user.tokens < tokenCost) {
-      return res.status(400).json({ error: 'You do not have enough tokens to edit this image.' });
-    }
-
-    // Deduct tokens based on image size and model
-    req.user.tokens -= tokenCost;
-    await req.user.save();
-
     const savedImageUrl = `/personal-images/${req.user.id}/${fileName}`;
     const savedThumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
 
@@ -961,13 +952,12 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: tokenCost });
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
   } catch (error) {
     console.error('Error in /edit-image:', error);
     res.status(500).json({ error: error.message || 'Failed to edit image' });
   }
 });
-
 
 
 

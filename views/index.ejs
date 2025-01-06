@@ -57,6 +57,7 @@
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <script src="https://js.stripe.com/v3/"></script>
 
 
@@ -1353,14 +1354,6 @@ button.active {
 
       <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
   <div class="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 rounded-full bg-gray-600 flex items-center justify-center">
-    <img
-      src="https://path-to-your-google-profile-photo.jpg"
-      alt="Google"
-      class="w-full h-full rounded-full"
-      crossorigin="anonymous"
-      referrerPolicy="no-referrer"
-      onerror="this.style.display='none';"
-    />
     <i class="fas fa-user text-white text-xs sm:text-sm"></i> <!-- FontAwesome user icon -->
   </div>
   <span>Login</span>
@@ -2009,7 +2002,15 @@ button.active {
     let isLoading = false; // Prevent multiple simultaneous requests
     let hasMoreImages = true; // Track if there are more images to load
     let selectedStyle = '';
-      
+    const selectedImages = new Set(); // Track selected images globally
+
+    let selectedImageState = {
+      imageId: null,
+      keepFace: false,
+      keepStyle: false,
+      keepPose: false,
+    };
+
     window.isLoggedIn = <%= isLoggedIn %>; // Pass `true` or `false`
     window.currentUser = <%- JSON.stringify(user || {}) %>;
   
@@ -2617,9 +2618,9 @@ async function loadUserProfile(userId) {
         const googleAuthButton = document.getElementById('google-auth-button');
 
         if (data.loggedIn) {
-          // Format token count: show as integer unless there's a fractional part
+          // Format token count: round to 1 or 2 decimal places
           const tokens = parseFloat(data.tokens);
-          const formattedTokens = tokens % 1 === 0 ? tokens.toFixed(0) : tokens.toFixed(1);
+          const formattedTokens = tokens.toFixed(1); // Use toFixed(2) for 2 decimal places
 
           // Update the token count for logged-in users
           tokenCountElement.textContent = `${formattedTokens} Tokens`;
@@ -2822,7 +2823,6 @@ modalImage.addEventListener('click', (event) => {
   
 
 document.getElementById('generate-button').addEventListener('click', async () => {
-
   // Ensure the user is logged in
   if (!window.isLoggedIn) {
     showToast('Please log in to generate images.', 'error');
@@ -2839,7 +2839,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   };
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
-  const strength = parseFloat(options.strength) || 0.75; // Get strength from options
+  const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75; // Get strength from the slider
 
   // Get selected style and model
   const styleSelect = document.getElementById('style-select');
@@ -2865,9 +2865,8 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     return;
   }
 
-  console.log('Selected style:', style);
-  console.log('Selected model:', model);
-  console.log('Selected image for editing:', selectedImage);
+  
+    
 
   // Add Placeholder
   const imageList = document.getElementById('image-list');
@@ -2893,10 +2892,17 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     generateButton.textContent = 'Processing...';
     generateButton.disabled = true;
 
-    // Check toggle buttons for additional options
-    const keepStyle = document.getElementById('toggle-style')?.classList.contains('active') || false;
-    const keepFace = document.getElementById('toggle-face')?.classList.contains('active') || false;
-    const keepPose = document.getElementById('toggle-pose')?.classList.contains('active') || false;
+    
+    // Use the stored state of the toggle buttons
+    const { keepFace, keepStyle, keepPose } = selectedImageState;
+
+    console.log('Selected style:', style);
+    console.log('Selected model:', model);
+    console.log('Selected image for editing:', selectedImage);
+    console.log('Strength from slider:', strength);
+    console.log('Keep Face:', keepFace );
+    console.log('Keep Style:', keepStyle);
+    console.log('Keep Pose:', keepPose);
 
     // Determine API endpoint and payload based on selected image
     const url = selectedImage ? '/edit-image' : '/generate-image';
@@ -3691,9 +3697,8 @@ async function loadComments(imageId) {
 }
 
 
-// Define selectedImages as a global variable
-const selectedImages = new Set(); // Track selected images globally
 
+      
 async function loadPrivatePosts() {
   if (isLoading || !hasMoreImages) return;
   isLoading = true;
@@ -3745,148 +3750,190 @@ async function loadPrivatePosts() {
       );
       badge.textContent = image.isPublic ? 'Public' : 'Private';
 
-      // Build card content
-      imageCard.innerHTML = `
-        <div class="relative">
-          <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
-               class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
-          <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
-            <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
-              Keep Style
-            </button>
-            <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
-              Keep Face
-            </button>
-            <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
-              Keep Pose
-            </button>
+        // Build card content
+        imageCard.innerHTML = `
+          <div class="relative">
+            <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
+                 class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+            <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
+              <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
+                Keep Style
+              </button>
+              <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
+                Keep Face
+              </button>
+              <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
+                Keep Pose
+              </button>
+            </div>
+            <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
+              <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
+                <i class="fas fa-download"></i>
+              </a>
+              <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
+                <i class="fas fa-info-circle"></i>
+              </button>
+              <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-green-100" data-id="${image.id}" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+              <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
+                <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
+              </button>
+            </div>
           </div>
-          <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
-            <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
-              <i class="fas fa-download"></i>
-            </a>
-            <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
-              <i class="fas fa-info-circle"></i>
-            </button>
-            <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-green-100" data-id="${image.id}" title="Delete">
-              <i class="fas fa-trash"></i>
-            </button>
-            <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
-              <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
-            </button>
-          </div>
-        </div>
-      `;
+        `;
 
-      // Append the badge to the card
-      imageCard.appendChild(badge);
+        // Append the badge to the card
+        imageCard.appendChild(badge);
 
-      // Add the image card to the image list
-      imageList.appendChild(imageCard);
+        // Add the image card to the image list
+        imageList.appendChild(imageCard);
 
-      // Add event listeners for buttons and actions (same as your current implementation)
-      const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
-      const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
-      const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
-      const imgElement = imageCard.querySelector('img');
-      const actionButtons = imageCard.querySelector('.action-buttons');
+        // Add event listeners for buttons and actions
+        const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
+        const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
+        const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
+        const imgElement = imageCard.querySelector('img');
+        const actionButtons = imageCard.querySelector('.action-buttons');
 
-      const infoButton = imageCard.querySelector('.info-button');
-      infoButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
-      });
+        const infoButton = imageCard.querySelector('.info-button');
+        infoButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+        });
 
-      styleButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        styleButton.classList.toggle('active');
-        
-      });
+        // Function to deactivate other toggle buttons
+        const deactivateOtherButtons = (activeButton) => {
+          if (activeButton !== styleButton) {
+            styleButton.classList.remove('active');
+            selectedImageState.keepStyle = false;
+          }
+          if (activeButton !== faceButton) {
+            faceButton.classList.remove('active');
+            selectedImageState.keepFace = false;
+          }
+          if (activeButton !== poseButton) {
+            poseButton.classList.remove('active');
+            selectedImageState.keepPose = false;
+          }
+        };
 
-      faceButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        faceButton.classList.toggle('active');
-        
-      });
+        // Event listener for Keep Style button
+        styleButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          styleButton.classList.toggle('active');
+          selectedImageState.keepStyle = styleButton.classList.contains('active');
+          if (selectedImageState.keepStyle) {
+            deactivateOtherButtons(styleButton); // Deactivate other buttons
+          }
+          console.log('Keep Style Toggled:', selectedImageState.keepStyle); // Debug log
+        });
 
-      poseButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        poseButton.classList.toggle('active');
-        
-      });
+        // Event listener for Keep Face button
+        faceButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          faceButton.classList.toggle('active');
+          selectedImageState.keepFace = faceButton.classList.contains('active');
+          if (selectedImageState.keepFace) {
+            deactivateOtherButtons(faceButton); // Deactivate other buttons
+          }
+          console.log('Keep Face Toggled:', selectedImageState.keepFace); // Debug log
+        });
 
-      // Add a double-click event to open the comments modal
-      imgElement.addEventListener('dblclick', (event) => {
-        event.stopPropagation();
-        openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
-      });
+        // Event listener for Keep Pose button
+        poseButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          poseButton.classList.toggle('active');
+          selectedImageState.keepPose = poseButton.classList.contains('active');
+          if (selectedImageState.keepPose) {
+            deactivateOtherButtons(poseButton); // Deactivate other buttons
+          }
+          console.log('Keep Pose Toggled:', selectedImageState.keepPose); // Debug log
+        });
+
+        // Add a double-click event to open the comments modal
+        imgElement.addEventListener('dblclick', (event) => {
+          event.stopPropagation();
+          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+        });
 
       imgElement.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const toggleButtons = imageCard.querySelector('.toggle-buttons');
-        const thumbnailContainer = document.getElementById('selected-thumbnail-container'); // Use the existing ID
-        const generateButton = document.getElementById('generate-button');
+          event.stopPropagation();
+          const toggleButtons = imageCard.querySelector('.toggle-buttons');
+          const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+          const generateButton = document.getElementById('generate-button');
 
-        if (selectedImages.has(image.id)) {
-          selectedImages.delete(image.id);
-          imageCard.style.border = 'none';
-          imageCard.style.backgroundColor = 'transparent';
-          actionButtons.classList.add('hidden'); // Hide action buttons
-          if (toggleButtons) toggleButtons.classList.add('hidden'); // Hide toggle buttons
+          if (selectedImages.has(image.id)) {
+            selectedImages.delete(image.id);
+            imageCard.style.border = 'none';
+            imageCard.style.backgroundColor = 'transparent';
+            actionButtons.classList.add('hidden');
+            if (toggleButtons) toggleButtons.classList.add('hidden');
 
-          if (selectedImages.size === 0) {
-            // No images selected               
-            populateModelDropdownForImageSelection("");
-            resetStylesToAllStyles();
+            if (selectedImages.size === 0) {
+              populateModelDropdownForImageSelection("");
+              resetStylesToAllStyles();
 
-            // Clear and hide the thumbnail container
-            generateButton.textContent = 'Generate';             
-            // Clear and reset the thumbnail container
+              if (thumbnailContainer) {
+                thumbnailContainer.innerHTML = '';
+                thumbnailContainer.style.display = 'none';
+                delete thumbnailContainer.dataset.imagePath;
+              }
+            }
+          } else {
+            const allCards = document.querySelectorAll('.image-card');
+            allCards.forEach((card) => {
+              card.style.border = 'none';
+              card.style.backgroundColor = 'transparent';
+              card.querySelector('.action-buttons')?.classList.add('hidden');
+              card.querySelector('.toggle-buttons')?.classList.add('hidden');
+            });
+
+            selectedImages.clear();
+            selectedImages.add(image.id);
+            imageCard.style.border = '2px solid red';
+            imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+
+            actionButtons.classList.remove('hidden');
+            if (toggleButtons) toggleButtons.classList.remove('hidden');
+            showCreateImage();
+            updatePromptBox(image);
+
+             // Debug: Log the state of the toggle buttons
+            console.log('Toggle Button States on Image Selection:');
+            console.log('Keep Face Button Active:', faceButton.classList.contains('active') );
+            console.log('Keep Style Button Active:', styleButton.classList.contains('active') );
+            console.log('Keep Pose Button Active:', poseButton.classList.contains('active') );
+
+             // Update the selected image state with the current toggle button states
+            selectedImageState = {
+              imageId: image.id,
+              keepFace: faceButton.classList.contains('active'),
+              keepStyle: styleButton.classList.contains('active'),
+              keepPose: poseButton.classList.contains('active'),
+            };
+
+            // Debug: Log the updated selectedImageState
+            console.log('Updated selectedImageState:', selectedImageState);
+
+            // Update the model dropdown based on the selected style
+            const styleSelect = document.getElementById('style-select');
+            if (styleSelect) {
+              const selectedStyle = styleSelect.value;
+              if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle === "") {
+                populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0");
+              } else {
+                populateModelDropdownForImageSelection(selectedStyle);
+              }
+            }
+
+            // Update the thumbnail container
             if (thumbnailContainer) {
-              thumbnailContainer.innerHTML = '';
-              thumbnailContainer.style.display = 'none';
-              delete thumbnailContainer.dataset.imagePath; // Clear dataset
+              thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`;
+              thumbnailContainer.style.display = 'block';
             }
           }
-        } else {
-          const allCards = document.querySelectorAll('.image-card');
-          allCards.forEach((card) => {
-            card.style.border = 'none';
-            card.style.backgroundColor = 'transparent';
-            card.querySelector('.action-buttons')?.classList.add('hidden');
-            card.querySelector('.toggle-buttons')?.classList.add('hidden');
-          });
-
-          selectedImages.clear();
-          selectedImages.add(image.id);
-          imageCard.style.border = '2px solid red';
-          imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-
-          actionButtons.classList.remove('hidden'); // Show action buttons
-          if (toggleButtons) toggleButtons.classList.remove('hidden'); // Show toggle buttons
-          showCreateImage();
-          updatePromptBox(image);
-
-          // Update the model dropdown based on the selected style in the dropdown
-          const styleSelect = document.getElementById('style-select');
-          if (styleSelect) {
-            const selectedStyle = styleSelect.value;
-
-            // If "All Styles" is selected, default to a model that supports image-to-image
-            if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle  === "" ) {
-              populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0"); // Default to Stable Diffusion XL
-            } else {
-              populateModelDropdownForImageSelection(selectedStyle); // Use the selected style
-            }
-          }
-
-          // Update the thumbnail container when an image is selected
-          if (thumbnailContainer) {
-            thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`; // Use .thumbnail-image class
-            thumbnailContainer.style.display = 'block';
-          }
-        }
-      });
+    });
 
       const deleteButton = imageCard.querySelector('.delete-button');
       deleteButton.addEventListener('click', async (event) => {
