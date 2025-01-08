@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery Demo</title>
+  <style>
+    /* Masonry Layout with CSS Columns */
+    #image-list {
+      column-count: 2; /* Default: 2 columns for mobile */
+      column-gap: 8px; /* Gap between columns */
+    }
+
+    .image-card {
+      break-inside: avoid; /* Prevent items from breaking across columns */
+      margin-bottom: 8px; /* Gap between items */
+      width: 100%; /* Ensure cards fill the column width */
+      border-radius: 8px; /* Optional: Add rounded corners */
+      background-color: #2d3748; /* Background color for the card */
+      padding: 8px; /* Padding inside the card */
+    }
+
+    .image-card img {
+      width: 100%; /* Ensure images fill the container */
+      height: auto; /* Maintain aspect ratio */
+      display: block; /* Remove extra space below images */
+      border-radius: 8px; /* Optional: Add rounded corners */
+    }
+
+    /* Like button styling */
+    .like-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .like-button i {
+      color: #ff4757; /* Heart color */
+    }
+
+    .like-button.liked i {
+      color: #ff6b81; /* Liked heart color */
+    }
+
+    /* Style for the numbered overlay */
+    .image-card .relative {
+      position: relative; /* Ensure the overlay is positioned relative to the image */
+    }
+
+    .image-card .absolute {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+      border-radius: 8px; /* Match the image's border radius */
+    }
+
+    .image-card .absolute span {
+      font-size: 4rem; /* Large text size */
+      font-weight: bold;
+      color: white; /* White text for contrast */
+      opacity: 0.8; /* Slightly transparent text */
+    }
+
+    /* Responsive Design */
+    @media (min-width: 768px) {
+      #image-list {
+        column-count: 3; /* 3 columns for medium screens (≥ 768px) */
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #image-list {
+        column-count: 4; /* 4 columns for large screens (≥ 1024px) */
+      }
+    }
+
+    @media (min-width: 1280px) {
+      #image-list {
+        column-count: 5; /* 5 columns for extra-large screens (≥ 1280px) */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Images Grid -->
+  <div id="image-list" class="masonry-grid">
+    <!-- Public images will be dynamically added here -->
+  </div>
+
+  <script>
+    let isLoading = false;
+    let hasMoreImages = true;
+    let page = 1;
+
+    async function loadImages(apiEndpoint, mode) {
+      if (isLoading || !hasMoreImages) return;
+      isLoading = true;
+
+      try {
+        const response = await fetch(apiEndpoint);
+        if (!response.ok) throw new Error('Failed to load images.');
+
+        const data = await response.json();
+        const images = data.images;
+
+        if (!Array.isArray(images)) {
+          throw new Error('Invalid data format: "images" is not an array.');
+        }
+
+        const imageList = document.getElementById('image-list');
+        if (!imageList) return;
+
+        // Clear the image list only on the first page load
+        if (page === 1) {
+          imageList.innerHTML = '';
+        }
+
+        if (images.length === 0 && page === 1) {
+          imageList.innerHTML = '<p class="text-white text-center mt-4">No images found. Try a different search query.</p>';
+          hasMoreImages = false;
+          return;
+        }
+
+        // Track the total number of images loaded so far
+        const totalImagesLoaded = imageList.children.length;
+
+        images.forEach((image, index) => {
+          if (!image.imageUrl) return;
+
+          // CREATE MASONRY ITEM
+          const imageCard = document.createElement('div');
+          imageCard.classList.add('image-card');
+
+          // Like button
+          const likeButton = document.createElement('button');
+          likeButton.classList.add('like-button');
+          const heartIcon = document.createElement('i');
+          heartIcon.classList.add('fas', 'fa-heart');
+          if (image.likedByUser) {
+            heartIcon.classList.add('liked');
+          }
+          likeButton.appendChild(heartIcon);
+          likeButton.dataset.isPublic = image.isPublic;
+          likeButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleLike(image.id, likeButton);
+          });
+
+          // Calculate the image number (order in which it's loaded)
+          const imageNumber = totalImagesLoaded + index + 1;
+
+          // Image HTML with a numbered overlay
+          imageCard.innerHTML = `
+            <div class="relative">
+              <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg">
+              <div class="absolute">
+                <span>${imageNumber}</span>
+              </div>
+            </div>
+          `;
+
+          // Insert the Like button
+          imageCard.querySelector('.relative').appendChild(likeButton);
+
+          // Add to the DOM
+          imageList.appendChild(imageCard);
+
+          // Comment modal on click
+          imageCard.querySelector('img').addEventListener('click', () => {
+            openCommentsModal(image.id, image.imageUrl, mode);
+          });
+        });
+
+        hasMoreImages = data.hasMore;
+        if (hasMoreImages) {
+          page++;
+        }
+
+        // Check if the visible area is filled
+        if (imageList.clientHeight < window.innerHeight && hasMoreImages) {
+          loadImages(apiEndpoint, mode); // Load more images until the visible area is filled
+        }
+      } catch (error) {
+        console.error(`Error loading images from ${apiEndpoint}:`, error);
+        showToast('An error occurred while loading images.', 'error');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    function toggleLike(imageId, likeButton) {
+      // Implement like functionality here
+      console.log(`Toggling like for image ${imageId}`);
+    }
+
+    function openCommentsModal(imageId, imageUrl, mode) {
+      // Implement comment modal functionality here
+      console.log(`Opening comments modal for image ${imageId}`);
+    }
+
+    function showToast(message, type) {
+      // Implement toast notification functionality here
+      console.log(`Toast: ${message} (${type})`);
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      const apiEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+      loadImages(apiEndpoint, 'public');
+    });
+  </script>
+</body>
+</html>

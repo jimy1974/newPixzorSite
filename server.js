@@ -630,8 +630,17 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
     const { prompt, width, height, guidanceScale, inferenceSteps, isPublic, style, model } = req.body;
 
-     // Calculate token cost based on image size and model
-    const tokenCost = calculateTokenCost(width, height, model);
+    // Convert width and height to integers
+    const parsedWidth = parseInt(width, 10);
+    const parsedHeight = parseInt(height, 10);
+
+    // Validate width and height
+    if (isNaN(parsedWidth) || isNaN(parsedHeight)) {
+      return res.status(400).json({ error: 'Width and height must be valid numbers.' });
+    }
+
+    // Calculate token cost based on image size and model
+    const tokenCost = calculateTokenCost(parsedWidth, parsedHeight, model);
 
     // Check if the user has enough tokens
     if (req.user.tokens < tokenCost) {
@@ -641,15 +650,13 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
     // Deduct tokens based on image size and model
     req.user.tokens -= tokenCost;
     await req.user.save();
-      
-      
-      
+
     // Debugging input parameters
     console.log('Generate Image API Called');
     console.log('Input Parameters:');
     console.log(`Prompt: ${prompt}`);
-    console.log(`Width: ${width}`);
-    console.log(`Height: ${height}`);
+    console.log(`Width: ${parsedWidth}`);
+    console.log(`Height: ${parsedHeight}`);
     console.log(`Guidance Scale: ${guidanceScale}`);
     console.log(`Inference Steps: ${inferenceSteps}`);
     console.log(`Style: ${style}`);
@@ -669,8 +676,8 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       requestBody = {
         model: model, // "flux-dev" or "flux-schnell"
         prompt,
-        width,
-        height,
+        width: parsedWidth, // Use parsed integer value
+        height: parsedHeight, // Use parsed integer value
         guidance: guidanceScale || 3.5,
         steps: 4, // Flux models generally use lower steps
         output_format: 'jpeg',
@@ -682,8 +689,8 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       requestBody = {
         model: model || 'stable-diffusion-xl-v1-0', // Default to SD XL if no model is specified
         prompt,
-        width,
-        height,
+        width: parsedWidth, // Use parsed integer value
+        height: parsedHeight, // Use parsed integer value
         guidance: guidanceScale || 7.5, // Higher guidance scale for SD XL
         steps: inferenceSteps || 25, // Default to 25 steps for SD XL models
         output_format: 'jpeg',
@@ -728,7 +735,6 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       console.error('Error generating image:', error);
       return res.status(500).json({ error: 'Failed to generate image.' });
     }
-
 
     // Save the image to the user's folder
     const userFolderPath = path.join(personalImagesPath, req.user.id.toString());
@@ -786,12 +792,23 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
 
 
-
 app.post('/edit-image', ensureAuthenticated, async (req, res) => {
   console.log('Edit Image API called');
   console.log('Request body:', req.body);
 
-  const { imagePath, prompt, strength, steps, guidance, style, model, keepStyle, keepFace, keepPose, isPublic } = req.body;
+  const {
+    imagePath,
+    prompt,
+    strength,
+    steps,
+    guidance,
+    style,
+    model,
+    keepStyle,
+    keepFace,
+    keepPose,
+    isPublic,
+  } = req.body;
 
   if (!imagePath) {
     console.error('No image path provided');
@@ -808,15 +825,20 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
   try {
     // Modify the prompt to include the style if provided
     const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
-
     console.log('Updated Prompt:', updatedPrompt);
 
     // Resolve the full file path
     let resolvedImagePath;
     if (imagePath.startsWith('/personal-images/')) {
-      resolvedImagePath = path.join(personalImagesPath, imagePath.replace('/personal-images/', ''));
+      resolvedImagePath = path.join(
+        personalImagesPath,
+        imagePath.replace('/personal-images/', '')
+      );
     } else if (imagePath.startsWith('/public-images/')) {
-      resolvedImagePath = path.join(publicImagesPath, imagePath.replace('/public-images/', ''));
+      resolvedImagePath = path.join(
+        publicImagesPath,
+        imagePath.replace('/public-images/', '')
+      );
     } else {
       console.error('Invalid image path provided');
       return res.status(400).json({ error: 'Invalid image path' });
@@ -833,52 +855,56 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     // Load and convert the image to Base64
     const base64Image = fs.readFileSync(resolvedImagePath, { encoding: 'base64' });
 
-    // Determine the control net adapter(s) based on user options
-    let adapter = '';
-    if (keepFace) adapter = 'face';
-    else if (keepPose) adapter = 'content';
-    else if (keepStyle) adapter = 'style';
+    // Collect all desired adapters
+    const adapters = [];
+    if (keepFace) adapters.push('face');
+    if (keepPose) adapters.push('content');
+    if (keepStyle) adapters.push('style');
 
-    if (adapter) {
-      console.log('Selected Control Net Adapter:', adapter);
-    } else {
-      console.log('No control net adapter specified, proceeding without control net.');
-    }
-
-    if (adapters.length === 0) {
-      console.log('No control net adapter specified, proceeding without control net.');
-    } else {
-      console.log('Selected Control Net Adapter(s):', adapter);
-    }
-
-    // Select the correct API endpoint based on the presence of an adapter
-    const endpoint = adapters.length > 0
-      ? 'https://api.getimg.ai/v1/stable-diffusion-xl/ip-adapter' // Adapter API
-      : 'https://api.getimg.ai/v1/stable-diffusion-xl/image-to-image'; // Standard Image-to-Image API
+    // Decide which endpoint to use
+    const endpoint = adapters.length
+      ? 'https://api.getimg.ai/v1/stable-diffusion-xl/ip-adapter' // IP Adapter API
+      : 'https://api.getimg.ai/v1/stable-diffusion-xl/image-to-image'; // Standard Image-to-Image
 
     console.log('Selected API Endpoint:', endpoint);
+    console.log('Selected Control Net Adapters:', adapters);
 
-    // Prepare the body for the API request
-    const apiPayload = {
+    // Create a base payload object (without "adapter")
+    const basePayload = {
       model: model || 'stable-diffusion-xl-v1-0', // Use model from request or default
-      prompt: updatedPrompt, // Pass the updated prompt with the style
-      negative_prompt: 'disfigured, blurry', // Add your negative prompts here
+      prompt: updatedPrompt,
+      negative_prompt: 'disfigured, blurry',
       image: base64Image,
-      strength: strength || 0.3, // Lower default strength to preserve the original image
-      steps: steps || 50, // Default steps
-      guidance: guidance || 10, // Higher default guidance to follow the prompt
+      strength: strength || 0.3,
+      steps: steps || 50,
+      guidance: guidance || 10,
       output_format: 'jpeg',
       response_format: 'url',
       scheduler: 'euler',
     };
 
-    // Include the adapter field only if adapters are specified
+    // Convert the basePayload to a JSON string, then inject repeated "adapter" lines if needed
+    let finalPayloadString = JSON.stringify(basePayload, null, 2);
+
     if (adapters.length > 0) {
-      apiPayload.adapter = adapter;
+      // Remove the very last "}" from the JSON string
+      finalPayloadString = finalPayloadString.replace(/\}\s*$/, '');
+
+      // Insert a comma if the JSON isn't empty (it won't be)
+      finalPayloadString += ',\n';
+
+      // For each adapter, add a separate line:  "adapter": "face"
+      const adapterLines = adapters
+        .map((adapterValue) => `  "adapter": "${adapterValue}"`)
+        .join(',\n');
+
+      // Now add those lines and close off the JSON object
+      finalPayloadString += adapterLines + '\n}';
     }
 
-    console.log('API Request Payload:', JSON.stringify(apiPayload, null, 2));
+    console.log('API Request Payload (string):', finalPayloadString);
 
+    // Make the request to getimg.ai
     const options = {
       method: 'POST',
       headers: {
@@ -886,7 +912,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
         'content-type': 'application/json',
         authorization: `Bearer ${process.env.GETIMG_API_KEY}`,
       },
-      body: JSON.stringify(apiPayload),
+      body: finalPayloadString, // Send the custom-built JSON string
     };
 
     const response = await fetch(endpoint, options);
@@ -933,12 +959,12 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       imageUrl: savedImageUrl,
       thumbnailUrl: savedThumbnailUrl,
       prompt,
-      style, // Save the style
-      type: 'stylized-photo', // Mark this as a stylized photo
+      style,
+      type: 'stylized-photo',
       isPublic: isPublic || false,
     });
 
-    // If public, save to PublicImages table
+    // If public, also save to PublicImages table
     if (isPublic) {
       await PublicImage.create({
         userId: req.user.id,
@@ -946,21 +972,19 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
         imageUrl: savedImageUrl,
         thumbnailUrl: savedThumbnailUrl,
         prompt,
-        style, // Save the style
+        style,
         type: 'stylized-photo',
         likes: 0,
       });
     }
 
+    // Respond to the client
     res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
   } catch (error) {
     console.error('Error in /edit-image:', error);
     res.status(500).json({ error: error.message || 'Failed to edit image' });
   }
 });
-
-
-
 
 
 

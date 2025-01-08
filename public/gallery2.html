@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Generated Gallery with Masonry</title>
+  <style>
+    /* Masonry Container */
+    #image-list {
+      position: relative; /* Needed for Masonry's absolute positioning */
+      margin: 0 auto;
+      max-width: 1200px; /* or whatever width you want for your gallery */
+    }
+
+    /* The .grid-sizer sets the base column width for fluid Masonry. 
+       Typically, it is 0-height, invisible, used just for measurement. */
+    .grid-sizer {
+      width: 25%; /* Example: 4 columns => 25% each (100/4=25). Adjust to your preference. */
+      /* No visible styles needed. Just leave it empty in the DOM. */
+    }
+
+    /* Each image-card is one Masonry 'tile' or 'brick'. */
+    .image-card {
+      /* Match the width to .grid-sizer if you want uniform columns. */
+      width: 25%;
+      float: left; /* Masonry can handle floats or you can omit float if you prefer. */
+      box-sizing: border-box;
+      padding: 8px;
+      margin-bottom: 16px;
+      background-color: #2d3748; /* Example background */
+      border-radius: 8px;
+      position: relative; /* for the like button absolute positioning */
+    }
+
+    .image-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    /* Number overlay styling (matches your snippet) */
+    .relative {
+      position: relative;
+    }
+    .absolute {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+    }
+    .absolute span {
+      font-size: 4rem;
+      font-weight: bold;
+      color: white;
+      opacity: 0.8;
+    }
+
+    /* Like button styling (as in your snippet) */
+    .like-button {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .like-button i {
+      color: #ff4757; /* Heart color */
+    }
+    .like-button.liked i {
+      color: #ff6b81; /* Liked heart color */
+    }
+  </style>
+</head>
+<body style="background-color: #1a202c; color: #fff;">
+
+  <!-- Masonry Container (replaces the old "image-list" in your snippet) -->
+  <div id="image-list">
+    <!-- .grid-sizer is required for fluid Masonry column width -->
+    <div class="grid-sizer"></div>
+    <!-- Items will be dynamically appended here by loadImages() -->
+  </div>
+
+  <!-- Include imagesLoaded and Masonry via CDN -->
+  <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+  <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+
+  <script>
+    /*********************************************/
+    /* Placeholders for your existing functions  */
+    /*********************************************/
+    function toggleLike(imageId, likeButton) {
+      console.log(`Toggling like for image ID: ${imageId}`);
+      // Implement your "like" logic here, e.g., fetch/POST to server
+    }
+
+    function openCommentsModal(imageId, imageUrl, mode) {
+      console.log(`Opening comments modal for image ID: ${imageId}, mode: ${mode}`);
+      // Implement your modal logic here
+    }
+
+    function showToast(message, type) {
+      console.log(`Toast: ${message} [${type}]`);
+      // Implement your toast/notification logic
+    }
+
+    /*******************************************************/
+    /* Global variables for pagination / infinite scrolling */
+    /*******************************************************/
+    let isLoading = false;
+    let hasMoreImages = true;
+    let page = 1;
+
+    // We'll store a reference to the Masonry instance here:
+    let msnry = null;
+
+    /*********************************************/
+    /* Function to load images from your API      */
+    /*********************************************/
+    async function loadImages(apiEndpoint, mode) {
+      if (isLoading || !hasMoreImages) return;
+      isLoading = true;
+
+      try {
+        const response = await fetch(apiEndpoint);
+        if (!response.ok) throw new Error('Failed to load images.');
+
+        const data = await response.json();
+        const images = data.images;
+
+        if (!Array.isArray(images)) {
+          throw new Error('Invalid data format: "images" is not an array.');
+        }
+
+        const imageList = document.getElementById('image-list');
+        if (!imageList) return;
+
+        // Clear the image list only on the first page load
+        if (page === 1) {
+          imageList.innerHTML = '<div class="grid-sizer"></div>'; 
+        }
+
+        if (images.length === 0 && page === 1) {
+          imageList.innerHTML = '<p class="text-white text-center mt-4">No images found. Try a different search query.</p>';
+          hasMoreImages = false;
+          return;
+        }
+
+        // Keep track of new items so we can pass them to Masonry
+        const newItems = [];
+
+        // Track how many items are already there (excluding grid-sizer)
+        const totalImagesLoaded = imageList.querySelectorAll('.image-card').length;
+
+        images.forEach((image, index) => {
+          if (!image.imageUrl) return;
+
+          // Create the Masonry "tile"
+          const imageCard = document.createElement('div');
+          imageCard.classList.add('image-card');
+
+          // Like button
+          const likeButton = document.createElement('button');
+          likeButton.classList.add('like-button');
+          const heartIcon = document.createElement('i');
+          heartIcon.classList.add('fas', 'fa-heart');
+          if (image.likedByUser) {
+            heartIcon.classList.add('liked');
+          }
+          likeButton.appendChild(heartIcon);
+          likeButton.dataset.isPublic = image.isPublic;
+          likeButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            toggleLike(image.id, likeButton);
+          });
+
+          // Calculate the image number (order in which it's loaded)
+          const imageNumber = totalImagesLoaded + index + 1;
+
+          // The card's inner HTML, including the number overlay
+          imageCard.innerHTML = `
+            <div class="relative">
+              <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg" />
+              <div class="absolute">
+                <span class="text-white text-6xl font-bold opacity-50">${imageNumber}</span>
+              </div>
+            </div>
+          `;
+
+          // Insert the Like button
+          imageCard.querySelector('.relative').appendChild(likeButton);
+
+          // Add click event for opening comments
+          imageCard.querySelector('img').addEventListener('click', () => {
+            openCommentsModal(image.id, image.imageUrl, mode);
+          });
+
+          // Append to the DOM
+          imageList.appendChild(imageCard);
+          newItems.push(imageCard);
+        });
+
+        // After adding all new items, wait until they're fully loaded, then Masonry them
+        imagesLoaded(newItems, () => {
+          msnry.appended(newItems); // Tell Masonry about new elements
+          msnry.layout();          // Recalculate layout
+        });
+
+        hasMoreImages = data.hasMore;
+        if (hasMoreImages) {
+          page++;
+        }
+      } catch (error) {
+        console.error(`Error loading images from ${apiEndpoint}:`, error);
+        showToast('An error occurred while loading images.', 'error');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    /*******************************************************/
+    /* Example usage: Initialize Masonry and load 2 pages  */
+    /*******************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      const grid = document.getElementById('image-list');
+
+      // Initialize Masonry
+      msnry = new Masonry(grid, {
+        itemSelector: '.image-card',  // each "tile" has this class
+        columnWidth: '.grid-sizer',   // base column width
+        percentPosition: true         // let Masonry treat columnWidth as percent
+      });
+
+      // Ensure Masonry does an initial layout after everything visible loads
+      imagesLoaded(grid, () => {
+        msnry.layout();
+      });
+
+      // Load the first page from your API
+      const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+      loadImages(firstEndpoint, 'public');
+
+      // For demo: load second page after 1 second
+      setTimeout(() => {
+        const secondEndpoint = `/api/public-posts?type=ai-generated&page=2&`;
+        loadImages(secondEndpoint, 'public');
+      }, 1000);
+    });
+
+    /*********************************************/
+    /* Optional: Handle infinite scroll          */
+    /*********************************************/
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+      // Check if we're near the bottom
+      if (scrollTop + clientHeight >= scrollHeight - 50) {
+        if (hasMoreImages && !isLoading) {
+          const apiEndpoint = `/api/public-posts?type=ai-generated&page=${page}&`;
+          loadImages(apiEndpoint, 'public');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

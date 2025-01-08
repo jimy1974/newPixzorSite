@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Character Encoding -->
+    <meta charset="UTF-8">
+    
+    <!-- Viewport for Responsive Design -->    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <!-- Page Title -->
+    <title></title>
+
+    <!-- Meta Description and Keywords -->
+    <meta name="description" content="Create stunning AI-generated images with Pixzor. Transform your creative vision into reality with advanced tools for character consistency, face swap, and storytelling. Future plans include AI-powered video animation for subscribers.">
+    <meta name="keywords" content="AI image generation, AI video creation, character design, face swap, AI storytelling, generative AI, creative tools, character consistency, AI animation">
+    <meta name="author" content="Pixzor">
+
+
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "url": "https://www.pixzor.com/",
+        "name": "Pixzor",
+        "description": "AI-powered platform for creating stunning images and videos. Transform your creative vision into reality with advanced tools for character consistency, face swap, and storytelling.",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "contact@pixzor.com",
+            "contactType": "customer support"
+        },
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.pixzor.com/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    
+    .fixed-prompt {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%; /* Ensure it takes most of the screen's width */
+      max-width: 1200px; /* Cap it for larger screens */
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);      
+      border-radius: 12px 12px 0 0;
+      padding: 16px; /* Reduce padding slightly */
+    }
+      
+    /* General Button Styles */
+    .custom-button {
+      background-color: #374151; /* Tailwind's bg-gray-800 */
+      color: white; /* Text color */
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem; /* Rounded corners */
+      font-size: 0.875rem; /* Tailwind's text-sm */
+      padding: 0 1rem; /* Horizontal padding */
+      transition: background-color 0.2s, box-shadow 0.2s; /* Smooth transitions */
+      cursor: pointer; /* Pointer cursor on hover */
+    }
+
+    /* Hover Effect */
+    .custom-button:hover {
+      background-color: #4b5563; /* Tailwind's bg-gray-700 */
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow effect */
+    }
+
+    /* Selected Toggle Button */
+    .custom-button.selected-toggle {
+      background-color: #d1d5db; /* Tailwind's bg-gray-300 (light gray) */
+      color: #1f2937; /* Dark gray text color for contrast */
+      font-weight: bold; /* Emphasize selected button */
+      box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2); /* Adds subtle inset shadow */
+    }
+
+    /* Rounded Button Styles */
+    .custom-button.rounded-l-lg {
+      border-top-left-radius: 0.5rem; /* Left rounded corner */
+      border-bottom-left-radius: 0.5rem;
+    }
+
+    .custom-button.rounded-r-lg {
+      border-top-right-radius: 0.5rem; /* Right rounded corner */
+      border-bottom-right-radius: 0.5rem;
+    }
+
+    /* Hidden Button */
+    .custom-button.hidden {
+      display: none; /* Hide the button */
+    }
+
+
+    /* Add padding to the main content to prevent overlap with the fixed prompt box */
+    .content-padding {
+      padding-bottom: 300px; /* Adjust based on the prompt box height */
+      padding-top: 60px; /* Adjust based on the height of your navbar */
+    }
+
+      
+    #public-toggle {
+      border-radius: 8px 0 0 8px; /* Rounded left corners */
+    }
+
+    #profile-toggle {
+      border-radius: 0 8px 8px 0; /* Rounded right corners */
+    }
+
+    #friend-toggle {
+      border-radius: 0; /* No rounded corners for the middle button */
+    }
+
+
+    /* Modal backdrop */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+    }
+
+    /* Logo Placeholder */
+    .logo {
+      width: 40px;
+      height: 40px;
+      background-color: #4b5563; /* Gray background */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 1.2rem;
+    }
+
+    /* Fixed Generated Images Container */
+    .generated-images-container {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    /* Selected Toggle Button Style */
+    .selected-toggle {
+      background-color: #a1a1aa; /* Light Gray */
+      color: white;
+    }
+
+ 
+
+    
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    /* Spinner Styles */
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1); /* Light border */
+      border-top: 4px solid #ffffff; /* White top for visibility */
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Badges */
+    .badge-public {
+      display: inline-block;
+      background-color: green;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    .badge-private {
+      display: inline-block;
+      background-color: red;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    /* Error Message Styling */
+    #error-message {
+      display: block;
+      margin-top: 10px;
+      font-size: 0.875rem;
+      color: #f87171; /* Tailwind's red-400 */
+    }
+
+    /* Toast Notification Container */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+    }
+
+    /* Toast Styles */
+    .toast {
+      background-color: #1f2937; /* Dark background */
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 10px;
+      opacity: 0.95;
+      transition: opacity 0.3s ease;
+    }
+
+    .toast-success {
+      background-color: #10b981; /* Green */
+    }
+
+    .toast-error {
+      background-color: #ef4444; /* Red */
+    }
+
+    .hidden {
+      display: none;
+    }
+      
+   
+    #post-visibility-toggle:checked + .block {
+      background-color: #10b981; 
+    }
+    #post-visibility-toggle:checked + .block + .dot {
+      transform: translateX(4px); 
+    }
+      
+   #post-visibility-button:hover + #post-visibility-tooltip {
+      display: block;
+    }
+      
+    .post-visibility-wrapper {
+      position: relative; 
+    }
+
+
+   
+    .toggle-visibility-button {
+      margin-left: 4px; /* Add some space between buttons */
+      display: inline-block; /* Align with other buttons */
+   }
+    .bg-gray-100 {
+      background-color: #f9f9f9; /* Light gray background */
+    }
+    .text-gray-900 {
+      color: #111827; /* Dark text for contrast */
+    }
+
+   #close-comments-modal {
+      font-size: 24px;
+      font-weight: bold;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 10; /* Ensure it is above other elements */
+      color: #555; /* Default color */
+    }
+/* Modal content */
+#comments-modal > div {
+  background-color: white;
+  border-radius: 8px;
+  
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+      
+  #comments-modal {
+    z-index: 1050; /* A value higher than the prompt box */
+  }
+      
+ #comments-modal > div {
+  width: 90%; /* Default width */
+  height: 90%; /* Default height */
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+#comments-modal .bg-white {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+      
+.full-size-image {
+  transition: transform 0.2s ease;
+  cursor: zoom-in;      
+}
+      
+/* Magnifying glass visibility */
+#modal-image:hover + span {
+  opacity: 1; /* Makes magnifying glass visible on hover */
+}
+
+/* Default state for the magnifying glass */
+#modal-image + span {
+  opacity: 0;
+}
+
+/* Text adjustments */
+.text-black {
+  color: black;
+}
+
+textarea#comment-input {
+  color: black; /* Ensures visible text in comments input */
+}
+/* Magnifying glass visibility */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+.group-hover\:opacity-100 {
+  opacity: 0;
+}
+
+/* Text shadow for magnifying glass */
+.drop-shadow-md {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7), -2px -2px 4px rgba(255, 255, 255, 0.7);
+}
+
+#modal-image {
+  position: relative;
+  padding: 10px;
+  background: white; 
+  border-radius: 8px;
+}
+
+#modal-prompt-container {
+  height: 6rem; 
+}
+#comments-list {
+  background-color: #ffffff; /* Optional: Set a light background */
+  padding: 10px;
+  border-radius: 5px;
+}
+
+#comments-list li {
+  color: black; /* Ensures text is visible */
+  font-size: 1rem;
+  line-height: 1.5; /* Optional: Improves readability */
+  margin-bottom: 8px; /* Adds spacing between comments */
+}
+#comments-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+#comments-list img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+#comments-list p {
+  margin: 0;
+}
+
+#comments-list .font-bold {
+  margin-bottom: 2px;
+}
+
+
+#copy-prompt {
+  cursor: pointer; /* Make it clear the button is clickable */
+  font-size: 1rem; /* Adjust size to match the title */
+  margin-left: 8px; /* Add space between the title and the icon */
+  background: none; /* Remove any default button styling */
+  border: none; /* Remove border */
+  padding: 0; /* Remove extra padding */
+}
+#copy-prompt:hover {
+  color: #1f2937; /* Slight color change on hover */
+}
+
+#comments-modal {
+  overflow-y: auto;  /* Allow vertical scrolling for the entire modal */
+  -webkit-overflow-scrolling: touch;  /* Smooth scrolling on iOS */
+}
+
+#comments-modal > div {
+  max-height: 90vh;  /* Limit height to 90% of viewport height */
+  overflow-y: auto;  /* Enable scrolling for the modal content */
+}
+
+/* Ensure the comments list can scroll independently */
+#comments-list {
+  max-height: 50vh;  /* Limit comments list height */
+  
+}
+      
+
+
+
+
+@media (max-width: 768px) { 
+  /* Ensure the modal container doesn't scroll the background */
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* Make the modal content scrollable */
+    #comments-modal {
+      overflow: auto;
+      max-height: 100vh; /* Limit modal height to the viewport */
+    }
+
+    #comments-modal .flex-grow.overflow-hidden {
+      overflow-y: auto; /* Enable vertical scrolling for the comments section */
+      max-height: 60vh; /* Adjust based on desired modal height */
+    }
+    
+    
+  #comments-modal > div {
+    flex-direction: column; 
+    height: auto;
+  }
+  #comments-modal .bg-gray-100 {
+    width: 100%; 
+  }
+  #comments-modal .p-6 {
+    width: 100%; 
+  }
+}
+
+      
+
+#prompt-input {
+  width: 100%;
+  background-color: #374151;
+  color: white;
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  padding: 0.5rem 4rem 0.5rem 0.5rem;
+  font-size: 0.875rem;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 2.5rem;
+  max-height: 10rem;
+  line-height: 1.25;
+  
+  /* Add these properties */
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  box-sizing: border-box;
+  display: block;
+
+}
+
+.absolute.right-2.top-2 {
+  right: 0.5rem;
+  top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  #prompt-input {
+    max-height: 8rem;
+    padding-right: 3.5rem;
+  }
+
+  .absolute.right-2.top-2 {
+    right: 0.25rem;
+    top: 0.25rem;
+  }
+}
+      
+      
+      
+.bottom-action-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #2d3748; /* Tailwind's bg-gray-800 equivalent */
+  display: flex;
+  justify-content: center; /* Align buttons to the center */
+  padding: 16px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.2); /* Add subtle shadow for elevation */
+  border-radius: 12px 12px 0 0; /* Match rounded style */
+}
+
+/* General styles for buttons */
+.large-button {
+  background-color: #4b5563; /* Tailwind's bg-gray-600 equivalent */
+  color: white;
+  font-size: 1rem;
+  padding: 8px 16px; /* Slightly smaller padding */
+  margin: 0 4px; /* Reduce margin */
+  border: none;
+  border-radius: 8px; /* Rounded corners */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Space between icon and text */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover effects */
+  cursor: pointer;
+}
+
+.large-button i {
+  font-size: 1.2rem; /* Icon size */
+}
+
+/* Hover effects */
+.large-button:hover {
+  background-color: #10b981; /* Tailwind's green-500 equivalent for hover */
+  transform: scale(1.05); /* Slightly larger on hover */
+}
+
+
+
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+      
+.upload-container, .search-container {
+  padding: 20px;
+  background-color: #2d3748; /* Tailwind's bg-gray-800 */
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+  margin: 20px auto;
+  max-width: 80%;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+#search-results img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+      
+      
+.modal {
+  display: none; /* Hidden by default */
+}
+
+.modal-content {
+  animation: fadeIn 0.3s ease-in-out; /* Smooth fade-in animation */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+.modal-content {
+  outline: 2px solid red; /* Temporary outline for debugging */
+}
+
+.upload-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #2d3748;
+  padding: 20px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+}
+.search-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #2d3748;
+  padding: 20px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.3);
+  overflow-y: auto; /* Allow vertical scrolling if content exceeds height */
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+  gap: 10px; /* Add space between elements */
+}
+
+.search-container h2 {
+  margin-bottom: 8px; /* Reduce the bottom margin */
+}
+
+.search-container .flex {
+  margin-top: 0; /* Remove extra margin at the top of the input container */
+}
+
+
+  
+/* Close Button */
+#close-sidebar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+}
+
+#close-sidebar:hover {
+  color: #ccc;
+}
+
+
+
+/* Default filter button style */
+.filter-button {  
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;  
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  position: relative; /* Ensure pseudo-elements are positioned relative to this button */
+  padding-right: 35px; /* Add space for the tick to the right */
+  transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition */    
+}
+
+/* When selected, show light gray and a red or yellow tick */
+.filter-button.selected {
+  background-color: #4b5563; /* Slightly lighter gray */
+  color: white;
+}
+
+.filter-button:hover {
+  background-color: #374151; /* Tailwind's bg-gray-700 for hover */
+  
+}
+
+.filter-button.selected::after {
+  content: "✔"; /* Red or Yellow tick */
+  
+  position: absolute;
+  right: 8px; /* Position tick to the far right */
+  top: 50%; /* Center tick vertically */
+  transform: translateY(-50%); /* Align the tick properly */
+  font-size: 1rem;
+}
+
+
+      
+#open-filters-button:hover {
+  background-color: #10b981; /* Green hover */
+  transform: scale(1.05); /* Slight zoom effect */
+}
+
+
+[data-category="image-source"] .selected::before {
+  color: #ff6347; /* Example: Orange arrow for "Image Source" */
+}
+
+[data-category="art-styles"] .selected::before {
+  color: #1e90ff; /* Example: Blue arrow for "Art Styles" */
+}
+
+[data-category="advanced"] .selected::before {
+  color: #32cd32; /* Example: Green arrow for "Advanced Filters" */
+}
+
+     
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.2em;
+  padding-right: 2rem;
+}
+      
+.custom-select {
+  background-color: #374151;
+  color: white;
+  height: 32px;
+  padding: 0 2rem 0 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.2em;
+  appearance: none;
+  max-width: 150px; /* Limit the maximum width */
+  width: 100%; /* Ensure it takes up available space */
+}
+
+
+
+
+.fixed-prompt .container {
+  padding-top: 0; /* Remove padding only from the top */
+}
+
+
+
+.fixed-prompt .flex-col {
+  gap: 0; /* Remove extra vertical spacing between elements */
+}
+
+button.down-arrow-btn {
+  background-color: #374151; /* Tailwind's bg-gray-700 */
+  color: white;
+  height: 24px; /* Adjust height to match design */
+  width: auto; /* Ensure it’s not overly wide */
+  padding: 0 8px; /* Minimal padding for arrow */
+  margin: 0; /* Remove all margins */
+  border-radius: 8px; /* Keep a small rounded corner */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.down-arrow-btn:hover {
+  background-color: #4b5563; /* Slightly lighter gray on hover */
+}
+
+.flex.justify-center {
+  margin: 0; /* Remove extra margin around the button container */
+  padding: 0; /* Remove extra padding */
+}
+
+      
+.toggle-buttons.hidden {
+  display: none;
+}
+.toggle-buttons {  
+  display: flex;
+  justify-content: space-around; /* Spread buttons evenly */
+  gap: 0.5rem; /* Add spacing between buttons */
+    
+}
+      
+/* Default button styles */
+.toggle-buttons button {
+  background-color: #374151; /* Default dark gray */
+  color: white; /* Text color */
+  font-size: 0.875rem; /* Base font size */
+  padding: 0.5rem; /* Padding for buttons */
+  border: none; /* Remove default borders */
+  border-radius: 0.375rem; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor */
+  transition: background-color 0.2s ease, color 0.2s ease; /* Smooth transition */
+}
+
+/* Hover effect (dark green highlight) */
+.toggle-buttons button:hover {
+  background-color: #14532d; /* Dark green for hover */
+  color: #e5f4e3; /* Light greenish text for hover */
+}
+
+/* Active state (green background when clicked) */
+button.active {
+  background-color: #4caf50; /* Bright green background */
+  color: white; /* Keep text white */
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2); /* Subtle inset shadow */
+}
+
+      
+    
+/* Action buttons responsive layout */
+.action-buttons {
+  
+  flex-direction: row; /* Ensure buttons stay side by side */
+  justify-content: flex-start;
+  gap: 0.5rem; /* Ensure consistent spacing between buttons */
+}
+
+
+
+
+   
+      
+
+
+
+
+@media (max-width: 640px) {
+    
+  .large-button {
+    font-size: 0.8rem; /* Smaller text */
+    padding: 6px 12px; /* Less padding */
+    margin: 0 2px; /* Reduce spacing further */
+    gap: 0.3rem; /* Smaller gap between icon and text */
+  }
+    
+   /* Custom styles for the fixed prompt box */
+  .fixed-prompt {
+      position: fixed;
+      bottom: 0;
+      
+      width: 100%;
+      
+      overflow-y: auto;
+      z-index: 50;
+      padding-top: 4px;
+      padding: 5px;    
+    }  
+  .fixed-prompt .flex-col {
+    gap: 0.5rem;
+  }
+      
+  .content-padding {
+    padding-bottom: 200px;
+    padding-top: 50px;
+  }
+  
+ 
+  
+  #prompt-input {
+    font-size: 0.875rem;
+    padding: 8px 160px 8px 8px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+
+  
+  select {
+    height: 32px;
+  }
+  .toggle-buttons {
+    flex-direction: row; /* Ensure buttons stay side by side */
+    align-items: center; /* Center buttons vertically */
+    justify-content: space-around; /* Spread buttons evenly */
+    gap: 0.25rem; /* Adjust spacing for smaller screens */
+  }
+
+  .toggle-buttons button {
+    font-size: 0.75rem; /* Make text smaller */
+    padding: 0.5rem; /* Reduced padding for smaller buttons */
+  }
+
+  .action-buttons {
+    flex-direction: row; /* Ensure action buttons stay side by side */
+    align-items: center; /* Vertically center align */
+    justify-content: flex-start;
+    gap: 0.25rem; /* Reduce gap for smaller screens */
+  }
+
+  .action-buttons button,
+  .action-buttons a {
+    font-size: 0.75rem; /* Smaller font size for compact layout */
+    padding: 0.5rem; /* Reduced padding for smaller buttons */
+  }
+}
+#options-button {
+  pointer-events: auto !important; /* Ensure it's always clickable */
+}
+
+
+
+/* Ensure the fullscreen modal fills the viewport */
+#fullscreen-modal {
+  z-index: 1100; /* Higher than #comments-modal */
+}
+  
+#fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100; /* Higher than #comments-modal */
+  background-color: rgba(0, 0, 0, 0.9); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#fullscreen-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  touch-action: pan-x pan-y; /* Enable pinch-to-zoom */
+  user-select: none; /* Prevent text selection */
+  transform-origin: center center; /* Zoom from the center */
+  transition: transform 0.2s ease; /* Smooth zoom transition */
+}
+
+#close-fullscreen-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+      
+ 
+/* Buy Tokens Modal */
+#buy-tokens-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  overflow-y: auto; /* Allow scrolling if content exceeds height */
+}
+
+
+/* Ensure the dropdown menu is fully visible */
+/* Adjust the dropdown height and text alignment */
+#token-bundle {
+  height: 48px; /* Increase the height */
+  padding: 12px 8px; /* Add more padding for better spacing */
+  line-height: 1.5; /* Ensure text is vertically centered */
+  font-size: 16px; /* Adjust font size if needed */
+  border: 1px solid #ccc; /* Ensure the border is visible */
+  border-radius: 8px; /* Match your design */
+  appearance: none; /* Remove default arrow */
+  
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+/* Adjust modal content for smaller screens */
+@media (max-width: 640px) {
+  #buy-tokens-modal > div {
+    width: 95%; /* Use more screen width on small devices */
+    padding: 16px; /* Reduce padding for better fit */
+  }
+
+  #token-bundle {
+    font-size: 14px; /* Smaller font size for dropdown */
+  }
+}
+      
+/* Ensure the dropdown menu appears above the modal */
+.dropdown-menu {
+  z-index: 1001; /* Higher than the modal's z-index */
+  position: relative; /* Ensure it respects the z-index */
+}
+
+/* Adjust the modal's overflow property */
+#buy-tokens-modal {
+  overflow: visible; /* Allow dropdown to overflow */
+}
+
+#buy-tokens-modal > div {
+  overflow: visible; /* Ensure the modal content doesn't clip the dropdown */
+}      
+      
+      
+      
+/* Update the sidebar styles */
+#filter-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  z-index: 5000;
+  background-color: #1a202c;
+  border-right: 1px solid #2d3748;
+  color: white;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1a202c;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  padding: 16px;
+}
+      
+/* Backdrop styling */
+#sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 4999;
+  display: none; /* Hide by default */
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Show backdrop when sidebar is open */
+#filter-sidebar.open ~ #sidebar-backdrop {
+  display: block;
+  opacity: 1;
+}
+
+/* Ensure the sidebar is above the backdrop */
+#filter-sidebar.open {
+  transform: translateX(0);
+  animation: bounce-in 0.5s ease-in-out;
+}
+
+/* Keep existing animations and other styles */
+@keyframes bounce-in {
+  0% { transform: translateX(-100%); }
+  40% { transform: translateX(10px); }
+  100% { transform: translateX(0); }
+}
+      
+#welcome-modal {
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+#welcome-modal > div {
+  pointer-events: auto; /* Allow clicks within the modal */
+}      
+      
+
+/* Adjust modal width for small screens */
+@media (max-width: 400px) {
+  #options-modal .max-w-md {
+    max-width: 90%; /* Reduce modal width on small screens */
+    padding: 1rem; /* Reduce padding for better spacing */
+  }
+
+  #options-modal input,
+  #options-modal select,
+  #options-modal input[type="range"] {
+    font-size: 14px; /* Reduce font size for better fit */
+  }
+
+  #options-modal .custom-button {
+    padding: 0.5rem 1rem; /* Adjust button padding */
+  }
+
+  #options-modal #image-strength-modal {
+    width: 100%; /* Ensure the slider takes full width */
+  }
+}
+      
+      
+
+      
+/* Default thumbnail size */
+.thumbnail-image {
+  width: 5rem; /* w-20 in Tailwind (20 * 0.25rem = 5rem) */
+  height: 5rem; /* h-20 in Tailwind */
+  border: 1px solid #ccc; /* Optional: Add a border for better visibility */
+}
+
+/* Reduce thumbnail size on mobile screens */
+@media (max-width: 640px) {
+  .thumbnail-image {
+    width: 2.5rem; /* Half the size (2.5rem) */
+    height: 2.5rem; /* Half the size (2.5rem) */
+    margin-left: 0.1rem; /* Reduce left margin for better spacing */
+  }
+}
+@media (max-width: 640px) {
+  #prompt-input {
+    font-size: 16px; /* Increase font size for better readability on mobile */
+    padding: 8px; /* Adjust padding for mobile */
+    min-height: 3rem; /* Increase minimum height for mobile */
+  }
+}
+
+
+
+      
+      
+.custom-dropdown {
+  position: relative;
+  width: 200px;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  background-color: #2d3748;
+  color: white;
+  cursor: pointer;
+  height: 32px;  
+  max-width: 100px;    
+}
+
+.selected-option {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  justify-content: space-between;
+}
+
+.selected-option i {
+  margin-right: 8px;
+  color: #cbd5e0;
+}
+
+.dropdown-options {
+  display: none; /* Hide by default */
+  position: absolute;
+  bottom: calc(100% + 8px); /* Add some space between the dropdown and options */
+  left: 0;
+  width: 100%;
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  border-radius: 4px 4px 0 0;
+  z-index: 6000; /* Ensure it's above other elements */
+  max-height: 200px; /* Limit height to prevent overflow */
+  overflow-y: auto; /* Add scroll if options exceed max height */
+    
+  padding: 0 2rem 0 0.5rem;        
+}
+
+.custom-dropdown.open .dropdown-options {
+  display: block; /* Show when open */
+}
+
+/* Ensure the parent container doesn't clip the dropdown */
+.fixed-prompt {
+  overflow: visible; /* Allow dropdown to overflow */
+}
+/* Mobile styles */
+@media (max-width: 768px) {
+  .custom-dropdown {
+    width: auto; /* Adjust width to fit content */
+    min-width: 50px; /* Minimum width to prevent it from being too small */
+  }
+
+  .selected-option span {
+    display: none; /* Hide "Ratio" text on mobile */
+  }
+
+  .selected-option i {
+    margin-right: 0; /* Remove margin between icons */
+  }
+
+  .dropdown-options {
+    width: auto; /* Adjust width to fit content */
+    min-width: 120px; /* Minimum width for options */
+  }
+}
+      
+      
+#generate-button {
+  height: 32px;  
+  max-width: 80px;        
+  padding: 0.5rem 1rem; /* Adjust padding for better spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Add spacing between text and icon (if needed) */
+}
+
+/* Hide the icon by default */
+.generate-icon {
+  display: none;
+}
+
+/* Ensure the Visibility Button and Generate Button are aligned */
+#post-visibility-button {
+  margin-right: 0.5rem; /* Add spacing between Visibility Button and Generate Button */
+}
+
+/* On mobile screens, adjust spacing */
+@media (max-width: 640px) {
+  #post-visibility-button {
+    margin-right: 0.25rem; /* Smaller spacing for mobile */
+  }
+
+  #generate-button {
+    min-width: auto; /* Allow the button to shrink */
+    padding: 0.5rem; /* Smaller padding for mobile */
+  }
+}
+      
+      
+      
+      
+      
+.like-button:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Slight hover effect */
+    transform: scale(1.1); /* Slight zoom on hover */
+}
+
+
+
+
+.like-button i.liked {
+    color: red; /* Liked heart color */
+}
+
+.liked {
+    color: red; /* Red when liked */
+}
+
+
+.image-card .toggle-buttons {
+    /*position: absolute;*/
+    bottom: 8px; /* Adjust for spacing */
+    left: 8px;
+    right: 8px;
+    /*display: flex;*/
+    justify-content: space-around;
+}
+
+.image-card {
+  position: relative;
+  overflow: hidden; /* Ensures image scaling doesn't affect layout */
+  border-radius: 12px; /* Matches other rounded elements */
+}
+
+.image-card:hover img {
+  transform: scale(1.05); /* Slight zoom on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
+}
+
+      
+.like-button {
+  position: absolute;
+  top: 8px; /* Adjust positioning */
+  right: 8px; /* Adjust positioning */
+  width: 40px; /* Set button width */
+  height: 40px; /* Set button height */
+  background-color: transparent; /* Transparent background */
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Optional border for visibility */
+  border-radius: 50%; /* Make the button circular */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+.like-button i {
+  color: white; /* Set the heart color */
+  font-size: 1.2rem; /* Adjust size */
+  transition: color 0.2s ease-in-out;
+}      
+.like-button.liked i {
+  color: #f00; /* Highlighted heart color for liked state */
+} 
+      
+      
+/* Masonry Layout with CSS Columns */
+/* Masonry Container */
+#image-list {
+  position: relative; /* Needed for Masonry's absolute positioning */
+  margin: 0 auto;
+  max-width: 1200px; /* or whatever width you want for your gallery */
+}
+
+    /* The .grid-sizer sets the base column width for fluid Masonry. 
+       Typically, it is 0-height, invisible, used just for measurement. */
+    .grid-sizer {
+      width: 25%; /* Example: 4 columns => 25% each (100/4=25). Adjust to your preference. */
+      /* No visible styles needed. Just leave it empty in the DOM. */
+    }
+
+    /* Each image-card is one Masonry 'tile' or 'brick'. */
+    .image-card {
+      /* Match the width to .grid-sizer if you want uniform columns. */
+      width: 25%;
+      float: left; /* Masonry can handle floats or you can omit float if you prefer. */
+      box-sizing: border-box;
+      padding: 8px;
+      margin-bottom: 16px;
+      background-color: #2d3748; /* Example background */
+      border-radius: 8px;
+      position: relative; /* for the like button absolute positioning */
+    }
+
+    .image-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+      
+      
+  </style>
+</head>
+<body style="background-color: #1a202c; color: #fff;">
+
+    <!-- Navbar -->
+<nav class="bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-50">
+  <div class="container mx-auto px-2 py-2 flex justify-between items-center">
+    
+    <!-- Left Section: Hamburger Menu and Logo -->
+    <div class="flex items-center space-x-4">
+      
+      <!-- Logo -->
+      <!-- Logo as a Button -->
+        <button id="logo-button" class="flex items-center space-x-2 focus:outline-none">
+          <img src="/images/logo.png" alt="Pixzor Logo">
+          <span class="text-lg sm:text-xl font-bold">Pixzor</span>
+        </button>
+    </div>
+
+    <!-- Right Section: Mobile-friendly Buttons -->
+    <div class="flex items-center space-x-2 sm:space-x-4">
+      <button id="tokens-button" class="flex items-center bg-gray-700 hover:bg-yellow-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 mr-1 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd" />
+        </svg>
+        <span id="token-count" class="text-yellow-400">- Tokens</span>
+      </button>
+
+      <button id="google-auth-button" class="flex items-center bg-gray-700 hover:bg-green-600 px-2 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
+  <div class="w-4 h-4 sm:w-6 sm:h-6 mr-1 sm:mr-2 rounded-full bg-gray-600 flex items-center justify-center">
+    <i class="fas fa-user text-white text-xs sm:text-sm"></i> <!-- FontAwesome user icon -->
+  </div>
+  <span>Login</span>
+</button>
+        
+    </div>
+  </div>
+</nav>
+    
+    
+    <!-- Filter Sidebar -->
+<div id="filter-sidebar" class="fixed left-0 top-0 h-full w-64 bg-gray-800 text-white p-4 hidden">
+  <!-- Backdrop -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-4999 hidden"></div>
+
+  <!-- Close Button -->
+  <button id="close-sidebar" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl" aria-label="Close">
+    &times;
+  </button>
+
+  <!-- Sidebar Content -->
+  <h2 class="text-lg font-bold mb-4">Filters</h2>
+  
+  <!-- Image Source -->
+  <h3 class="text-md font-semibold mb-2">Image Source</h3>
+  <ul class="mb-4">
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="ai-generated">AI Generated</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="user-uploaded">User Uploaded</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="image-source" data-filter="stylized-photo">Stylized Photos</button>
+    </li>
+  </ul>
+    
+  <!-- Advanced Filters -->
+  <h3 class="text-md font-semibold mb-2">Advanced Filters</h3>
+  <ul>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="newest">Newest</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="most-liked">Most Liked</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="most-commented">Most Commented</button>
+    </li>
+    <li>
+      <button class="filter-button" data-category="advanced" data-advanced="trending">Trending</button>
+    </li>
+  </ul>    
+
+  <!-- AI Subcategories -->
+  <h3 class="text-md font-semibold mb-2">Styles</h3>
+  <ul class="menu-style-list mb-4"></ul>  
+    
+  <!-- Close Button at the Bottom (Optional) -->
+  <button id="close-sidebar-bottom" class="mt-8 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded">
+    Close
+  </button>
+</div>
+
+    
+    
+<!-- Fixed Container for Toggle Buttons -->
+<div class="fixed left-0 right-0 z-40 " style="top: 56px;">
+  <div class="container mx-auto py-2 flex items-center">
+    <!-- Open Filters Button (aligned to the left) -->
+    <div class="flex-grow">
+      <button 
+        id="open-filters-button" 
+        class="bg-gray-700 hover:bg-green-600 text-white text-sm px-4 py-2 rounded-lg shadow-md flex items-center space-x-2">
+        <i class="fas fa-filter"></i>
+        <span>Open Filters</span>
+      </button>
+    </div>
+
+   <div class="flex justify-center flex-grow">
+  <button id="public-toggle" class="custom-button bg-transparent text-white px-4 rounded-l-lg text-sm selected-toggle hover:bg-green-700">
+    Public Posts
+  </button>
+
+  <button id="profile-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-green-700">
+    Profile Posts
+  </button>
+  
+  <button id="search-results-toggle" class="custom-button bg-transparent text-white px-4 rounded-r-lg text-sm hover:bg-green-700 hidden">
+    Search Results
+  </button>
+</div>    
+    <!-- Empty space on the right (optional for future elements) -->
+    <div class="flex-grow"></div>
+  </div>
+</div>
+    
+    
+  <!-- Main Container -->
+<div class="container mx-auto py-20 content-padding">
+  <!-- Error Message -->
+  <div id="error-message" class="text-red-500 text-center mb-4"></div>
+
+  <!-- User Profile Container -->
+  <div id="profile-container">
+    <!-- User Profile Header -->
+    <div class="flex items-center space-x-4 mb-8">
+      <img id="profile-avatar" src="" alt="User Avatar" class="w-16 h-16 rounded-full hidden"  referrerPolicy="no-referrer" >
+      <h1 id="profile-username" class="text-2xl font-bold"></h1>
+    </div>
+
+   <!-- Masonry Container (replaces the old "image-list" in your snippet) -->
+  <div id="image-list">
+    <!-- .grid-sizer is required for fluid Masonry column width -->
+    <div class="grid-sizer"></div>
+    <!-- Items will be dynamically appended here by loadImages() -->
+  </div>
+
+  <!-- Include imagesLoaded and Masonry via CDN -->
+  <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+  <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+      
+  </div>
+</div>
+    
+    
+    
+<div class="fixed-prompt bottom-action-bar">
+  <button class="large-button" onclick="showUploadImage()">
+    <i class="fas fa-upload"></i> Upload
+  </button>
+  <button class="large-button" onclick="showCreateImage()">
+    <i class="fas fa-paint-brush"></i> Create
+  </button>
+  <button class="large-button" onclick="showSearchImages()">
+    <i class="fas fa-search"></i> Search
+  </button>
+</div>
+
+    
+
+<!-- Image Upload Section -->
+<div id="image-upload" class="hidden">
+  <div class="upload-container">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-white text-lg">Upload Your Image</h2>
+      <button onclick="returnToMain()" class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-green-600">
+        Back
+      </button>
+    </div>
+    <form id="image-upload-form" enctype="multipart/form-data">
+      <input
+        type="file"
+        id="image-file"
+        name="image"
+        accept="image/*"
+        class="block w-full text-sm text-white bg-gray-700 border border-gray-300 rounded-lg cursor-pointer focus:outline-none"
+        required
+      />
+      <textarea
+        id="image-description"
+        name="description"        
+        rows="3"
+        class="mt-4 block w-full bg-gray-700 text-white rounded-lg p-2 border border-gray-300"
+        placeholder="Add a description (optional)"
+      ></textarea>
+      <button
+        type="submit"
+        class="mt-4 bg-green-700 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-lg text-sm"
+      >
+        Upload Image
+      </button>
+      <div class="mt-4 w-full bg-gray-700 rounded-lg h-2">
+        <div id="upload-progress-bar" class="h-2 bg-blue-500 rounded-lg" style="width: 0;"></div>
+      </div>
+      <div id="upload-status" class="mt-2 text-sm text-white"></div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
+<div id="ai-creation" class="hidden">
+  <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
+    <div class="container mx-auto px-2 py-3">
+      <!-- Main Content Area -->
+      <div class="flex flex-col space-y-2">
+        <!-- Down Arrow Button -->
+        <div class="flex justify-center">
+          <button onclick="returnToMain()" class="bg-gray-700 hover:bg-green-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
+            <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Thumbnail and Prompt Layout -->
+        <div class="flex flex-row space-x-2 w-full">
+          <div id="selected-thumbnail-container">
+            <!-- Thumbnail will be inserted here -->
+          </div>
+
+          <!-- Textarea Container -->
+          <div class="flex-grow relative min-w-0">
+            <textarea
+              id="prompt-input"
+              class="w-full bg-gray-700 rounded-lg p-2 pr-24 text-sm text-white border border-gray-600 resize-none"
+              rows="2"
+              placeholder="Enter your prompt"
+              aria-label="Prompt Input"
+              style="width: 100%; box-sizing: border-box;"
+            ></textarea>
+
+            
+          </div>
+        </div>
+
+        <!-- Controls Area -->
+<div class="flex flex-wrap gap-2 items-center">
+  <!-- Options Button -->
+  <button id="options-button" class="custom-button px-3" title="Options">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  </button>
+
+  <!-- Enhance Prompt Button -->
+  <button id="enhance-prompt-button" class="custom-button px-3" title="Enhance Prompt">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+    </svg>
+  </button>
+
+  <!-- Aspect Ratio Dropdown -->
+  <div class="custom-dropdown" id="aspect-ratio-select">
+    <div class="selected-option">
+      <i class="fas fa-crop-alt"></i>
+      <span>Ratio</span>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+    <ul class="dropdown-options">
+      <li data-value="1:1">
+        <i class="fas fa-square"></i>
+        <span>1:1</span>
+      </li>
+      <li data-value="4:3">
+        <i class="fas fa-image"></i>
+        <span>4:3</span>
+      </li>
+      <li data-value="3:4">
+        <i class="fas fa-image"></i>
+        <span>3:4</span>
+      </li>
+      <li data-value="16:9">
+        <i class="fas fa-desktop"></i>
+        <span>16:9</span>
+      </li>
+      <li data-value="9:16">
+        <i class="fas fa-mobile-alt"></i>
+        <span>9:16</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Style Dropdown -->
+  <select id="style-select" class="custom-select">
+    <option value="" disabled selected>Style</option>
+  </select>
+
+  <!-- Model Dropdown -->
+  <select id="model-select" class="custom-select">
+    <option value="" disabled selected>Model</option>
+  </select>
+
+  <!-- Group Visibility Button and Generate Button -->
+  <div class="flex items-center gap-2 ml-auto">
+    <!-- Visibility Button -->
+    <button id="post-visibility-button" class="bg-gray-700 p-1 rounded-lg hover:bg-green-600 relative">
+      <svg id="post-visibility-icon" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+      </svg>
+      <!-- Tooltip -->
+      <div id="post-visibility-tooltip" class="hidden absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-md">
+        Create privately
+      </div>
+    </button>
+
+    <!-- Generate Button -->
+    <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
+      <span class="generate-text">Generate</span>
+      <span class="generate-icon">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </span>
+    </button>
+  </div>
+</div>
+          
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    
+    
+
+<!-- Image Search Section -->
+<div id="image-search" class="hidden">
+  <div class="search-container">
+    <div class="flex justify-between items-center w-full">
+      <h2 class="text-white text-lg">Search for Images</h2>
+      <button onclick="returnToMain()" class="bg-gray-700 text-white px-3 py-1.5 rounded hover:bg-green-600 text-sm">
+        Back
+      </button>
+    </div>
+    <!-- Search Input and Dropdown -->
+    <div class="flex flex-col sm:flex-row gap-2 items-center mt-2 w-full">
+      <input
+        type="text"
+        id="search-query"
+        class="w-full sm:flex-grow bg-gray-700 text-white rounded-lg py-1.5 px-2 border border-gray-300 placeholder:text-sm"
+        placeholder="Enter keywords to search"
+      />
+      <button
+        id="search-button"
+        class="w-full sm:w-auto bg-green-700 hover:bg-green-600 text-white font-medium px-3 py-1.5 rounded-lg text-sm"
+      >
+        Search
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Buy Tokens Modal -->
+<div id="buy-tokens-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-gray-100 text-gray-900 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <!-- Close Button -->
+      <button id="close-buy-tokens-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">
+        &times;
+      </button>
+
+      <!-- Modal Header -->
+      <h2 class="text-xl font-bold mb-4">Manage PIXZOR Tokens</h2>
+
+      <!-- Token Purchase Form -->
+      <form id="buy-tokens-form" class="mb-6">
+        <label for="token-bundle" class="block mb-2">Select a Token Bundle:</label>
+        <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4 dropdown-menu">
+          <!-- Adjusted Token Options -->
+          <option value="500" data-price="5.00">500 Tokens - $5.00</option>
+          <option value="1000" data-price="10.00">1,000 Tokens - $10.00</option>
+          <option value="2500" data-price="20.00">2,500 Tokens - $20.00</option>            
+          <option value="4000" data-price="30.00">4,000 Tokens - $30.00</option>            
+          <option value="6000" data-price="40.00">6,000 Tokens - $40.00</option>            
+          <option value="10000" data-price="50.00">10,000 Tokens - $50.00</option>
+        </select>
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-500">
+          Purchase Tokens
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-modal="true" aria-labelledby="options-modal-title">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+      <button id="close-options-modal" class="absolute top-2 right-2 text-gray-600 hover:text-gray-800" aria-label="Close">&times;</button>
+      <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
+
+      <form id="options-form">
+        <!-- HD Toggle -->
+        <div class="mb-4">
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="hd-toggle" class="form-checkbox h-5 w-5 text-blue-600">
+            <span class="text-gray-900">Enable HD Resolution</span>
+          </label>
+        </div>
+
+        <!-- Width and Height Inputs -->
+        <div class="mb-4">
+          <label for="width-modal" class="block font-medium mb-1 text-gray-900">Width</label>
+          <input type="number" id="width-modal" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Width (e.g., 800)">
+          <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
+          <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
+          <div class="flex items-center mt-2">
+            <input type="checkbox" id="lock-aspect-ratio" class="mr-2" checked>
+            <label for="lock-aspect-ratio" class="text-sm text-gray-900">Lock Aspect Ratio</label>
+          </div>
+        </div>
+
+        <!-- Guidance Scale and Inference Steps -->
+        <div class="mb-4">
+          <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
+          <input type="number" step="0.1" id="guidance-scale-modal" value="10.0" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
+          <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
+          <input type="number" id="inference-steps-modal" value="25" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
+        </div>
+
+        <!-- Image Strength Slider -->
+        <div class="mb-2">
+          <label for="image-strength-modal" class="block font-medium mb-1 text-gray-900">Image Strength</label>
+          <div class="flex items-center space-x-2">
+            <input type="range" id="image-strength-modal" min="0" max="1" step="0.01" value="0.75" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="image-strength-value" class="text-sm text-gray-900">0.75</span>
+          </div>
+        </div>
+
+        <!-- Token Cost Display -->
+        <div class="mb-4 flex justify-between items-center">
+          <label class="block font-medium text-gray-900">Token Cost</label>
+          <div id="token-cost-display" class="text-gray-900">
+            <!-- Token cost will be dynamically updated here -->
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end">
+          <button type="submit" class="custom-button font-medium py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-green-600">Save Options</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+    
+    
+
+  <!-- Setup Character Modal -->
+<div id="setup-character-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" role="dialog" aria-modal="true" aria-labelledby="setup-character-modal-title">
+ 
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button id="close-setup-character-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600" aria-label="Close">&times;</button>
+        <h2 id="setup-character-modal-title" class="text-xl font-bold mb-4">Setup Character</h2>
+        <form id="setup-character-form">
+          <!-- Character Name -->
+          <div class="mb-4">
+            <label for="character-name" class="block font-medium mb-1">Character Name</label>
+            <input type="text" id="character-name" name="character-name" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" required>
+          </div>
+          <!-- Character Description -->
+          <div class="mb-4">
+            <label for="character-description" class="block font-medium mb-1">Description</label>
+            <textarea id="character-description" name="character-description" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white" rows="4" placeholder="Describe your character"></textarea>
+          </div>
+          <!-- Upload Face -->
+          <div class="mb-4">
+            <label for="face-upload-character" class="block font-medium mb-1">Upload Face</label>
+            <input type="file" id="face-upload-character" class="w-full bg-gray-700 rounded-lg py-2 px-3 text-white">
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="custom-button font-medium py-2 px-4 rounded-lg">Save Character</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+    
+ 
+<!-- Updated Comments Modal -->
+<div id="comments-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+  <div class="bg-white rounded-lg shadow-lg flex flex-col md:flex-row relative w-11/12 md:w-4/5 max-h-screen overflow-y-auto">
+    <!-- Close Button -->
+ <button id="close-comments-modal" class="absolute top-2 right-2 bg-gray-400 text-white hover:bg-green-300 rounded-full p-1 text-2xl z-30" aria-label="Close Comments Modal">
+  &times;
+</button>
+
+
+    <!-- Left Section: Image -->
+    <div class="md:w-2/3 bg-gray-100 flex items-start justify-center p-4 relative">
+      <!-- Fullscreen Icon -->
+      <button id="fullscreen-icon" class="absolute top-2 left-2 bg-black text-white p-1 rounded-full text-sm z-20" aria-label="Fullscreen Image">
+        <i class="fas fa-expand"></i>
+      </button>
+      <img id="modal-image" src="" alt="Full Image" class="w-full h-auto rounded-lg object-contain">
+    </div>
+
+    <!-- Right Section: Details and Comments -->
+    <div class="md:w-1/3 p-6 flex flex-col space-y-4">
+      <!-- Prompt -->
+      <div class="flex flex-col">
+        <h3 class="text-lg font-bold text-black mb-2 flex items-center">
+          Prompt
+          <button id="copy-prompt" class="ml-2 text-gray-500 hover:text-gray-700" title="Copy Prompt" aria-label="Copy Prompt">
+            <i class="fas fa-copy"></i>
+          </button>
+        </h3>
+        <div id="modal-prompt-container" class="border p-3 rounded max-h-24 overflow-y-auto bg-gray-50 relative">
+          <p id="modal-prompt" class="text-gray-600 pr-8"></p>
+        </div>
+      </div>
+
+      <div class="flex items-center">
+      <button id="like-button-modal" class="bg-gray-700 text-white p-2 rounded-full">
+        <i class="fas fa-heart"></i>
+      </button>
+      <span id="like-count" class="ml-2 text-gray-600">0</span>
+    </div>
+    
+      <!-- User Profile -->
+      <div>
+        <h3 class="text-lg font-bold text-black">Created By <a id="modal-user-profile" href="#" class="text-blue-500 hover:underline"></a></h3>    
+      </div>
+
+      <!-- Action Buttons with Icons and Tooltips -->
+      <div class="flex flex-wrap gap-2">
+        <div class="relative group">
+          <a id="download-button" href="#" class="bg-green-600 text-white p-2 rounded flex items-center" download>
+            <i class="fas fa-download"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Download</span>
+        </div>
+          
+          
+        <div class="relative group">
+          <a id="create-button" href="#" class="btn bg-purple-600 text-white p-2 rounded flex items-center" aria-label="Create Similar">
+            <i class="fas fa-pencil-alt"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Create Similar</span>
+        </div>
+          
+          
+          
+        <div class="relative group">
+          <a id="share-facebook" href="#" target="_blank" class="bg-blue-600 text-white p-2 rounded flex items-center" aria-label="Share on Facebook">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Facebook</span>
+        </div>
+          
+          
+          
+        <div class="relative group">
+          <a id="share-twitter" href="#" target="_blank" class="bg-blue-400 text-white p-2 rounded flex items-center" aria-label="Share on Twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Twitter</span>
+        </div>
+        <div class="relative group">
+          <a id="share-pinterest" href="#" target="_blank" class="bg-red-600 text-white p-2 rounded flex items-center" aria-label="Share on Pinterest">
+            <i class="fab fa-pinterest-p"></i>
+          </a>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Pinterest</span>
+        </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="flex flex-col flex-grow overflow-hidden">
+        <h3 class="text-lg font-bold text-black mb-2">Comments</h3>
+        <div class="flex-grow overflow-y-auto mb-4">
+          <ul id="comments-list" class="space-y-2"></ul>
+        </div>
+        
+        <!-- Comment Input at the Bottom -->
+        <div class="mt-auto">
+          <textarea id="comment-input" placeholder="Write a comment..." class="w-full p-2 border rounded text-black mb-2" aria-label="Write a comment"></textarea>
+          <button id="post-comment" class="w-full bg-green-600 text-white px-4 py-2 rounded" aria-label="Post Comment">Post Comment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Welcome Modal -->
+<div id="welcome-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4">Welcome to Pixzor!</h2>
+    <p class="mb-4">
+      Register now to claim your <strong>50 free tokens</strong> and start creating stunning AI-generated images.
+    </p>
+    <div class="flex justify-end space-x-4">
+      <button id="close-welcome-modal" class="bg-gray-700 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+        Close
+      </button>
+      <button id="register-with-google" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg">
+        Register with Google
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- About Popup -->
+<div id="about-popup" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+  <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4">About Pixzor</h2>
+    <p class="mb-4">
+      Pixzor is an AI-powered platform designed to help you create stunning, personalized images. 
+      Upload a photo of yourself, and transform it into different styles or environments while maintaining 
+      your unique face and body pose. This ensures <strong>character consistency</strong>, making it perfect 
+      for storytelling, avatars, or creative projects.
+    </p>
+    <p class="mb-4">
+      Our goal is to make creativity accessible to everyone. In the near future, we plan to expand 
+      into <strong>AI-powered video animation</strong>, allowing subscribers to bring their characters 
+      to life in dynamic, animated stories. Stay tuned for updates!
+    </p>
+    <p class="mb-4">
+      For any inquiries, please contact us at: 
+      <a href="mailto:contact@pixzor.com" class="text-blue-400 hover:text-blue-300">contact@pixzor.com</a>
+    </p>
+    <button id="close-about-popup" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg">
+      Close
+    </button>
+  </div>
+</div>
+    
+<!-- Fullscreen Modal -->
+<div id="fullscreen-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
+  <div class="relative w-full h-full flex justify-center items-center">
+    <!-- Fullscreen Image -->
+    <img id="fullscreen-image" src="" alt="Full Image" class="max-w-full max-h-full object-contain">
+
+    <!-- Close Button -->
+    <button id="close-fullscreen-modal" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white text-2xl px-3 py-1 rounded-full shadow-lg">
+      &times;
+    </button>
+  </div>
+</div>
+    
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-20 z-50"></div>
+    
+    
+
+  <script>
+      
+      // script.js
+    let isPublic = false;
+    let page = 1; // Initial page for pagination
+    let isLoading = false; // Prevent multiple simultaneous requests      
+    let msnry = null; // Reference the Masonry instance here:      
+    let hasMoreImages = true; // Track if there are more images to load
+    let selectedStyle = '';
+    const selectedImages = new Set(); // Track selected images globally
+
+    let selectedImageState = {
+      imageId: null,
+      keepFace: false,
+      keepStyle: false,
+      keepPose: false,
+    };
+
+    window.isLoggedIn = true; 
+    window.currentUser = true;
+  
+    if (!window.isLoggedIn) {
+        console.log('User is not logged in');
+    } else {
+        console.log(`Welcome, ${window.currentUser.username}!`);
+    }       
+    let selectedFilters = {
+      type: 'ai-generated', // Default value
+      style: 'all-styles', // Default value
+      sort: 'newest', // Default value
+    };
+
+  
+
+
+      
+      
+  // Dynamically generated styles array
+  const styles = "";
+
+      
+function populateMenuStyles() {
+  const menu = document.querySelector(".menu-style-list");
+  if (!menu) {
+    console.error("Menu element not found!");
+    return;
+  }
+
+  menu.innerHTML = ""; // Clear existing items
+
+  styles.forEach((style) => {
+    const countDisplay = style.value === 'all-styles' ? style.count : style.count || 0;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <button class="filter-button" data-category="art-styles" data-subfilter="${style.value}">
+        ${style.label} (${countDisplay})
+      </button>
+    `;
+    menu.appendChild(li);
+  });
+
+  // Add event listeners to the buttons
+  const buttons = menu.querySelectorAll(".filter-button");
+  buttons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const filterCategory = event.target.dataset.category;
+      const filterValue = event.target.dataset.subfilter;
+
+      // Update filters
+      activeFilters[filterCategory] = filterValue;
+      
+      // Apply filters
+      applyFilters();
+    });
+  });
+}
+
+
+
+
+      
+function populateAIStyleDropdown() {
+  //const dropdown = document.getElementById("style-select-modal");
+  const dropdown = document.getElementById("style-select");    
+    
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="" disabled selected>Choose a style</option>'; // Reset options
+    styles.forEach((style) => {
+      const option = document.createElement("option");
+      option.value = style.value;
+      option.textContent = style.label;
+      dropdown.appendChild(option);
+    });
+  } 
+}
+
+function populateSearchStyles() {
+  const dropdown = document.getElementById("category-select");
+  if (dropdown) {
+    dropdown.innerHTML = '<option value="" disabled selected>Choose a category</option>'; // Reset options
+    styles.forEach((style) => {
+      const option = document.createElement("option");
+      option.value = style.value;
+      option.textContent = style.label;
+      dropdown.appendChild(option);
+    });
+  }
+}
+      
+
+// Map each style to its default model
+const styleToModelMap = {
+  "abstract": "animagine-xl-v-3-1", // Artistic and flexible
+  "anime": "sdvn7-niji-style-xl-v1", // Specialized for anime
+  "balloon-art": "real-cartoon-xl-v6", // Best for cartoon-like visuals
+  "cartoon": "real-cartoon-xl-v6", // Good for cartoon styles
+  "ceramic": "stable-diffusion-xl-v1-0", // Use SD XL for versatility
+  "chibi": "sdvn7-niji-style-xl-v1", // Specialized for anime and chibi
+  "claymation": "animagine-xl-v-3-1", // Works great for claymation
+  "comic": "real-cartoon-xl-v6", // Comic book-like visuals
+  "crystal": "reproduction-v3-31", // Specialized for crystal-like details
+  "cubist": "animagine-xl-v-3-1", // Works well for artistic styles
+  "cyberpunk": "stable-diffusion-xl-v1-0", // Reliable alternative for cyberpunk
+  "digital-art": "animagine-xl-v-3-1", // Good for digital art styles
+  "dreamscape": "animagine-xl-v-3-1", // Artistic and dream-like
+  "felted": "stable-diffusion-xl-v1-0", // SD XL works well for felted textures
+  "graffiti": "real-cartoon-xl-v6", // Cartoonish and bold visuals
+  "impressionist": "animagine-xl-v-3-1", // Works well for impressionist art
+  "knitted-wool": "stable-diffusion-xl-v1-0", // Use SD XL for photorealistic knitting
+  "metal-sculpture": "stable-diffusion-xl-v1-0", // Best for 3D textures
+  "minimalist": "stable-diffusion-xl-v1-0", // SD XL for simplicity
+  "mosaic": "animagine-xl-v-3-1", // Good for artistic mosaic-like visuals
+  "neon-light": "real-cartoon-xl-v6", // Works for bright and cartoonish neon effects
+  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
+  "origami": "reproduction-v3-31", // Best for delicate details
+  "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs
+  "photorealistic": "stable-diffusion-xl-v1-0", // Best for photorealism
+  "photo": "stable-diffusion-xl-v1-0", // Reliable for photographic styles
+  "pixar": "animagine-xl-v-3-1", // Best for Pixar-like effects
+  "plant-based": "animagine-xl-v-3-1", // Flexible for plant-based styles
+  "plush-toy": "animagine-xl-v-3-1", // Perfect for soft, plush visuals
+  "quilted-fabric": "stable-diffusion-xl-v1-0", // SD XL for texture
+  "sand-art": "animagine-xl-v-3-1", // Works for sand-like artistic visuals
+  "stained-glass": "reproduction-v3-31", // Best for stained glass visuals
+  "steampunk": "stable-diffusion-xl-v1-0", // SD XL for steampunk aesthetics
+  "vaporwave": "real-cartoon-xl-v6", // Works for bold, vaporwave designs
+  "vintage-poster": "real-cartoon-xl-v6", // Best for retro/vintage looks
+  "watercolor": "animagine-xl-v-3-1", // Artistic and soft for watercolor
+  "woodcarving": "stable-diffusion-xl-v1-0", // Best for 3D wood textures
+};
+      
+      
+      
+    /*********************************************/
+    /* Placeholders for your existing functions  */
+    /*********************************************/
+    function toggleLike(imageId, likeButton) {
+      console.log(`Toggling like for image ID: ${imageId}`);
+      // Implement your "like" logic here, e.g., fetch/POST to server
+    }
+
+    function openCommentsModal(imageId, imageUrl, mode) {
+      console.log(`Opening comments modal for image ID: ${imageId}, mode: ${mode}`);
+      // Implement your modal logic here
+    }
+
+    function showToast(message, type) {
+      console.log(`Toast: ${message} [${type}]`);
+      // Implement your toast/notification logic
+    }
+
+
+    /*********************************************/
+/* Function to load images from your API      */
+/*********************************************/
+async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
+  if (isLoading || !hasMoreImages) return;
+  isLoading = true;
+
+  try {
+    const response = await fetch(apiEndpoint);
+    if (!response.ok) throw new Error('Failed to load images.');
+
+    const data = await response.json();
+    const images = data.images;
+
+    if (!Array.isArray(images)) {
+      throw new Error('Invalid data format: "images" is not an array.');
+    }
+
+    const imageList = document.getElementById('image-list');
+    if (!imageList) return;
+
+    // Clear the image list only on the first page load
+    if (page === 1) {
+      imageList.innerHTML = '<div class="grid-sizer"></div>'; 
+    }
+
+    if (images.length === 0 && page === 1) {
+      imageList.innerHTML = '<p class="text-white text-center mt-4">No images found. Try a different search query.</p>';
+      hasMoreImages = false;
+      return;
+    }
+
+    // Keep track of new items so we can pass them to Masonry
+    const newItems = [];
+
+    images.forEach((image) => {
+      if (!image.imageUrl) return;
+
+      // Create the Masonry "tile"
+      const imageCard = document.createElement('div');
+      imageCard.classList.add('image-card');
+
+      // Like button
+      const likeButton = document.createElement('button');
+      likeButton.classList.add('like-button');
+      const heartIcon = document.createElement('i');
+      heartIcon.classList.add('fas', 'fa-heart');
+      if (image.likedByUser) {
+        heartIcon.classList.add('liked');
+      }
+      likeButton.appendChild(heartIcon);
+      likeButton.dataset.isPublic = image.isPublic;
+      likeButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        toggleLike(image.id, likeButton);
+      });
+
+      // The card's inner HTML
+      imageCard.innerHTML = `
+        <div class="relative">
+          <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg" />
+        </div>
+      `;
+
+      // Insert the Like button
+      imageCard.querySelector('.relative').appendChild(likeButton);
+
+      // Add click event for opening comments
+      imageCard.querySelector('img').addEventListener('click', () => {
+        openCommentsModal(image.id, image.imageUrl, mode);
+      });
+
+      // Append to the DOM
+      imageList.appendChild(imageCard);
+      newItems.push(imageCard);
+    });
+
+    // After adding all new items, wait until they're fully loaded, then Masonry them
+    imagesLoaded(newItems, () => {
+      msnry.appended(newItems); // Tell Masonry about new elements
+      msnry.layout();          // Recalculate layout
+
+      // Check if we need to load more pages to fill the viewport
+      if (isInitialLoad && hasMoreImages) {
+        const viewportHeight = window.innerHeight;
+        const contentHeight = imageList.getBoundingClientRect().height;
+
+        if (contentHeight < viewportHeight) {
+          // Load the next page to fill the viewport
+          const nextEndpoint = `/api/public-posts?type=ai-generated&page=${page + 1}&`;
+          loadImages(nextEndpoint, mode, true); // Recursively call with isInitialLoad = true
+        }
+      }
+    });
+
+    hasMoreImages = data.hasMore;
+    if (hasMoreImages) {
+      page++;
+    }
+  } catch (error) {
+    console.error(`Error loading images from ${apiEndpoint}:`, error);
+    showToast('An error occurred while loading images.', 'error');
+  } finally {
+    isLoading = false;
+  }
+}
+
+/*******************************************************/
+/* Example usage: Initialize Masonry and load images    */
+/*******************************************************/
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.getElementById('image-list');
+
+  // Initialize Masonry
+  msnry = new Masonry(grid, {
+    itemSelector: '.image-card',  // each "tile" has this class
+    columnWidth: '.grid-sizer',   // base column width
+    percentPosition: true         // let Masonry treat columnWidth as percent
+  });
+
+  // Ensure Masonry does an initial layout after everything visible loads
+  imagesLoaded(grid, () => {
+    msnry.layout();
+  });
+
+  // Load the first page from your API and fill the viewport
+  const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+  loadImages(firstEndpoint, 'public', true); // Pass isInitialLoad = true
+});
+
+/*********************************************/
+/* Optional: Handle infinite scroll          */
+/*********************************************/
+window.addEventListener('scroll', () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Check if we're near the bottom
+  if (scrollTop + clientHeight >= scrollHeight - 50) {
+    if (hasMoreImages && !isLoading) {
+      const apiEndpoint = `/api/public-posts?type=ai-generated&page=${page}&`;
+      loadImages(apiEndpoint, 'public'); // No need to pass isInitialLoad here
+    }
+  }
+});
+  </script>
+</body>
+</html>

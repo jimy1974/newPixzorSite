@@ -6,6 +6,8 @@
     
     <!-- Viewport for Responsive Design -->    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+
     <!-- Page Title -->
     <title><%= title %></title>
 
@@ -60,9 +62,10 @@
     
     <script src="https://js.stripe.com/v3/"></script>
 
-
+ 
+    
   <style>
-      
+    
     .fixed-prompt {
       position: fixed;
       bottom: 0;
@@ -174,10 +177,7 @@
 
  
 
-    /* Adjust padding or margin as needed */
-    .image-card {
-      padding: 0;
-    }
+    
 
     nav {
       position: fixed;
@@ -285,21 +285,7 @@
     }
 
 
-    .image-card {
-      position: relative;
-      overflow: hidden; /* Ensures image scaling doesn't affect layout */
-      border-radius: 12px; /* Matches other rounded elements */
-    }
-
-    .image-card img {
-      cursor: pointer; /* Change cursor to a hand */
-      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Smooth hover effect */
-    }
-
-    .image-card:hover img {
-      transform: scale(1.05); /* Slight zoom on hover */
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
-    }
+   
     .toggle-visibility-button {
       margin-left: 4px; /* Add some space between buttons */
       display: inline-block; /* Align with other buttons */
@@ -451,42 +437,10 @@ textarea#comment-input {
   max-height: 50vh;  /* Limit comments list height */
   
 }
-.like-button {
-  position: absolute;
-  top: 8px; /* Adjust positioning */
-  right: 8px; /* Adjust positioning */
-  width: 40px; /* Set button width */
-  height: 40px; /* Set button height */
-  background-color: transparent; /* Transparent background */
-  border: 2px solid rgba(255, 255, 255, 0.3); /* Optional border for visibility */
-  border-radius: 50%; /* Make the button circular */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
-  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
-}
+      
 
-.like-button:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Slight hover effect */
-  transform: scale(1.1); /* Slight zoom on hover */
-}
 
-.like-button i {
-  color: white; /* Set the heart color */
-  font-size: 1.2rem; /* Adjust size */
-  transition: color 0.2s ease-in-out;
-}
 
-.like-button.liked i {
-  color: #f00; /* Highlighted heart color for liked state */
-}
-.like-button i.liked {
-  color: red; /* Liked heart color */
-}
-  .liked {
-    color: red; /* Red when liked */
-  }
 
 @media (max-width: 768px) { 
   /* Ensure the modal container doesn't scroll the background */
@@ -877,14 +831,7 @@ button.active {
 }
 
 
-.image-card .toggle-buttons {
-  position: absolute;
-  bottom: 8px; /* Adjust for spacing */
-  left: 8px;
-  right: 8px;
-  display: flex;
-  justify-content: space-around;
-}
+
 
    
       
@@ -1091,7 +1038,7 @@ button.active {
   transition: transform 0.3s ease-in-out;
   padding: 16px;
 }
-
+      
 /* Backdrop styling */
 #sidebar-backdrop {
   position: fixed;
@@ -1183,43 +1130,7 @@ button.active {
 }
 
 
-/* Masonry Layout with CSS Columns */
-#image-list {
-  column-count: 2; /* Default: 2 columns for mobile */
-  column-gap: 8px; /* Gap between columns */
-}
 
-.image-card {
-  break-inside: avoid; /* Prevent items from breaking across columns */
-  margin-bottom: 8px; /* Gap between items */
-  width: 100%; /* Ensure cards fill the column width */
-}
-
-.image-card img {
-  width: 100%; /* Ensure images fill the container */
-  height: auto; /* Maintain aspect ratio */
-  display: block; /* Remove extra space below images */
-  border-radius: 8px; /* Optional: Add rounded corners */
-}
-
-/* Responsive Design */
-@media (min-width: 768px) {
-  #image-list {
-    column-count: 3; /* 3 columns for medium screens (≥ 768px) */
-  }
-}
-
-@media (min-width: 1024px) {
-  #image-list {
-    column-count: 4; /* 4 columns for large screens (≥ 1024px) */
-  }
-}
-
-@media (min-width: 1280px) {
-  #image-list {
-    column-count: 5; /* 5 columns for extra-large screens (≥ 1280px) */
-  }
-}
       
       
 .custom-dropdown {
@@ -1323,7 +1234,145 @@ button.active {
     padding: 0.5rem; /* Smaller padding for mobile */
   }
 }
-</style>
+      
+      
+      
+      
+      
+.like-button:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Slight hover effect */
+    transform: scale(1.1); /* Slight zoom on hover */
+}
+
+
+
+
+.like-button i.liked {
+    color: red; /* Liked heart color */
+}
+
+.liked {
+    color: red; /* Red when liked */
+}
+
+
+.image-card .toggle-buttons {
+    /*position: absolute;*/
+    bottom: 8px; /* Adjust for spacing */
+    left: 8px;
+    right: 8px;
+    /*display: flex;*/
+    justify-content: space-around;
+}
+
+.image-card {
+  position: relative;
+  overflow: hidden; /* Ensures image scaling doesn't affect layout */
+  border-radius: 12px; /* Matches other rounded elements */
+}
+
+.image-card:hover img {
+  transform: scale(1.05); /* Slight zoom on hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
+}
+
+      
+.like-button {
+  position: absolute;
+  top: 8px; /* Adjust positioning */
+  right: 8px; /* Adjust positioning */
+  width: 40px; /* Set button width */
+  height: 40px; /* Set button height */
+  background-color: transparent; /* Transparent background */
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Optional border for visibility */
+  border-radius: 50%; /* Make the button circular */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+.like-button i {
+  color: white; /* Set the heart color */
+  font-size: 1.2rem; /* Adjust size */
+  transition: color 0.2s ease-in-out;
+}      
+.like-button.liked i {
+  color: #f00; /* Highlighted heart color for liked state */
+} 
+      
+      
+/* Masonry Layout with CSS Columns */
+/* Masonry Container */
+#image-list {
+  position: relative; /* Needed for Masonry's absolute positioning */
+  margin: 0 auto;
+  max-width: 1200px; /* or whatever width you want for your gallery */
+}
+
+
+
+    /* Each image-card is one Masonry 'tile' or 'brick'. */
+    .image-card {
+      /* Match the width to .grid-sizer if you want uniform columns. */
+      width: 25%;
+      float: left; /* Masonry can handle floats or you can omit float if you prefer. */
+      box-sizing: border-box;
+      padding: 8px;
+      margin-bottom: 16px;
+      background-color: #2d3748; /* Example background */
+      border-radius: 8px;
+      position: relative; /* for the like button absolute positioning */
+    }
+
+    .image-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+      
+      
+/* Default: small screens (< 400px) => 1 column or 2 columns */
+.grid-sizer,
+.image-card {
+  width: 50%; /* 2 columns by default */
+}
+
+/* If the screen is at least 400px wide => 2 columns might become 50% still, or you can do 2 columns default and skip this */
+@media (min-width: 400px) {
+  .grid-sizer,
+  .image-card {
+    width: 50%; /* 2 columns */
+  }
+}
+
+/* If at least 600px => 3 columns */
+@media (min-width: 600px) {
+  .grid-sizer,
+  .image-card {
+    width: 33.33%; /* 3 columns */
+  }
+}
+
+/* If at least 900px => 4 columns */
+@media (min-width: 900px) {
+  .grid-sizer,
+  .image-card {
+    width: 25%; /* 4 columns */
+  }
+}
+
+/* If at least 1200px => 5 columns */
+@media (min-width: 1200px) {
+  .grid-sizer,
+  .image-card {
+    width: 20%; /* 5 columns */
+  }
+}
+
+
+  </style>
 </head>
 <body class="bg-gray-900 text-white">
     
@@ -1470,10 +1519,16 @@ button.active {
       <h1 id="profile-username" class="text-2xl font-bold"></h1>
     </div>
 
-    <!-- Images Grid -->
-    <div id="image-list" class="masonry-grid">
-      <!-- Public images will be dynamically added here -->
-    </div>
+   <!-- Masonry Container (replaces the old "image-list" in your snippet) -->
+  <div id="image-list">
+    <!-- .grid-sizer is required for fluid Masonry column width -->
+    <div class="grid-sizer"></div>
+    <!-- Items will be dynamically appended here by loadImages() -->
+  </div>
+
+  <!-- Include imagesLoaded and Masonry via CDN -->
+  <script src="https://unpkg.com/imagesloaded@5/imagesloaded.pkgd.min.js"></script>
+  <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
       
   </div>
 </div>
@@ -1999,7 +2054,8 @@ button.active {
     // script.js
     let isPublic = false;
     let page = 1; // Initial page for pagination
-    let isLoading = false; // Prevent multiple simultaneous requests
+    let isLoading = false; // Prevent multiple simultaneous requests      
+    let msnry = null; // Reference the Masonry instance here:      
     let hasMoreImages = true; // Track if there are more images to load
     let selectedStyle = '';
     const selectedImages = new Set(); // Track selected images globally
@@ -2103,6 +2159,7 @@ function populateSearchStyles() {
 }
       
 
+
 // Map each style to its default model
 const styleToModelMap = {
   "abstract": "animagine-xl-v-3-1", // Artistic and flexible
@@ -2129,8 +2186,8 @@ const styleToModelMap = {
   "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
   "origami": "reproduction-v3-31", // Best for delicate details
   "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs
-  "photorealistic": "stable-diffusion-xl-v1-0", // Best for photorealism
-  "photo": "stable-diffusion-xl-v1-0", // Reliable for photographic styles
+  "photorealistic": "realvis-xl-v4", // Best for photorealism (updated to realvis-xl-v4)
+  "photo": "realvis-xl-v4", // Reliable for photographic styles (updated to realvis-xl-v4)
   "pixar": "animagine-xl-v-3-1", // Best for Pixar-like effects
   "plant-based": "animagine-xl-v-3-1", // Flexible for plant-based styles
   "plush-toy": "animagine-xl-v-3-1", // Perfect for soft, plush visuals
@@ -2221,15 +2278,17 @@ function closeFullscreenModal() {
 // Helper function to retrieve model name from ID
 function getModelLabel(modelId) {
   const modelList = {
-    "sdvn7-niji-style-xl-v1": "SDVN7 NijiStyle XL", // Good
-    "real-cartoon-xl-v6": "RealCartoonXL v6", // Good
-    "animagine-xl-v-3-1": "Animagine XL v3.1", // Good
-    "reproduction-v3-31": "Reproduction v3.31", // Good
-    "stable-diffusion-xl-v1-0": "Stable Diffusion XL v1", // Good for oil painting
+    "sdvn7-niji-style-xl-v1": "SDVN7 NijiStyle XL", // Good for anime and chibi
+    "real-cartoon-xl-v6": "RealCartoonXL v6", // Good for cartoon and comic styles
+    "animagine-xl-v-3-1": "Animagine XL v3.1", // Good for artistic and digital art styles
+    "reproduction-v3-31": "Reproduction v3.31", // Good for crystal, origami, and stained glass
+    "stable-diffusion-xl-v1-0": "Stable Diffusion XL v1", // Good for oil painting, ceramic, and photorealistic textures
+    "realvis-xl-v4": "RealVis XL v4", // Best for photo-realistic images
+    "juggernaut-xl-v10": "Juggernaut XL v10", // Good for versatile and high-quality outputs
+    "counterfeit-xl-v2-5": "Counterfeit XL v2.5", // Good for cartoonish and stylized visuals
   };
   return modelList[modelId] || "Unknown Model";
 }
-
 
 function populateInitialModelDropdown() {
   const modelDropdown = document.getElementById("model-select");
@@ -2237,16 +2296,27 @@ function populateInitialModelDropdown() {
   if (modelDropdown) {
     modelDropdown.innerHTML = ""; // Reset the dropdown
 
-    // Add higher-quality models at the top
-    const topQualityModels = [
+    // Define the available models, organized into categories
+    const models = [
+      // High-Quality Models
+      { id: "flux-dev", label: "FLUX DEV (High Quality)" },
       { id: "flux-schnell", label: "FLUX Schnell (High Quality)" },
+      { id: "realvis-xl-v4", label: "RealVis XL v4 (Photo-Realistic)" },
+      { id: "juggernaut-xl-v10", label: "Juggernaut XL v10 (Versatile)" },
+
+      // General-Purpose Models
       { id: "stable-diffusion-xl-v1-0", label: "Stable Diffusion XL (General)" },
-      { id: "realistic-vision-v5-1", label: "Realistic Vision v5.1 (Photorealistic)" },
-      { id: "dream-shaper-v8", label: "DreamShaper v8 (Fantasy/Artistic)" },
+      { id: "animagine-xl-v-3-1", label: "Animagine XL v3.1 (Artistic)" },
+      { id: "reproduction-v3-31", label: "Reproduction v3.31 (Detailed)" },
+
+      // Specialized Models
+      { id: "real-cartoon-xl-v6", label: "RealCartoon XL v6 (Cartoon)" },
+      { id: "sdvn7-niji-style-xl-v1", label: "SDVN7 NijiStyle XL (Anime)" },
+      { id: "counterfeit-xl-v2-5", label: "Counterfeit XL v2.5 (Stylized)" },
     ];
 
-    // Populate the dropdown with the top-quality models
-    topQualityModels.forEach((model, index) => {
+    // Populate the dropdown with the models
+    models.forEach((model, index) => {
       const option = document.createElement("option");
       option.value = model.id;
       option.textContent = model.label;
@@ -2284,18 +2354,14 @@ function populateModelDropdownForImageSelection(selectedStyle) {
     return;
   }
 
-  modelDropdown.innerHTML = ""; // Clear the dropdown
-
-  // Check if no specific style is selected or if "All-Styles" is selected
+  // If no style is selected or "All-Styles" is selected, use the initial dropdown
   if (!selectedStyle || selectedStyle.toLowerCase() === "all-styles" || selectedStyle.toLowerCase() === "select-a-style") {
-    // Default to Flux model when no style is selected
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "flux-schnell";
-    defaultOption.textContent = "FLUX Schnell (High Quality)";
-    defaultOption.selected = true; // Auto-select the default model
-    modelDropdown.appendChild(defaultOption);
+    populateInitialModelDropdown(); // Populate with the full list of models
     return;
   }
+
+  // Clear the dropdown
+  modelDropdown.innerHTML = "";
 
   // Add the recommended model for the selected style
   const defaultModelId = styleToModelMap[selectedStyle];
@@ -2314,6 +2380,9 @@ function populateModelDropdownForImageSelection(selectedStyle) {
     { id: "sdvn7-niji-style-xl-v1", label: "SDVN7 NijiStyle XL (Anime)" },
     { id: "animagine-xl-v-3-1", label: "Animagine XL v3.1 (Claymation/Artistic)" },
     { id: "reproduction-v3-31", label: "Reproduction v3.31 (Crystal/Origami)" },
+    { id: "realvis-xl-v4", label: "RealVis XL v4 (Photo-Realistic)" },
+    { id: "juggernaut-xl-v10", label: "Juggernaut XL v10 (Versatile)" },
+    { id: "counterfeit-xl-v2-5", label: "Counterfeit XL v2.5 (Stylized)" },
   ];
 
   imageToImageCompatibleModels.forEach((model) => {
@@ -2332,25 +2401,52 @@ function populateModelDropdownForImageSelection(selectedStyle) {
       
       
     document.addEventListener('DOMContentLoaded', () => {
-        
       populateMenuStyles();       
       populateAIStyleDropdown();
       populateInitialModelDropdown();
       populateSearchStyles();
-        
+
       // Fetch user data on page load
       fetchUserData();
 
       // Initialize character dropdown
       populateCharacterDropdown();
-      
-      const apiEndpoint = `/api/public-posts?type=ai-generated`;
-        
-      loadImages( apiEndpoint, 'public');
 
       // Set up event listeners
       setupEventListeners();
+
+      const grid = document.getElementById('image-list');
+
+      // Initialize Masonry
+      msnry = new Masonry(grid, {
+        itemSelector: '.image-card',  // each "tile" has this class
+        columnWidth: '.grid-sizer',   // base column width
+        percentPosition: true         // let Masonry treat columnWidth as percent
+      });
+
+      // Ensure Masonry does an initial layout after everything visible loads
+      imagesLoaded(grid, () => {
+        msnry.layout();
+      });
+
+      // Add a resize listener to re-layout Masonry on screen size changes
+      window.addEventListener('resize', () => {
+        const gridSizer = document.querySelector('.grid-sizer');
+        if (gridSizer) {
+          // Ensure the grid-sizer width matches the current CSS media query
+          const gridSizerComputedStyle = getComputedStyle(gridSizer);
+          gridSizer.style.width = gridSizerComputedStyle.width;
+
+          // Trigger Masonry layout recalculation
+          msnry.layout();
+        }
+      });
+
+      // Load the first page from your API and fill the viewport
+      const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+      loadImages(firstEndpoint, 'public', true); // Pass isInitialLoad = true
     });
+
 
       
       
@@ -2643,7 +2739,7 @@ async function loadUserProfile(userId) {
           googleAuthButton.classList.add('bg-gray-700');
 
           // Disable the generate button
-          document.getElementById('generate-button').disabled = true;
+          //document.getElementById('generate-button').disabled = true;
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -2839,34 +2935,37 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   };
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
-  const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75; // Get strength from the slider
+  const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75;
 
-  // Get selected style and model
   const styleSelect = document.getElementById('style-select');
   const modelSelect = document.getElementById('model-select');
   const style = styleSelect ? styleSelect.value : '';
   const model = modelSelect ? modelSelect.value : '';
 
-  // Check for selected image (for editing)
   const selectedThumbnailContainer = document.getElementById('selected-thumbnail-container');
   const selectedImage = selectedThumbnailContainer && selectedThumbnailContainer.dataset.imagePath;
 
-  // Validate the prompt
   if (!prompt) {
     showToast('Please enter a prompt.', 'error');
     console.error('No prompt entered.');
     return;
   }
 
-  // Validate the model
   if (!model) {
     showToast('Please select a model before generating an image.', 'error');
     console.error('No model selected.');
     return;
   }
 
-  
-    
+  if (activeTab !== 'profile') {
+      
+      // Perform the actual tab switching
+      await switchTab('profile'); // Switch to profile view if not already done
+      
+      await delay(500);
+          
+      
+  }
 
   // Add Placeholder
   const imageList = document.getElementById('image-list');
@@ -2876,15 +2975,32 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     return;
   }
 
+  // Placeholder Div
   const imageContainer = document.createElement('div');
-  imageContainer.classList.add('relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+  imageContainer.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
   imageContainer.style.backgroundColor = '#2d2d2d';
-  imageContainer.innerHTML = `
-    <div class="flex justify-center items-center h-full">
+
+  // Size based on Masonry layout (e.g., thumbnail dimensions)
+  const masonryColumnWidth = document.querySelector('.grid-sizer').offsetWidth || 300; // Get Masonry column width
+  const thumbnailHeight = (dimensions.height / dimensions.width) * masonryColumnWidth; // Preserve aspect ratio
+
+  imageContainer.style.width = `${masonryColumnWidth}px`;
+  imageContainer.style.height = `${thumbnailHeight}px`;
+
+  imageContainer.innerHTML = `<div class="flex justify-center items-center h-full">
       <div class="spinner"></div>
-    </div>
-  `;
-  imageList.prepend(imageContainer);
+    </div>`;
+
+  // Add placeholder to Masonry and re-layout
+  imageList.prepend(imageContainer); // Add placeholder at the top
+  msnry.prepended(imageContainer); // Let Masonry know about the new element
+  msnry.layout(); // Recalculate Masonry layout
+
+  // Scroll to the top of the page
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
 
   try {
     // Show loading state
@@ -2892,25 +3008,14 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     generateButton.textContent = 'Processing...';
     generateButton.disabled = true;
 
-    
-    // Use the stored state of the toggle buttons
     const { keepFace, keepStyle, keepPose } = selectedImageState;
 
-    console.log('Selected style:', style);
-    console.log('Selected model:', model);
-    console.log('Selected image for editing:', selectedImage);
-    console.log('Strength from slider:', strength);
-    console.log('Keep Face:', keepFace );
-    console.log('Keep Style:', keepStyle);
-    console.log('Keep Pose:', keepPose);
-
-    // Determine API endpoint and payload based on selected image
     const url = selectedImage ? '/edit-image' : '/generate-image';
     const payload = selectedImage
       ? {
           imagePath: selectedImage,
           prompt: prompt,
-          strength: strength, // Use the strength value from the slider
+          strength: strength,
           steps: inferenceSteps,
           guidance: guidanceScale,
           style,
@@ -2930,10 +3035,6 @@ document.getElementById('generate-button').addEventListener('click', async () =>
           model,
         };
 
-    console.log('Sending request to:', url);
-    console.log('Payload:', payload);
-
-    // Send data to the backend
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2941,27 +3042,20 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     });
 
     const data = await response.json();
-    console.log('Response from server:', data);
-
     if (response.ok && data.imageUrl) {
-      // Create image element
       const imgElement = document.createElement('img');
       imgElement.src = data.imageUrl;
       imgElement.alt = selectedImage ? 'Edited Image' : 'Generated Image';
       imgElement.classList.add('w-full', 'h-auto', 'object-cover', 'rounded-lg');
-      imgElement.style.display = 'none'; // Hide image initially
+      imgElement.style.display = 'none';
       imageContainer.appendChild(imgElement);
 
-      // Show image on load
       imgElement.addEventListener('load', () => {
         imgElement.style.display = 'block';
         const spinner = imageContainer.querySelector('.spinner');
         if (spinner) spinner.remove();
-
-        // Update Tokens Count in Navbar
         updateTokenCount(-data.tokensUsed);
 
-        // Switch to Profile Posts after a short delay
         setTimeout(() => {
           document.getElementById('profile-toggle').click();
         }, 500);
@@ -2969,25 +3063,36 @@ document.getElementById('generate-button').addEventListener('click', async () =>
         showToast('Image processed successfully!', 'success');
       });
 
-      // Handle image load error
       imgElement.addEventListener('error', () => {
         showToast('Failed to load image.', 'error');
         imageList.removeChild(imageContainer);
+        msnry.remove(imageContainer); // Remove from Masonry
+        msnry.layout();
       });
     } else {
       showToast(data.error || 'Failed to process image.', 'error');
       imageList.removeChild(imageContainer);
+      msnry.remove(imageContainer); // Remove from Masonry
+      msnry.layout();
     }
   } catch (error) {
     console.error('Error processing image:', error);
     showToast('An error occurred while processing the image.', 'error');
     imageList.removeChild(imageContainer);
+    msnry.remove(imageContainer); // Remove from Masonry
+    msnry.layout();
   } finally {
     const generateButton = document.getElementById('generate-button');
     generateButton.textContent = selectedImage ? 'Modify' : 'Generate';
     generateButton.disabled = false;
   }
+  
 });
+
+// Utility function to introduce a delay
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Update the strength value display when the slider changes
 document.getElementById('image-strength-modal').addEventListener('input', (event) => {
@@ -3247,125 +3352,159 @@ function closeModal(modalId) {
       }
         
         
-        let activeTab = 'public'; // Default to public tab
+      document.addEventListener('click', (event) => {
+  if (event.target.id === 'public-toggle') {
+    switchTab('public');
+  } else if (event.target.id === 'profile-toggle') {
+      
+    if (!window.isLoggedIn) {
+       showToast('Please log in to view your profile.', 'error');       
+    }else{
+       switchTab('profile');
+    }
+  } else if (event.target.id === 'search-results-toggle') {
+    switchTab('search');
+  }
+});
+
+// The activeTab defaults to 'public'
+let activeTab = 'public';
+let isLoadingImages = false;
         
-        function switchTab(tab) {
-      // Reset pagination when switching tabs
-      page = 1; // Reset to the first page
-      hasMoreImages = true; // Allow fetching more images
-      isLoadingImages = false;
-      // Update the active tab
-      activeTab = tab;
+function switchTab(tab) {
+  return new Promise((resolve, reject) => {
+    page = 1;
+    hasMoreImages = true;
+    isLoadingImages = false;
 
-      // Clear the image list
-      const imageList = document.getElementById('image-list');
-      if (imageList) imageList.innerHTML = '';
+    // Update activeTab
+    activeTab = tab;
 
-      // Hide or clear the user profile elements
-      const profileUsername = document.getElementById('profile-username');
-      const profileAvatar = document.getElementById('profile-avatar');
-      if (profileUsername) profileUsername.textContent = '';
-      if (profileAvatar) {
-        profileAvatar.src = '';
-        profileAvatar.classList.add('hidden');
-      }
+    // Clear out the Masonry container
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+      imageList.innerHTML = '<div class="grid-sizer"></div>';
+    }
 
-      // Update button styles
-      document.getElementById('public-toggle').classList.toggle('selected-toggle', activeTab === 'public');
-      document.getElementById('profile-toggle').classList.toggle('selected-toggle', activeTab === 'profile');
-      document.getElementById('search-results-toggle').classList.toggle('selected-toggle', activeTab === 'search');
+    // Hide or clear the user profile elements
+    const profileUsername = document.getElementById('profile-username');
+    const profileAvatar = document.getElementById('profile-avatar');
+    if (profileUsername) profileUsername.textContent = '';
+    if (profileAvatar) {
+      profileAvatar.src = '';
+      profileAvatar.classList.add('hidden');
+    }
 
-      // Show/hide the search results toggle
-      const searchResultsToggle = document.getElementById('search-results-toggle');
-      if (activeTab === 'search') {
-        searchResultsToggle.classList.remove('hidden');
-      } else {
-        searchResultsToggle.classList.add('hidden');
-      }
+    // Update button styles
+    document.getElementById('public-toggle').classList.toggle('selected-toggle', activeTab === 'public');
+    document.getElementById('profile-toggle').classList.toggle('selected-toggle', activeTab === 'profile');
+    document.getElementById('search-results-toggle').classList.toggle('selected-toggle', activeTab === 'search');
 
-      // Load content based on the active tab
-      switch (activeTab) {
-        case 'public':
-          // Reset filters and load public posts
-          activeFilters['image-source'] = 'ai-generated';
-          activeFilters['art-styles'] = 'all-styles';
-          activeFilters['advanced'] = 'newest';
-          applyFilters();
-          break;
+    // Show/hide the search toggle if needed
+    const searchResultsToggle = document.getElementById('search-results-toggle');
+    if (activeTab === 'search') {
+      searchResultsToggle.classList.remove('hidden');
+    } else {
+      searchResultsToggle.classList.add('hidden');
+    }
 
-        case 'profile':
-          // Check if the user is logged in
-          fetch('/user-data')
-            .then(response => response.json())
-            .then(userData => {
-              if (!userData.loggedIn) {
-                showToast('Please log in to view your posts.', 'error');
-                return;
-              }
-              loadPrivatePosts();
-            })
-            .catch(error => {
-              console.error('Error fetching user data:', error);
-              showToast('An error occurred. Please try again.', 'error');
-            });
-          break;
+    // Optionally destroy & re-init Masonry if you want a fresh layout
+    if (msnry) {
+      msnry.destroy();
+    }
+    const grid = document.getElementById('image-list');
+    msnry = new Masonry(grid, {
+      itemSelector: '.image-card',
+      columnWidth: '.grid-sizer',
+      percentPosition: true,
+    });
 
-        case 'search':
-          // Reload search results if necessary
-          const query = document.getElementById('search-query').value.trim();
-          if (query) {
-            triggerSearch();
+    // Load content based on the active tab
+    if (activeTab === 'public') {
+      // Reset filters & load
+      activeFilters['image-source'] = 'ai-generated';
+      activeFilters['art-styles'] = 'all-styles';
+      activeFilters['advanced'] = 'newest';
+      applyFilters(); // or directly call loadImages for public
+      resolve(); // Resolve immediately since applyFilters is synchronous
+    } else if (activeTab === 'profile') {
+      // Check if user is logged in
+      fetch('/user-data')
+        .then((res) => res.json())
+        .then((userData) => {
+          if (!userData.loggedIn) {
+            showToast('Please log in to view your posts.', 'error');
+            reject(new Error('User not logged in')); // Reject if user is not logged in
+            return;
           }
-          break;
+          loadPrivatePosts().then(resolve).catch(reject); // Resolve when loadPrivatePosts is done
+        })
+        .catch((err) => {
+          console.error('Error fetching user data:', err);
+          showToast('An error occurred. Please try again.', 'error');
+          reject(err); // Reject if there's an error
+        });
+    } else if (activeTab === 'search') {
+      const query = document.getElementById('search-query').value.trim();
+      if (query) {
+        triggerSearch().then(resolve).catch(reject); // Resolve when triggerSearch is done
+      } else {
+        resolve(); // Resolve immediately if no query
+      }
+    } else {
+      resolve(); // Resolve for any other case
+    }
+  });
+}
 
-        default:
-          console.error('Invalid tab:', activeTab);
+        
+        /*
+        
+        window.addEventListener('scroll', () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Check if we're near the bottom
+  if (scrollTop + clientHeight >= scrollHeight - 50) {
+    if (hasMoreImages && !isLoading) {
+      const apiEndpoint = `/api/public-posts?type=ai-generated&page=${page}&`;
+      loadImages(apiEndpoint, 'public'); // No need to pass isInitialLoad here
+    }
+  }
+});*/
+        
+   
+window.addEventListener('scroll', () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // If near the bottom
+  if (scrollTop + clientHeight >= scrollHeight - 50) {
+    // Check if the current tab is public, profile, or search
+    if (activeTab === 'profile') {
+      // Load more private if we have more
+      if (hasMoreImages && !isLoadingImages) {
+        loadPrivatePosts();
+      }
+    } else if (activeTab === 'search') {
+      // Search results
+      if (hasMoreImages && !isLoadingImages) {
+        const query = document.getElementById('search-query').value.trim();
+        const apiEndpoint = `/api/search?query=${query}&type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
+        loadImages(apiEndpoint, 'search');
+      }
+    } else {
+      // Otherwise assume public is active
+      if (hasMoreImages && !isLoadingImages) {
+        const apiEndpoint = `/api/public-posts?type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
+        loadImages(apiEndpoint, 'public');
       }
     }
-        
-    document.addEventListener('click', (event) => {
-      if (event.target.id === 'public-toggle') {
-        switchTab('public');
-      } else if (event.target.id === 'profile-toggle') {
-        switchTab('profile');
-      } else if (event.target.id === 'search-results-toggle') {
-        switchTab('search');
-      }
-    });        
-    
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+  }
+});
 
-      // Check if we're near the bottom of the page
-      if (scrollTop + clientHeight >= scrollHeight - 50) {
-        // Determine the current mode based on the selected toggle button
-        const publicToggle = document.getElementById('public-toggle');
-        const profileToggle = document.getElementById('profile-toggle');
-        const searchResultsToggle = document.getElementById('search-results-toggle');
-
-        if (profileToggle.classList.contains('selected-toggle')) {
-          // In profile posts mode (private images)
-          if (hasMoreImages && !isLoadingImages) {
-            loadPrivatePosts();
-          }
-        } else if (searchResultsToggle.classList.contains('selected-toggle')) {
-          // In search mode
-          if (hasMoreImages) {
-            const query = document.getElementById('search-query').value.trim();
-            const apiEndpoint = `/api/search?query=${query}&type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
-            loadImages(apiEndpoint, 'search');
-          }
-        } else if (publicToggle.classList.contains('selected-toggle')) {
-          // In public posts mode
-          if (hasMoreImages) {
-            const apiEndpoint = `/api/public-posts?type=${activeFilters['image-source'] || 'ai-generated'}&style=${activeFilters['art-styles'] || 'all-styles'}&sort=${activeFilters['advanced'] || 'newest'}&page=${page}&limit=10`;
-            loadImages(apiEndpoint, 'public');
-          }
-        }
-      }
-    });
 
         
         
@@ -3587,14 +3726,10 @@ async function loadComments(imageId) {
       
    
 
-    /**
-     * General function to load images for public posts or search results.
-     * @param {string} apiEndpoint - The API endpoint for fetching images.
-     * @param {string} mode - "public" for public posts, "search" for search results.
-     */
- async function loadImages(apiEndpoint, mode) {
-  
-
+    /*********************************************/
+/* Function to load images from your API      */
+/*********************************************/
+async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
   if (isLoading || !hasMoreImages) return;
   isLoading = true;
 
@@ -3612,8 +3747,9 @@ async function loadComments(imageId) {
     const imageList = document.getElementById('image-list');
     if (!imageList) return;
 
+    // Clear the image list only on the first page load
     if (page === 1) {
-      imageList.innerHTML = ''; // Clear existing images on the first page
+      imageList.innerHTML = '<div class="grid-sizer"></div>'; 
     }
 
     if (images.length === 0 && page === 1) {
@@ -3622,37 +3758,19 @@ async function loadComments(imageId) {
       return;
     }
 
+    // Keep track of new items so we can pass them to Masonry
+    const newItems = [];
+
     images.forEach((image) => {
       if (!image.imageUrl) return;
 
-      // CREATE MASONRY ITEM
+      // Create the Masonry "tile"
       const imageCard = document.createElement('div');
-      // Add 'break-inside-avoid' and 'mb-4'
-      imageCard.classList.add(
-        'image-card',
-        'rounded-lg',
-        'shadow-md',
-        'bg-gray-800',
-        'p-2',
-        'break-inside-avoid',
-        'mb-4'
-      );
+      imageCard.classList.add('image-card');
 
       // Like button
       const likeButton = document.createElement('button');
-      likeButton.classList.add(
-        'like-button',
-        'absolute',
-        'top-2',
-        'right-2',
-        'bg-gray-700',
-        'text-white',
-        'p-2',
-        'rounded-full',
-        'flex',
-        'items-center',
-        'justify-center'
-      );
+      likeButton.classList.add('like-button');
       const heartIcon = document.createElement('i');
       heartIcon.classList.add('fas', 'fa-heart');
       if (image.likedByUser) {
@@ -3665,23 +3783,42 @@ async function loadComments(imageId) {
         toggleLike(image.id, likeButton);
       });
 
-      // Image HTML
+      // The card's inner HTML
       imageCard.innerHTML = `
         <div class="relative">
-          <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg">
+          <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg" />
         </div>
       `;
 
       // Insert the Like button
       imageCard.querySelector('.relative').appendChild(likeButton);
 
-      // Add to the DOM
-      imageList.appendChild(imageCard);
-
-      // Comment modal on click
+      // Add click event for opening comments
       imageCard.querySelector('img').addEventListener('click', () => {
         openCommentsModal(image.id, image.imageUrl, mode);
       });
+
+      // Append to the DOM
+      imageList.appendChild(imageCard);
+      newItems.push(imageCard);
+    });
+
+    // After adding all new items, wait until they're fully loaded, then Masonry them
+    imagesLoaded(newItems, () => {
+      msnry.appended(newItems); // Tell Masonry about new elements
+      msnry.layout();          // Recalculate layout
+
+      // Check if we need to load more pages to fill the viewport
+      if (isInitialLoad && hasMoreImages) {
+        const viewportHeight = window.innerHeight;
+        const contentHeight = imageList.getBoundingClientRect().height;
+
+        if (contentHeight < viewportHeight) {
+          // Load the next page to fill the viewport
+          const nextEndpoint = `/api/public-posts?type=ai-generated&page=${page + 1}&`;
+          loadImages(nextEndpoint, mode, true); // Recursively call with isInitialLoad = true
+        }
+      }
     });
 
     hasMoreImages = data.hasMore;
@@ -3697,135 +3834,137 @@ async function loadComments(imageId) {
 }
 
 
+  async function loadPrivatePosts() {
+      if (isLoading || !hasMoreImages) return;
+      isLoading = true;
 
-      
-async function loadPrivatePosts() {
-  if (isLoading || !hasMoreImages) return;
-  isLoading = true;
+      try {
+        const response = await fetch(`/personal-images?page=${page}`);
+        if (!response.ok) {
+          throw new Error('Failed to load profile posts');
+        }
 
-  try {
-    const response = await fetch(`/personal-images?page=${page}`);
-    if (!response.ok) {
-      throw new Error('Failed to load profile posts');
-    }
+        const data = await response.json();
+        const images = data.images;
+        const imageList = document.getElementById('image-list');
+        if (!imageList) {
+          console.error('Image List container not found in the DOM.');
+          return;
+        }
 
-    const data = await response.json();
-    const images = data.images;
-    const imageList = document.getElementById('image-list');
-    if (!imageList) {
-      console.error('Image List container not found in the DOM.');
-      return;
-    }
+        // For the first page, clear the container and re-add the grid-sizer
+        if (page === 1) {
+          imageList.innerHTML = '<div class="grid-sizer"></div>'; // Ensures Masonry's grid-sizer remains
+        }
 
-    if (page === 1) {
-      imageList.innerHTML = ''; // Clear current images on the first page
-    }
+        // If no images on the first page, display a message
+        if (images.length === 0 && page === 1) {
+          imageList.innerHTML = '<p class="text-white text-center mt-4">No images found.</p>';
+          hasMoreImages = false;
+          return;
+        }
 
-    if (images.length === 0 && page === 1) {
-      imageList.innerHTML = '<p class="text-white text-center mt-4">No images found.</p>';
-      hasMoreImages = false;
-      return;
-    }
+        // Track newly created items to add to Masonry
+        const newItems = [];
 
-    images.forEach((image) => {
-      const imageCard = document.createElement('div');
-      imageCard.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
-      imageCard.dataset.imageId = image.id;
+        // Loop through images and create image cards
+        images.forEach((image) => {
+          const imageCard = document.createElement('div');
+          imageCard.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+          imageCard.dataset.imageId = image.id;
 
-      // Add Public/Private Badge
-      const badge = document.createElement('span');
-      badge.classList.add(
-        'badge',
-        image.isPublic ? 'badge-public' : 'badge-private',
-        'absolute',
-        'top-2',
-        'left-2',
-        'px-2',
-        'py-1',
-        'rounded',
-        'text-sm',
-        'font-bold',
-        'text-white',
-        image.isPublic ? 'bg-green-500' : 'bg-red-500'
-      );
-      badge.textContent = image.isPublic ? 'Public' : 'Private';
+          // Add Public/Private Badge
+          const badge = document.createElement('span');
+          badge.classList.add(
+            'badge',
+            image.isPublic ? 'badge-public' : 'badge-private',
+            'absolute',
+            'top-2',
+            'left-2',
+            'px-2',
+            'py-1',
+            'rounded',
+            'text-sm',
+            'font-bold',
+            'text-white',
+            image.isPublic ? 'bg-green-500' : 'bg-red-500'
+          );
+          badge.textContent = image.isPublic ? 'Public' : 'Private';
 
-        // Build card content
-        imageCard.innerHTML = `
-          <div class="relative">
-            <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
-                 class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
-            <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
-              <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
-                Keep Style
-              </button>
-              <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
-                Keep Face
-              </button>
-              <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
-                Keep Pose
-              </button>
+          // Build card content
+          imageCard.innerHTML = `
+            <div class="relative">
+              <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
+                   class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+              <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
+                <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
+                  Keep Style
+                </button>
+                <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
+                  Keep Face
+                </button>
+                <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
+                  Keep Pose
+                </button>
+              </div>
+              <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
+                <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
+                  <i class="fas fa-download"></i>
+                </a>
+                <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+                <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-green-100" data-id="${image.id}" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
+                  <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
+                </button>
+              </div>
             </div>
-            <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
-              <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
-                <i class="fas fa-download"></i>
-              </a>
-              <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
-                <i class="fas fa-info-circle"></i>
-              </button>
-              <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-green-100" data-id="${image.id}" title="Delete">
-                <i class="fas fa-trash"></i>
-              </button>
-              <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
-                <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
-              </button>
-            </div>
-          </div>
-        `;
+          `;
 
-        // Append the badge to the card
-        imageCard.appendChild(badge);
+          // Append the badge to the card
+          imageCard.appendChild(badge);
 
-        // Add the image card to the image list
-        imageList.appendChild(imageCard);
+          // Add the image card to the DOM
+          imageList.appendChild(imageCard);
+          newItems.push(imageCard); // Add to newItems array for Masonry
 
-        // Add event listeners for buttons and actions
-        const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
-        const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
-        const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
-        const imgElement = imageCard.querySelector('img');
-        const actionButtons = imageCard.querySelector('.action-buttons');
+          // Add event listeners for buttons and actions
+          const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
+          const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
+          const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
+          const imgElement = imageCard.querySelector('img');
+          const actionButtons = imageCard.querySelector('.action-buttons');
 
-        const infoButton = imageCard.querySelector('.info-button');
-        infoButton.addEventListener('click', (event) => {
-          event.stopPropagation();
-          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
-        });
+          const infoButton = imageCard.querySelector('.info-button');
+          infoButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+          });
 
-        // Function to deactivate other toggle buttons
-        const deactivateOtherButtons = (activeButton) => {
-          if (activeButton !== styleButton) {
-            styleButton.classList.remove('active');
-            selectedImageState.keepStyle = false;
-          }
-          if (activeButton !== faceButton) {
-            faceButton.classList.remove('active');
-            selectedImageState.keepFace = false;
-          }
-          if (activeButton !== poseButton) {
-            poseButton.classList.remove('active');
-            selectedImageState.keepPose = false;
-          }
-        };
+          // Function to deactivate other toggle buttons
+          const deactivateOtherButtons = (activeButton) => {
+            if (activeButton !== styleButton) {
+              styleButton.classList.remove('active');
+              selectedImageState.keepStyle = false;
+            }
+            if (activeButton !== faceButton) {
+              faceButton.classList.remove('active');
+              selectedImageState.keepFace = false;
+            }
+            if (activeButton !== poseButton) {
+              poseButton.classList.remove('active');
+              selectedImageState.keepPose = false;
+            }
+          };
 
-        // Event listener for Keep Style button
+      // Event listener for Keep Style button
         styleButton.addEventListener('click', (event) => {
           event.stopPropagation();
           styleButton.classList.toggle('active');
           selectedImageState.keepStyle = styleButton.classList.contains('active');
-          if (selectedImageState.keepStyle) {
-            deactivateOtherButtons(styleButton); // Deactivate other buttons
-          }
           console.log('Keep Style Toggled:', selectedImageState.keepStyle); // Debug log
         });
 
@@ -3834,9 +3973,6 @@ async function loadPrivatePosts() {
           event.stopPropagation();
           faceButton.classList.toggle('active');
           selectedImageState.keepFace = faceButton.classList.contains('active');
-          if (selectedImageState.keepFace) {
-            deactivateOtherButtons(faceButton); // Deactivate other buttons
-          }
           console.log('Keep Face Toggled:', selectedImageState.keepFace); // Debug log
         });
 
@@ -3845,95 +3981,92 @@ async function loadPrivatePosts() {
           event.stopPropagation();
           poseButton.classList.toggle('active');
           selectedImageState.keepPose = poseButton.classList.contains('active');
-          if (selectedImageState.keepPose) {
-            deactivateOtherButtons(poseButton); // Deactivate other buttons
-          }
           console.log('Keep Pose Toggled:', selectedImageState.keepPose); // Debug log
         });
 
-        // Add a double-click event to open the comments modal
-        imgElement.addEventListener('dblclick', (event) => {
-          event.stopPropagation();
-          openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
-        });
+      // Add a double-click event to open the comments modal
+      imgElement.addEventListener('dblclick', (event) => {
+        event.stopPropagation();
+        openCommentsModal(image.id, image.imageUrl, 'private'); // Pass 'private' or any relevant mode
+      });
 
       imgElement.addEventListener('click', (event) => {
-          event.stopPropagation();
-          const toggleButtons = imageCard.querySelector('.toggle-buttons');
-          const thumbnailContainer = document.getElementById('selected-thumbnail-container');
-          const generateButton = document.getElementById('generate-button');
+        event.stopPropagation();
+        const toggleButtons = imageCard.querySelector('.toggle-buttons');
+        const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+        const generateButton = document.getElementById('generate-button');
 
-          if (selectedImages.has(image.id)) {
-            selectedImages.delete(image.id);
-            imageCard.style.border = 'none';
-            imageCard.style.backgroundColor = 'transparent';
-            actionButtons.classList.add('hidden');
-            if (toggleButtons) toggleButtons.classList.add('hidden');
+        if (selectedImages.has(image.id)) {
+          selectedImages.delete(image.id);
+          imageCard.style.border = 'none';
+          imageCard.style.backgroundColor = 'transparent';
+          actionButtons.classList.add('hidden');
+          if (toggleButtons) toggleButtons.classList.add('hidden');
 
-            if (selectedImages.size === 0) {
-              populateModelDropdownForImageSelection("");
-              resetStylesToAllStyles();
+          if (selectedImages.size === 0) {
+            populateModelDropdownForImageSelection("");
+            resetStylesToAllStyles();
 
-              if (thumbnailContainer) {
-                thumbnailContainer.innerHTML = '';
-                thumbnailContainer.style.display = 'none';
-                delete thumbnailContainer.dataset.imagePath;
-              }
-            }
-          } else {
-            const allCards = document.querySelectorAll('.image-card');
-            allCards.forEach((card) => {
-              card.style.border = 'none';
-              card.style.backgroundColor = 'transparent';
-              card.querySelector('.action-buttons')?.classList.add('hidden');
-              card.querySelector('.toggle-buttons')?.classList.add('hidden');
-            });
-
-            selectedImages.clear();
-            selectedImages.add(image.id);
-            imageCard.style.border = '2px solid red';
-            imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
-
-            actionButtons.classList.remove('hidden');
-            if (toggleButtons) toggleButtons.classList.remove('hidden');
-            showCreateImage();
-            updatePromptBox(image);
-
-             // Debug: Log the state of the toggle buttons
-            console.log('Toggle Button States on Image Selection:');
-            console.log('Keep Face Button Active:', faceButton.classList.contains('active') );
-            console.log('Keep Style Button Active:', styleButton.classList.contains('active') );
-            console.log('Keep Pose Button Active:', poseButton.classList.contains('active') );
-
-             // Update the selected image state with the current toggle button states
-            selectedImageState = {
-              imageId: image.id,
-              keepFace: faceButton.classList.contains('active'),
-              keepStyle: styleButton.classList.contains('active'),
-              keepPose: poseButton.classList.contains('active'),
-            };
-
-            // Debug: Log the updated selectedImageState
-            console.log('Updated selectedImageState:', selectedImageState);
-
-            // Update the model dropdown based on the selected style
-            const styleSelect = document.getElementById('style-select');
-            if (styleSelect) {
-              const selectedStyle = styleSelect.value;
-              if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle === "") {
-                populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0");
-              } else {
-                populateModelDropdownForImageSelection(selectedStyle);
-              }
-            }
-
-            // Update the thumbnail container
             if (thumbnailContainer) {
-              thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`;
-              thumbnailContainer.style.display = 'block';
+              thumbnailContainer.innerHTML = '';
+              thumbnailContainer.style.display = 'none';
+              delete thumbnailContainer.dataset.imagePath;
             }
           }
-    });
+        } else {
+          const allCards = document.querySelectorAll('.image-card');
+          allCards.forEach((card) => {
+            card.style.border = 'none';
+            card.style.backgroundColor = 'transparent';
+            card.querySelector('.action-buttons')?.classList.add('hidden');
+            card.querySelector('.toggle-buttons')?.classList.add('hidden');
+          });
+
+          selectedImages.clear();
+          selectedImages.add(image.id);
+          imageCard.style.border = '2px solid red';
+          imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+
+          actionButtons.classList.remove('hidden');
+          if (toggleButtons) toggleButtons.classList.remove('hidden');
+          showCreateImage();
+          updatePromptBox(image);
+
+          // Debug: Log the state of the toggle buttons
+          console.log('Toggle Button States on Image Selection:');
+          console.log('Keep Face Button Active:', faceButton.classList.contains('active'));
+          console.log('Keep Style Button Active:', styleButton.classList.contains('active'));
+          console.log('Keep Pose Button Active:', poseButton.classList.contains('active'));
+
+          // Update the selected image state with the current toggle button states
+          selectedImageState = {
+            imageId: image.id,
+            keepFace: faceButton.classList.contains('active'),
+            keepStyle: styleButton.classList.contains('active'),
+            keepPose: poseButton.classList.contains('active'),
+          };
+
+          // Debug: Log the updated selectedImageState
+          console.log('Updated selectedImageState:', selectedImageState);
+
+          // Update the model dropdown based on the selected style
+          const styleSelect = document.getElementById('style-select');
+          if (styleSelect) {
+            const selectedStyle = styleSelect.value;
+            if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle === "") {
+              populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0");
+            } else {
+              populateModelDropdownForImageSelection(selectedStyle);
+            }
+          }
+
+          // Update the thumbnail container
+          if (thumbnailContainer) {
+            thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`;
+            thumbnailContainer.style.display = 'block';
+          }
+        }
+      });
 
       const deleteButton = imageCard.querySelector('.delete-button');
       deleteButton.addEventListener('click', async (event) => {
@@ -3943,8 +4076,17 @@ async function loadPrivatePosts() {
           const response = await fetch('/delete-private-image/' + imageId, { method: 'DELETE' });
           if (response.ok) {
             showToast('Image deleted successfully!', 'success');
-            imageCard.remove();
-            selectedImages.delete(imageId);
+            // Notify Masonry about the element removal
+              msnry.remove(imageCard);
+
+              // Recalculate the layout to fill the gap
+              msnry.layout();
+
+              // Remove the card from the DOM
+              imageCard.remove();
+
+              // Clean up any references to the deleted image
+              selectedImages.delete(imageId);
           } else {
             showToast('Failed to delete image', 'error');
           }
@@ -3974,6 +4116,13 @@ async function loadPrivatePosts() {
       });
     });
 
+    // After adding all new items, wait for images to load, then integrate with Masonry
+    imagesLoaded(newItems, () => {
+      msnry.appended(newItems); // Tell Masonry about the new items
+      msnry.layout();          // Recalculate Masonry layout
+    });
+
+    // Update the pagination state
     hasMoreImages = data.hasMore;
     if (hasMoreImages) {
       page++;
@@ -4400,12 +4549,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const data = await response.json();
 
   const promptInput = document.getElementById("prompt-input");
-  const generateButton = document.getElementById("generate-button");
-
+  
   if (!data.isAuthenticated) {
     // Disable prompt box and button
     promptInput.disabled = true;
-    generateButton.disabled = true;
+  
 
     // Add placeholder text to indicate the user must log in
     promptInput.placeholder = "Please log in to create images.";
@@ -5098,11 +5246,13 @@ function adjustTextareaHeight() {
 }
 
 // Listen for orientation changes
-window.addEventListener('resize', adjustTextareaHeight);
 window.addEventListener('orientationchange', adjustTextareaHeight);
 
-// Initial adjustment
-adjustTextareaHeight();      
+window.addEventListener('resize', () => {
+  msnry.layout();
+  adjustTextareaHeight();       
+});
+
   </script>
 </body>
 </html>
