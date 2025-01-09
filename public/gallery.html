@@ -27,6 +27,34 @@
       border-radius: 8px; /* Optional: Add rounded corners */
     }
 
+      
+      
+      /* Style for the numbered overlay */
+.image-card .relative {
+  position: relative; /* Ensure the overlay is positioned relative to the image */
+}
+
+.image-card .absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  border-radius: 8px; /* Match the image's border radius */
+}
+
+.image-card .absolute span {
+  font-size: 4rem; /* Large text size */
+  font-weight: bold;
+  color: white; /* White text for contrast */
+  opacity: 0.8; /* Slightly transparent text */
+}
+      
+      
     /* Like button styling */
     .like-button {
       position: absolute;
@@ -51,31 +79,6 @@
       color: #ff6b81; /* Liked heart color */
     }
 
-    /* Style for the numbered overlay */
-    .image-card .relative {
-      position: relative; /* Ensure the overlay is positioned relative to the image */
-    }
-
-    .image-card .absolute {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-      border-radius: 8px; /* Match the image's border radius */
-    }
-
-    .image-card .absolute span {
-      font-size: 4rem; /* Large text size */
-      font-weight: bold;
-      color: white; /* White text for contrast */
-      opacity: 0.8; /* Slightly transparent text */
-    }
-
     /* Responsive Design */
     @media (min-width: 768px) {
       #image-list {
@@ -96,7 +99,7 @@
     }
   </style>
 </head>
-<body>
+<body class="bg-gray-900 text-white">
   <!-- Images Grid -->
   <div id="image-list" class="masonry-grid">
     <!-- Public images will be dynamically added here -->
@@ -106,6 +109,7 @@
     let isLoading = false;
     let hasMoreImages = true;
     let page = 1;
+    const activeFilters = {}; // Placeholder for active filters
 
     async function loadImages(apiEndpoint, mode) {
       if (isLoading || !hasMoreImages) return;
@@ -168,8 +172,8 @@
           imageCard.innerHTML = `
             <div class="relative">
               <img src="${image.imageUrl}" alt="${image.title || 'Image'}" class="w-full rounded-lg">
-              <div class="absolute">
-                <span>${imageNumber}</span>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-white text-6xl font-bold opacity-50">${imageNumber}</span>
               </div>
             </div>
           `;
@@ -218,11 +222,32 @@
       console.log(`Toast: ${message} (${type})`);
     }
 
-    // Initial load
-    document.addEventListener('DOMContentLoaded', () => {
-      const apiEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+    // Infinite Scroll Event Listener
+    window.addEventListener('scroll', () => {
+  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+  // Check if we're near the bottom of the page
+  if (scrollTop + clientHeight >= scrollHeight - 50) {
+    if (hasMoreImages && !isLoading) {
+      const apiEndpoint = `/api/public-posts?type=ai-generated&page=${page}&`;
       loadImages(apiEndpoint, 'public');
-    });
+    }
+  }
+});
+
+   document.addEventListener('DOMContentLoaded', () => {
+  // Load the first page
+  var apiEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+  loadImages(apiEndpoint, 'public');
+
+  // Load the second page after a short delay (for testing)
+  setTimeout(() => {
+    apiEndpoint = `/api/public-posts?type=ai-generated&page=2&`;
+    loadImages(apiEndpoint, 'public');
+  }, 1000); // Delay of 1 second
+});
   </script>
 </body>
 </html>

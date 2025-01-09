@@ -1690,17 +1690,7 @@ button.active {
 
   <!-- Group Visibility Button and Generate Button -->
   <div class="flex items-center gap-2 ml-auto">
-    <!-- Visibility Button -->
-    <button id="post-visibility-button" class="bg-gray-700 p-1 rounded-lg hover:bg-green-600 relative">
-      <svg id="post-visibility-icon" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-      </svg>
-      <!-- Tooltip -->
-      <div id="post-visibility-tooltip" class="hidden absolute top-full mt-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-md">
-        Create privately
-      </div>
-    </button>
+   
 
     <!-- Generate Button -->
     <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
@@ -2059,6 +2049,9 @@ button.active {
     let hasMoreImages = true; // Track if there are more images to load
     let selectedStyle = '';
     const selectedImages = new Set(); // Track selected images globally
+    // The activeTab defaults to 'public'
+    let activeTab = 'public';
+    let isLoadingImages = false;
 
     let selectedImageState = {
       imageId: null,
@@ -2272,6 +2265,96 @@ function closeFullscreenModal() {
   fullscreenImage.style.transform = 'scale(1)';
 }
 
+// Utility function to introduce a delay
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+        
+function switchTab(tab) {
+  return new Promise((resolve, reject) => {
+    page = 1;
+    hasMoreImages = true;
+    isLoadingImages = false;
+
+    // Update activeTab
+    activeTab = tab;
+
+    // Clear out the Masonry container
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+      imageList.innerHTML = '<div class="grid-sizer"></div>';
+    }
+
+    // Hide or clear the user profile elements
+    const profileUsername = document.getElementById('profile-username');
+    const profileAvatar = document.getElementById('profile-avatar');
+    if (profileUsername) profileUsername.textContent = '';
+    if (profileAvatar) {
+      profileAvatar.src = '';
+      profileAvatar.classList.add('hidden');
+    }
+
+    // Update button styles
+    document.getElementById('public-toggle').classList.toggle('selected-toggle', activeTab === 'public');
+    document.getElementById('profile-toggle').classList.toggle('selected-toggle', activeTab === 'profile');
+    document.getElementById('search-results-toggle').classList.toggle('selected-toggle', activeTab === 'search');
+
+    // Show/hide the search toggle if needed
+    const searchResultsToggle = document.getElementById('search-results-toggle');
+    if (activeTab === 'search') {
+      searchResultsToggle.classList.remove('hidden');
+    } else {
+      searchResultsToggle.classList.add('hidden');
+    }
+
+    // Optionally destroy & re-init Masonry if you want a fresh layout
+    if (msnry) {
+      msnry.destroy();
+    }
+    const grid = document.getElementById('image-list');
+    msnry = new Masonry(grid, {
+      itemSelector: '.image-card',
+      columnWidth: '.grid-sizer',
+      percentPosition: true,
+    });
+
+    // Load content based on the active tab
+    if (activeTab === 'public') {
+      // Reset filters & load
+      activeFilters['image-source'] = 'ai-generated';
+      activeFilters['art-styles'] = 'all-styles';
+      activeFilters['advanced'] = 'newest';
+      applyFilters(); // or directly call loadImages for public
+      resolve(); // Resolve immediately since applyFilters is synchronous
+    } else if (activeTab === 'profile') {
+      // Check if user is logged in
+      fetch('/user-data')
+        .then((res) => res.json())
+        .then((userData) => {
+          if (!userData.loggedIn) {
+            showToast('Please log in to view your posts.', 'error');
+            reject(new Error('User not logged in')); // Reject if user is not logged in
+            return;
+          }
+          loadPrivatePosts().then(resolve).catch(reject); // Resolve when loadPrivatePosts is done
+        })
+        .catch((err) => {
+          console.error('Error fetching user data:', err);
+          showToast('An error occurred. Please try again.', 'error');
+          reject(err); // Reject if there's an error
+        });
+    } else if (activeTab === 'search') {
+      const query = document.getElementById('search-query').value.trim();
+      if (query) {
+        triggerSearch().then(resolve).catch(reject); // Resolve when triggerSearch is done
+      } else {
+        resolve(); // Resolve immediately if no query
+      }
+    } else {
+      resolve(); // Resolve for any other case
+    }
+  });
+}
 
 
 
@@ -3089,10 +3172,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   
 });
 
-// Utility function to introduce a delay
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+
 
 // Update the strength value display when the slider changes
 document.getElementById('image-strength-modal').addEventListener('input', (event) => {
@@ -3367,95 +3447,6 @@ function closeModal(modalId) {
   }
 });
 
-// The activeTab defaults to 'public'
-let activeTab = 'public';
-let isLoadingImages = false;
-        
-function switchTab(tab) {
-  return new Promise((resolve, reject) => {
-    page = 1;
-    hasMoreImages = true;
-    isLoadingImages = false;
-
-    // Update activeTab
-    activeTab = tab;
-
-    // Clear out the Masonry container
-    const imageList = document.getElementById('image-list');
-    if (imageList) {
-      imageList.innerHTML = '<div class="grid-sizer"></div>';
-    }
-
-    // Hide or clear the user profile elements
-    const profileUsername = document.getElementById('profile-username');
-    const profileAvatar = document.getElementById('profile-avatar');
-    if (profileUsername) profileUsername.textContent = '';
-    if (profileAvatar) {
-      profileAvatar.src = '';
-      profileAvatar.classList.add('hidden');
-    }
-
-    // Update button styles
-    document.getElementById('public-toggle').classList.toggle('selected-toggle', activeTab === 'public');
-    document.getElementById('profile-toggle').classList.toggle('selected-toggle', activeTab === 'profile');
-    document.getElementById('search-results-toggle').classList.toggle('selected-toggle', activeTab === 'search');
-
-    // Show/hide the search toggle if needed
-    const searchResultsToggle = document.getElementById('search-results-toggle');
-    if (activeTab === 'search') {
-      searchResultsToggle.classList.remove('hidden');
-    } else {
-      searchResultsToggle.classList.add('hidden');
-    }
-
-    // Optionally destroy & re-init Masonry if you want a fresh layout
-    if (msnry) {
-      msnry.destroy();
-    }
-    const grid = document.getElementById('image-list');
-    msnry = new Masonry(grid, {
-      itemSelector: '.image-card',
-      columnWidth: '.grid-sizer',
-      percentPosition: true,
-    });
-
-    // Load content based on the active tab
-    if (activeTab === 'public') {
-      // Reset filters & load
-      activeFilters['image-source'] = 'ai-generated';
-      activeFilters['art-styles'] = 'all-styles';
-      activeFilters['advanced'] = 'newest';
-      applyFilters(); // or directly call loadImages for public
-      resolve(); // Resolve immediately since applyFilters is synchronous
-    } else if (activeTab === 'profile') {
-      // Check if user is logged in
-      fetch('/user-data')
-        .then((res) => res.json())
-        .then((userData) => {
-          if (!userData.loggedIn) {
-            showToast('Please log in to view your posts.', 'error');
-            reject(new Error('User not logged in')); // Reject if user is not logged in
-            return;
-          }
-          loadPrivatePosts().then(resolve).catch(reject); // Resolve when loadPrivatePosts is done
-        })
-        .catch((err) => {
-          console.error('Error fetching user data:', err);
-          showToast('An error occurred. Please try again.', 'error');
-          reject(err); // Reject if there's an error
-        });
-    } else if (activeTab === 'search') {
-      const query = document.getElementById('search-query').value.trim();
-      if (query) {
-        triggerSearch().then(resolve).catch(reject); // Resolve when triggerSearch is done
-      } else {
-        resolve(); // Resolve immediately if no query
-      }
-    } else {
-      resolve(); // Resolve for any other case
-    }
-  });
-}
 
         
         /*
@@ -4098,22 +4089,54 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
 
       const toggleVisibilityButton = imageCard.querySelector('.toggle-visibility-button');
       toggleVisibilityButton.addEventListener('click', async (event) => {
-        event.stopPropagation();
-        const imageId = event.target.closest('button').getAttribute('data-id');
-        try {
-          const response = await fetch(`/update-image-visibility/${imageId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
-          if (response.ok) {
-            const data = await response.json();
-            showToast('Image visibility updated!', 'success');
-            loadPrivatePosts();
-          } else {
-            showToast('Failed to update visibility', 'error');
+          event.stopPropagation();
+          const imageId = event.target.closest('button').getAttribute('data-id');
+          try {
+            const response = await fetch(`/update-image-visibility/${imageId}`, { 
+              method: 'PUT', 
+              headers: { 'Content-Type': 'application/json' } 
+            });
+            if (response.ok) {
+              const data = await response.json();
+              showToast('Image visibility updated!', 'success');
+
+              // Update the button and marker without refreshing the entire list
+              const badge = imageCard.querySelector('.badge');
+              const toggleButton = imageCard.querySelector('.toggle-visibility-button i');
+
+              if (badge && toggleButton) {
+                // Toggle the badge text and classes
+                if (data.isPublic) {
+                  badge.textContent = 'Public';
+                  badge.classList.remove('badge-private', 'bg-red-500');
+                  badge.classList.add('badge-public', 'bg-green-500');
+                } else {
+                  badge.textContent = 'Private';
+                  badge.classList.remove('badge-public', 'bg-green-500');
+                  badge.classList.add('badge-private', 'bg-red-500');
+                }
+
+                // Toggle the button icon and title
+                if (data.isPublic) {
+                  toggleButton.classList.remove('fa-globe');
+                  toggleButton.classList.add('fa-lock');
+                  toggleButton.parentElement.setAttribute('title', 'Make Private');
+                } else {
+                  toggleButton.classList.remove('fa-lock');
+                  toggleButton.classList.add('fa-globe');
+                  toggleButton.parentElement.setAttribute('title', 'Make Public');
+                }
+              }
+            } else {
+              showToast('Failed to update visibility', 'error');
+            }
+          } catch (error) {
+            console.error('Error updating image visibility:', error);
+            showToast('An error occurred while updating visibility', 'error');
           }
-        } catch (error) {
-          console.error('Error updating image visibility:', error);
-          showToast('An error occurred while updating visibility', 'error');
-        }
-      });
+        });  
+
+            
     });
 
     // After adding all new items, wait for images to load, then integrate with Masonry
@@ -4258,6 +4281,12 @@ function hideCreateImagePrompt() {
 
         if (response.ok) {
           showToast(`Image visibility updated to ${isPublic ? 'public' : 'private'}!`, 'success');
+          
+          setTimeout(() => {
+              //loadPrivatePosts();
+              switchTab('profile');
+          }, 500);  
+            
         } else {
           showToast('Failed to update image visibility.', 'error');
         }
@@ -4267,54 +4296,7 @@ function hideCreateImagePrompt() {
       }
     }
 
-      document.addEventListener('DOMContentLoaded', () => {
-  let isPublic = false; // Default to private
-
-  const visibilityButton = document.getElementById('post-visibility-button');
-  const visibilityIcon = document.getElementById('post-visibility-icon');
-  const tooltip = document.getElementById('post-visibility-tooltip');
-
-  if (!visibilityButton || !visibilityIcon || !tooltip) {
-    console.error('Visibility button or related elements not found!');
-    return;
-  }
-
-  // Tooltip Hover Events
-  visibilityButton.addEventListener('mouseover', () => {
-    tooltip.classList.remove('hidden');
-  });
-
-  visibilityButton.addEventListener('mouseout', () => {
-    tooltip.classList.add('hidden');
-  });
-
-  // Toggle Visibility on Click
-  visibilityButton.addEventListener('click', () => {
-    isPublic = !isPublic; // Toggle the state
-    updateVisibility();
-  });
-
-  function updateVisibility() {
-    if (isPublic) {
-      // Public state
-      visibilityIcon.innerHTML = `
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.522 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.478 0-8.268-2.943-9.542-7z" />
-      `;
-      tooltip.textContent = 'Create in public';
-    } else {
-      // Private state
-      visibilityIcon.innerHTML = `
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.048 10.048 0 012.13-3.962M9.879 9.879a3 3 0 104.243 4.243M15 12a3 3 0 01-6 0" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
-      `;
-      tooltip.textContent = 'Create privately';
-    }
-  }
-
-  // Initial state
-  updateVisibility();
-});
+      
 
 
 
@@ -4647,7 +4629,7 @@ function simulateProgress(progressBar) {
 }
 
 
-      
+    
 document.getElementById('image-upload-form').addEventListener('submit', async (event) => {
   event.preventDefault();
 
@@ -4655,6 +4637,7 @@ document.getElementById('image-upload-form').addEventListener('submit', async (e
     showToast('Please log in to upload an image.', 'error');
     return;
   }
+    
 
   const fileInput = document.getElementById('image-file');
   const descriptionInput = document.getElementById('image-description');
@@ -4663,8 +4646,18 @@ document.getElementById('image-upload-form').addEventListener('submit', async (e
   formData.append('image', fileInput.files[0]);
   formData.append('description', descriptionInput.value || '');
 
+  
+    
   try {
     await uploadImageWithProgress(formData);
+      
+    if (activeTab !== 'profile') {      
+      // Perform the actual tab switching
+      await switchTab('profile'); // Switch to profile view if not already done      
+      await delay(2000);
+      msnry.layout();    
+    }
+      
   } catch (error) {
     console.error('Error uploading image:', error);
     showToast('An error occurred while uploading the image.', 'error');

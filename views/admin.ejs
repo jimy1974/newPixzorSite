@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .thumbnails img {
+      width: 50px;
+      height: 50px;
+      margin-right: 5px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+
+  <h2>Users</h2>
+  <table border="1">
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Tokens</th>
+      <th>Created At</th>
+      <th>Total Images</th>
+      <th>Public Images</th>
+      <th>Private Images</th>
+      <th>Flags</th>
+      <th>Recent Thumbnails</th>
+    </tr>
+    <% users.forEach(user => { %>
+      <tr>
+        <td><%= user.id %></td>
+        <td><%= user.username %></td>
+        <td><%= user.email %></td>
+        <td><%= user.tokens %></td>
+        <td><%= user.createdAt.toLocaleString() %></td>
+        <td><%= user.dataValues.totalImages %></td>
+        <td><%= user.dataValues.publicImages %></td>
+        <td><a href="/admin/user/<%= user.id %>/images"><%= user.dataValues.privateImages %></a></td>
+        <td><%= user.flagCount || 0 %></td>
+        <td class="thumbnails">
+          <% user.personalImages.forEach(image => { %>
+            <img src="<%= image.thumbnailUrl %>" alt="Thumbnail">
+          <% }) %>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+</body>
+</html>

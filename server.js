@@ -11,17 +11,10 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
-
 const db = require('./models'); // Centralized model loader
 const { User, PersonalImage, Comment, PublicImage, Image, Like } = db;
-
-//const { sequelize } = db; // Extract sequelize instance
-
 const sequelize = require('./db'); // Import sequelize
-
 const { Op } = sequelize; // Extract Op from sequelize
-
-
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
@@ -37,6 +30,12 @@ const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `${appBaseUrl}/auth/google/callback`;
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+// Content Safety API 
+const { ContentSafety, MediaType, Category, Action } = require('./content-safety.js');
+const endpoint = 'https://mycontentsafety2.cognitiveservices.azure.com';
+const subscriptionKey = process.env.CONTENT_SAFETY_KEY;
+const apiVersion = '2024-09-01';
+const contentSafety = new ContentSafety(endpoint, subscriptionKey, apiVersion);
 
 
 // Set up the view engine
@@ -163,6 +162,56 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 const LocalStrategy = require('passport-local').Strategy;
 
 
+const nudityKeywords = [
+  'nude', 'naked', 'nudism', 'nudist', 'naturist', 'bare', 'explicit', 'porn', 'xxx', 'erotic', 'sexual', 'sex', 'breasts', 'genitals', 'buttocks', 'topless', 'without bra', 'undressed', 'undressing', 'fetish',  'lewd',
+];
+
+const underageKeywords = [
+  'child', 'kid', 'teen', 'underage', 'minor', 'young', 'baby', 'toddler', 'preteen', 
+  'schoolgirl', 'schoolboy', 'adolescent', 'juvenile', 'infant',  'teenager', 
+  'high school', 'playground', 'youth', 'boy', 'girl', 'kindergarten'
+];
+
+const photorealisticKeywords = [
+  'photo', 'photorealistic', 'realistic', 'photography', 'photo-real', 
+  'photo-realistic', 'hyper-realistic', 'render', 'cgi', 'lifelike', 'ultra-realistic'
+];
+
+async function checkAndFlagPrompt(req, prompt, style) {
+  // Normalize the prompt and style for case-insensitive matching
+  const normalizedPrompt = prompt.toLowerCase();
+  const normalizedStyle = style ? style.toLowerCase() : '';
+
+  // Check for nudity and underage content
+  const containsNudity = nudityKeywords.some(keyword => normalizedPrompt.includes(keyword));
+  const containsUnderage = underageKeywords.some(keyword => normalizedPrompt.includes(keyword));
+
+  // Check for photorealistic style
+  const isPhotorealistic = photorealisticKeywords.some(keyword => normalizedStyle.includes(keyword));
+
+  // Flag if the prompt contains both nudity and underage content
+  if (containsNudity && containsUnderage) {
+    req.user.flagCount = (req.user.flagCount || 0) + 1;
+    await req.user.save();
+
+    return { flagged: true, error: 'This prompt contains inappropriate content.' };
+  }
+
+  if (containsNudity && isPhotorealistic) {    
+    return { flagged: true, error: 'This prompt contains inappropriate content.' };
+  }
+
+  // Optional: Flag any nudity-related content, even without photorealism
+  if (containsNudity) {
+    req.user.flagCount = (req.user.flagCount || 0) + 1;
+    await req.user.save();
+
+    return { flagged: true, error: 'This prompt contains inappropriate content.' };
+  }
+
+  return { flagged: false };
+}
+
 
 // Serialize and Deserialize User
 passport.serializeUser((user, done) => {
@@ -171,7 +220,9 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'username', 'email', 'photo', 'tokens', 'isAdmin'], // Include isAdmin
+    });
     done(null, user);
   } catch (err) {
     done(err, null);
@@ -325,36 +376,39 @@ app.get('/cancel', (req, res) => {
 
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
+// Google OAuth Strategy
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: googleRedirectUri
 }, async (accessToken, refreshToken, profile, done) => {
   try {
-    // First, check if the user exists by googleId
     let user = await User.findOne({ where: { googleId: profile.id } });
 
     if (!user) {
-      // Then, check if the email is already used
       const existingEmailUser = await User.findOne({ where: { email: profile.emails[0].value } });
 
       if (existingEmailUser) {
         console.log(`A user with the email ${profile.emails[0].value} already exists.`);
-        // Optionally, you can link the existing account to this Google ID
         existingEmailUser.googleId = profile.id;
         await existingEmailUser.save();
         user = existingEmailUser;
       } else {
-        // Create a new user if no conflicts are found
         user = await User.create({
           googleId: profile.id,
           tokens: 50,
           username: profile.displayName || `User${Date.now()}`,
           email: profile.emails[0].value,
           photo: profile.photos[0] ? profile.photos[0].value : null,
+          isAdmin: false, // Default to false for new users
         });
       }
     }
+
+    // Ensure the isAdmin field is included in the user object
+    user = await User.findByPk(user.id, {
+      attributes: ['id', 'username', 'email', 'photo', 'tokens', 'isAdmin'], // Include isAdmin
+    });
 
     return done(null, user);
   } catch (err) {
@@ -628,8 +682,20 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
     }
 
-    const { prompt, width, height, guidanceScale, inferenceSteps, isPublic, style, model } = req.body;
+    var { prompt, width, height, guidanceScale, inferenceSteps, isPublic, style, model } = req.body;
 
+    // Append the style to the prompt if it's not already included
+    if (style && !prompt.toLowerCase().includes(style.toLowerCase())) {
+      prompt = `${prompt}, style: ${style}`;
+    }
+      
+    // Check and flag the prompt
+    const flagResult = await checkAndFlagPrompt(req, prompt, style);
+    if (flagResult.flagged) {
+      return res.status(400).json({ error: flagResult.error });
+    }
+      
+      
     // Convert width and height to integers
     const parsedWidth = parseInt(width, 10);
     const parsedHeight = parseInt(height, 10);
@@ -814,6 +880,16 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     console.error('No image path provided');
     return res.status(400).json({ error: 'Image path is required for editing' });
   }
+    
+    // Modify the prompt to include the style if provided
+    const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
+    console.log('Updated Prompt:', updatedPrompt);
+      
+    // Check and flag the prompt
+    const flagResult = await checkAndFlagPrompt(req, updatedPrompt, style);
+    if (flagResult.flagged) {
+      return res.status(400).json({ error: flagResult.error });
+    }    
 
   console.log('Editing image at path:', imagePath);
   console.log('Selected style:', style);
@@ -821,11 +897,9 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
   console.log('Keep Style:', keepStyle);
   console.log('Keep Face:', keepFace);
   console.log('Keep Pose:', keepPose);
-
+    
   try {
-    // Modify the prompt to include the style if provided
-    const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
-    console.log('Updated Prompt:', updatedPrompt);
+    
 
     // Resolve the full file path
     let resolvedImagePath;
@@ -1371,7 +1445,7 @@ app.get('/api/public-posts', async (req, res) => {
       ],
     });
 
-    console.log('Public Images:', JSON.stringify(publicImages, null, 2)); // Debugging
+    //console.log('Public Images:', JSON.stringify(publicImages, null, 2)); // Debugging
 
     const totalImages = await PublicImage.count({ where });
     const hasMore = offset + limit < totalImages;
@@ -1465,6 +1539,9 @@ app.get('/api/image-details/:id', async (req, res) => {
 
 
 app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) => {
+    
+  console.log("update-image-visibility" );  
+    
   try {
     const imageId = req.params.id;
     const image = await PersonalImage.findByPk(imageId);
@@ -1476,10 +1553,58 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
     if (image.userId !== req.user.id) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
+      
+    
 
+    // If the image is being made public, perform additional checks
+    if (!image.isPublic) {
+        
+      console.log("If the image is being made public, perform additional checks");
+        
+      // Check for flagged keywords in the prompt
+      const containsNudity = nudityKeywords.some(keyword => image.prompt.toLowerCase().includes(keyword));
+      if (containsNudity) {
+        return res.status(400).json({ error: 'This image cannot be made public due to inappropriate content.' });
+      }
+
+      // Perform content safety check using Azure Content Safety API
+      const resolvedImagePath = path.join(personalImagesPath, req.user.id.toString(), path.basename(image.imageUrl));
+
+      console.log("resolvedImagePath:"+resolvedImagePath);
+        
+    
+      if (!fs.existsSync(resolvedImagePath)) {
+          
+        console.log("Image file not found" );  
+        return res.status(404).json({ error: 'Image file not found' });
+      }
+
+      const imageBuffer = fs.readFileSync(resolvedImagePath);
+
+          
+      // Analyze the image using the Content Safety API
+      const detectionResult = await contentSafety.detect(MediaType.Image, imageBuffer);
+
+      // Make a decision based on the detection result
+      const decisionResult = contentSafety.makeDecision(detectionResult, {
+        [Category.Hate]: 6,
+        [Category.SelfHarm]: 6,
+        [Category.Sexual]: 6,
+        [Category.Violence]: 6,
+      });
+
+      // If the image is flagged as inappropriate, reject it
+      if (decisionResult.suggestedAction === Action.Reject) {
+        return res.status(400).json({ error: 'This image cannot be made public due to inappropriate content.' });
+      }
+      
+    }
+
+    // Toggle the visibility
     image.isPublic = !image.isPublic;
     await image.save();
 
+    // Handle public image creation or update
     if (image.isPublic) {
       let publicImage = await PublicImage.findOne({ where: { personalImageId: imageId } });
       if (!publicImage) {
@@ -1508,6 +1633,7 @@ app.put('/update-image-visibility/:id', ensureAuthenticated, async (req, res) =>
         await publicImage.save();
       }
     } else {
+      // If the image is being made private, remove it from the public images table
       await PublicImage.destroy({ where: { personalImageId: imageId } });
     }
 
@@ -1629,15 +1755,18 @@ app.get('/user-profile/:id', (req, res) => {
 });
 
 
-
-// Catch-all route to serve the frontend
+// Catch-all route
 app.get('*', (req, res, next) => {
+  if (req.originalUrl.startsWith('/admin')) {
+    return next(); // Pass through to the admin route handler
+  }
+
   if (req.originalUrl.startsWith('/api/')) {
     return next(); // Pass through for API routes
   }
-  res.render('index');
-});
 
+  res.render('index'); // Serve the frontend for all other routes
+});
 
 
 (async () => {
@@ -1781,7 +1910,113 @@ app.get('/api/search', async (req, res) => {
 
 
 
+// Middleware to check if the user is an admin
+function ensureAdmin(req, res, next) {
+  console.log('User object in ensureAdmin:', req.user); // Debug log
+  console.log('req.user.dataValues.isAdmin:', req.user.dataValues.isAdmin); // Access isAdmin from dataValues
 
+  if (req.isAuthenticated() && (req.user.dataValues.isAdmin === 1 || req.user.dataValues.isAdmin === true)) {
+    console.log("Running next.."); // Debug log
+    return next(); // User is authenticated and is an admin
+  }
+  res.status(403).json({ error: 'Unauthorized' }); // Deny access
+}
+
+app.get('/admin', ensureAdmin, async (req, res) => {
+  try {
+    // Fetch all users with their image counts and flag counts
+    const users = await User.findAll({
+      attributes: [
+        'id',
+        'username',
+        'email',
+        'tokens',
+        'flagCount', // Include flagCount
+        'createdAt',
+        [
+          sequelize.literal('(SELECT COUNT(*) FROM personalimages WHERE personalimages.userId = User.id)'),
+          'totalImages',
+        ],
+        [
+          sequelize.literal('(SELECT COUNT(*) FROM personalimages WHERE personalimages.userId = User.id AND personalimages.isPublic = 1)'),
+          'publicImages',
+        ],
+        [
+          sequelize.literal('(SELECT COUNT(*) FROM personalimages WHERE personalimages.userId = User.id AND personalimages.isPublic = 0)'),
+          'privateImages',
+        ],
+      ],
+      include: [
+        {
+          model: PersonalImage,
+          as: 'personalImages',
+          attributes: ['id', 'thumbnailUrl'],
+          limit: 3, // Show up to 3 thumbnails per user
+          order: [['createdAt', 'DESC']], // Show most recent images first
+        },
+      ],
+      order: [['flagCount', 'DESC']], // Sort users by flagCount in descending order
+    });
+
+    res.render('admin', {
+      users,
+    });
+  } catch (error) {
+    console.error('Error fetching admin data:', error);
+    res.status(500).json({ error: 'Failed to fetch admin data' });
+  }
+});
+
+
+app.get('/admin/user/:id/images', ensureAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Fetch the user's details
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'username', 'email'],
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch the user's images
+    const images = await PersonalImage.findAll({
+      where: { userId },
+      attributes: ['id', 'thumbnailUrl', 'imageUrl', 'prompt', 'isPublic', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.render('user-images', {
+      user,
+      images,
+    });
+  } catch (error) {
+    console.error('Error fetching user images:', error);
+    res.status(500).json({ error: 'Failed to fetch user images' });
+  }
+});
+
+app.get('/admin/api-balance', ensureAdmin, async (req, res) => {
+  try {
+    const url = 'https://api.getimg.ai/v1/account/balance';
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        authorization: 'Bearer key-3YrgJB7Jb4KDgwPdUpWvyUGn41hbImYvjE0f2LJW8dbm18T9oJ36pXAtDsjILaGfo27foxvhsoW4oOEwZ2kbRCtKI8V6zSh3'
+      }
+    };
+
+    const response = await fetch(url, options);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching API balance:', error);
+    res.status(500).json({ error: 'Failed to fetch API balance' });
+  }
+});
 /*
 
 // Route to fetch token balance (proxy to crypto service)
