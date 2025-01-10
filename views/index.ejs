@@ -3062,9 +3062,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const imageContainer = document.createElement('div');
   imageContainer.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
   imageContainer.style.backgroundColor = '#2d2d2d';
-
-  // Size based on Masonry layout (e.g., thumbnail dimensions)
-  const masonryColumnWidth = document.querySelector('.grid-sizer').offsetWidth || 300; // Get Masonry column width
+    
+  const gridSizer = document.querySelector('.grid-sizer');
+  const masonryColumnWidth = gridSizer ? gridSizer.offsetWidth : 300;     
   const thumbnailHeight = (dimensions.height / dimensions.width) * masonryColumnWidth; // Preserve aspect ratio
 
   imageContainer.style.width = `${masonryColumnWidth}px`;
@@ -3850,7 +3850,7 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
 
         // If no images on the first page, display a message
         if (images.length === 0 && page === 1) {
-          imageList.innerHTML = '<p class="text-white text-center mt-4">No images found.</p>';
+          imageList.innerHTML = '<p class="text-white text-center mt-4"></p>';
           hasMoreImages = false;
           return;
         }
