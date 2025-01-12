@@ -3082,6 +3082,16 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     return;
   }
 
+   // Check if the user has enough tokens
+  const tokenCountElement = document.getElementById('token-count');
+  const currentTokens = parseFloat(tokenCountElement.textContent.replace(' Tokens', ''));
+
+  if (currentTokens <= 0) {
+    showToast('You do not have enough tokens to generate an image.', 'error');
+    console.error('Not enough tokens');
+    return;
+  }    
+    
   // Get the prompt and options
   const prompt = document.getElementById('prompt-input').value.trim();
   const options = JSON.parse(localStorage.getItem('options')) || {};
