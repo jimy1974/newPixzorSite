@@ -16,6 +16,7 @@
     }
     th {
       background-color: #f2f2f2;
+      cursor: pointer;
     }
     .thumbnails img {
       width: 50px;
@@ -23,10 +24,43 @@
       margin-right: 5px;
       object-fit: cover;
     }
+    .api-balance {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .pagination {
+      margin-top: 20px;
+    }
+    .pagination a {
+      margin: 0 5px;
+      text-decoration: none;
+      color: #007bff;
+    }
+    .pagination a.active {
+      font-weight: bold;
+      color: #000;
+    }
   </style>
 </head>
 <body>
   <h1>Admin Dashboard</h1>
+
+  <!-- Display API Balance -->
+  <div class="api-balance">
+    API Balance: <%= apiBalance %>
+  </div>
+
+  <!-- Sorting Links -->
+  <div>
+    <strong>Sort By:</strong>
+    <a href="/admin?sortBy=tokens&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Tokens</a> |
+    <a href="/admin?sortBy=createdAt&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Created At</a> |
+    <a href="/admin?sortBy=totalImages&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Total Images</a> |
+    <a href="/admin?sortBy=publicImages&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Public Images</a> |
+    <a href="/admin?sortBy=privateImages&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Private Images</a> |
+    <a href="/admin?sortBy=flagCount&order=<%= order === 'ASC' ? 'DESC' : 'ASC' %>">Flags</a>
+  </div>
 
   <h2>Users</h2>
   <table border="1">
@@ -61,5 +95,20 @@
       </tr>
     <% }) %>
   </table>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    <% if (page > 1) { %>
+      <a href="/admin?sortBy=<%= sortBy %>&order=<%= order %>&page=<%= page - 1 %>">Previous</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="/admin?sortBy=<%= sortBy %>&order=<%= order %>&page=<%= i %>" class="<%= i === page ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+
+    <% if (page < totalPages) { %>
+      <a href="/admin?sortBy=<%= sortBy %>&order=<%= order %>&page=<%= page + 1 %>">Next</a>
+    <% } %>
+  </div>
 </body>
 </html>

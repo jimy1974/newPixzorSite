@@ -1372,6 +1372,81 @@ button.active {
 }
 
 
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+     /* Center the button on normal screens */
+.down-arrow-button {
+  display: flex;
+  justify-content: center; /* Center the button */
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  /* Ensure the parent container is a flex container */
+  .down-arrow-button {
+    display: flex;
+    justify-content: flex-end; /* Move the button to the right */
+    width: 100%; /* Ensure it takes full width */
+    padding-right: 16px; /* Add some spacing from the edge */
+  }
+} 
+      
+/* Add this to your existing styles */
+#prompt-status-text {
+  position: absolute;
+  top: 16px; /* Adjust as needed */
+  left: 16px; /* Moved to the left side */
+  font-size: 1rem; /* Larger font size */
+  font-weight: 600; /* Bolder text */
+  color: #9CA3AF; /* Light gray color */
+  transition: color 0.2s, left 0.2s; /* Smooth transitions for color and position */
+}
+
+#prompt-status-text.red {
+  color: #EF4444; /* Tailwind's text-red-500 */
+  left: 135px; /* Move closer to the prompt input when thumbnail is present */
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  #prompt-status-text.red {
+    left: 30px; /* Keep the text in its original position on small screens */
+  }
+}      
+      
+ /* Thumbnail Image */
+.thumbnail-image {
+  width: 5rem; /* Default size */
+  height: 5rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .thumbnail-image {
+    width: 3rem; /* Smaller size for mobile */
+    height: 3rem;
+  }
+}     
+      
+      
+      
+      
   </style>
 </head>
 <body class="bg-gray-900 text-white">
@@ -1596,119 +1671,117 @@ button.active {
 
 
 <div id="ai-creation" class="hidden">
-  <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
-    <div class="container mx-auto px-2 py-3">
-      <!-- Main Content Area -->
-      <div class="flex flex-col space-y-2">
-        <!-- Down Arrow Button -->
-        <div class="flex justify-center">
-          <button onclick="returnToMain()" class="bg-gray-700 hover:bg-green-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
-            <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+    <div class="fixed-prompt bg-gray-800 rounded-t-lg shadow-md">
+      <div class="container mx-auto px-2 py-3">
+        <!-- Add the new text element here -->
+        <div id="prompt-status-text" class="absolute top-2 left-4 text-base font-semibold text-gray-400 transition-all duration-200">
+          Generate an image
         </div>
-
-        <!-- Thumbnail and Prompt Layout -->
-        <div class="flex flex-row space-x-2 w-full">
-          <div id="selected-thumbnail-container">
-            <!-- Thumbnail will be inserted here -->
+        <!-- Main Content Area -->
+        <div class="flex flex-col space-y-2">
+          <!-- Down Arrow Button -->
+          <div class="down-arrow-button">
+            <button onclick="returnToMain()" class="bg-gray-700 hover:bg-green-600 text-white h-4 w-20 rounded-full my-1 flex items-center justify-center">
+              <svg class="w-4 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
 
-          <!-- Textarea Container -->
-          <div class="flex-grow relative min-w-0">
-            <textarea
-              id="prompt-input"
-              class="w-full bg-gray-700 rounded-lg p-2 pr-24 text-sm text-white border border-gray-600 resize-none"
-              rows="2"
-              placeholder="Enter your prompt"
-              aria-label="Prompt Input"
-              style="width: 100%; box-sizing: border-box;"
-            ></textarea>
+          <!-- Thumbnail and Prompt Layout -->
+          <div class="flex flex-row space-x-2 w-full">
+            <div id="selected-thumbnail-container">
+              <!-- Thumbnail will be inserted here -->
+            </div>
 
-            
+            <!-- Textarea Container -->
+            <div class="flex-grow relative min-w-0">
+              <textarea
+                id="prompt-input"
+                class="w-full bg-gray-700 rounded-lg p-2 pr-24 text-sm text-white border border-gray-600 resize-none"
+                rows="2"
+                placeholder="Enter your prompt"
+                aria-label="Prompt Input"
+                style="width: 100%; box-sizing: border-box;"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Controls Area -->
+          <div class="flex flex-wrap gap-2 items-center">
+            <!-- Options Button -->
+            <button id="options-button" class="custom-button px-3" title="Options">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+
+            <!-- Enhance Prompt Button -->
+            <button id="enhance-prompt-button" class="custom-button px-3" title="Enhance Prompt">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </button>
+
+            <!-- Aspect Ratio Dropdown -->
+            <div class="custom-dropdown" id="aspect-ratio-select">
+              <div class="selected-option">
+                <i class="fas fa-crop-alt"></i>
+                <span>Ratio</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
+              <ul class="dropdown-options">
+                <li data-value="1:1">
+                  <i class="fas fa-square"></i>
+                  <span>1:1</span>
+                </li>
+                <li data-value="4:3">
+                  <i class="fas fa-image"></i>
+                  <span>4:3</span>
+                </li>
+                <li data-value="3:4">
+                  <i class="fas fa-image"></i>
+                  <span>3:4</span>
+                </li>
+                <li data-value="16:9">
+                  <i class="fas fa-desktop"></i>
+                  <span>16:9</span>
+                </li>
+                <li data-value="9:16">
+                  <i class="fas fa-mobile-alt"></i>
+                  <span>9:16</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Style Dropdown -->
+            <select id="style-select" class="custom-select">
+              <option value="" disabled selected>Style</option>
+            </select>
+
+            <!-- Model Dropdown -->
+            <select id="model-select" class="custom-select">
+              <option value="" disabled selected>Model</option>
+            </select>
+
+            <!-- Group Visibility Button and Generate Button -->
+            <div class="flex items-center gap-2 ml-auto">
+              <!-- Generate Button -->
+              <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
+                <span class="generate-text">Generate</span>
+                <span class="generate-icon">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
-
-        <!-- Controls Area -->
-<div class="flex flex-wrap gap-2 items-center">
-  <!-- Options Button -->
-  <button id="options-button" class="custom-button px-3" title="Options">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  </button>
-
-  <!-- Enhance Prompt Button -->
-  <button id="enhance-prompt-button" class="custom-button px-3" title="Enhance Prompt">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-    </svg>
-  </button>
-
-  <!-- Aspect Ratio Dropdown -->
-  <div class="custom-dropdown" id="aspect-ratio-select">
-    <div class="selected-option">
-      <i class="fas fa-crop-alt"></i>
-      <span>Ratio</span>
-      <i class="fas fa-chevron-down"></i>
-    </div>
-    <ul class="dropdown-options">
-      <li data-value="1:1">
-        <i class="fas fa-square"></i>
-        <span>1:1</span>
-      </li>
-      <li data-value="4:3">
-        <i class="fas fa-image"></i>
-        <span>4:3</span>
-      </li>
-      <li data-value="3:4">
-        <i class="fas fa-image"></i>
-        <span>3:4</span>
-      </li>
-      <li data-value="16:9">
-        <i class="fas fa-desktop"></i>
-        <span>16:9</span>
-      </li>
-      <li data-value="9:16">
-        <i class="fas fa-mobile-alt"></i>
-        <span>9:16</span>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Style Dropdown -->
-  <select id="style-select" class="custom-select">
-    <option value="" disabled selected>Style</option>
-  </select>
-
-  <!-- Model Dropdown -->
-  <select id="model-select" class="custom-select">
-    <option value="" disabled selected>Model</option>
-  </select>
-
-  <!-- Group Visibility Button and Generate Button -->
-  <div class="flex items-center gap-2 ml-auto">
-   
-
-    <!-- Generate Button -->
-    <button id="generate-button" class="bg-green-700 hover:bg-green-600 text-white px-4 py-1 rounded-lg text-sm font-medium">
-      <span class="generate-text">Generate</span>
-      <span class="generate-icon">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-      </span>
-    </button>
-  </div>
-</div>
-          
       </div>
     </div>
   </div>
-</div>
-
 
     
     
@@ -3824,6 +3897,28 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
   }
 }
 
+      
+function removeThumbnail() {
+  const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+  const promptStatusText = document.getElementById('prompt-status-text'); // Get the status text element
+
+  if (thumbnailContainer) {
+    thumbnailContainer.innerHTML = ''; // Clear the thumbnail
+    delete thumbnailContainer.dataset.imagePath; // Remove the image path
+    
+    // Reset the button text to "Generate"
+    const generateText = document.querySelector('#generate-button .generate-text');
+    if (generateText) {
+      generateText.textContent = 'Generate';
+    }
+
+    // Reset the status text and color
+    if (promptStatusText) {
+      promptStatusText.textContent = 'Generate an image';
+      promptStatusText.classList.remove('red');
+    }
+  }
+}
 
   async function loadPrivatePosts() {
       if (isLoading || !hasMoreImages) return;
@@ -3984,7 +4079,7 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
       imgElement.addEventListener('click', (event) => {
         event.stopPropagation();
         const toggleButtons = imageCard.querySelector('.toggle-buttons');
-        const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+        //const thumbnailContainer = document.getElementById('selected-thumbnail-container');
         const generateButton = document.getElementById('generate-button');
 
         if (selectedImages.has(image.id)) {
@@ -3997,12 +4092,13 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
           if (selectedImages.size === 0) {
             populateModelDropdownForImageSelection("");
             resetStylesToAllStyles();
-
+            removeThumbnail();
+            /*
             if (thumbnailContainer) {
               thumbnailContainer.innerHTML = '';
               thumbnailContainer.style.display = 'none';
               delete thumbnailContainer.dataset.imagePath;
-            }
+            }*/
           }
         } else {
           const allCards = document.querySelectorAll('.image-card');
@@ -4195,11 +4291,13 @@ function handleToggleState(toggleType, imageId, isActive) {
       
       
 
+// Function to update the prompt box with a thumbnail
 function updatePromptBox(image) {
   const promptInput = document.getElementById('prompt-input');
   const thumbnailContainer = document.getElementById('selected-thumbnail-container');
   const generateButton = document.getElementById('generate-button');
   const generateText = generateButton.querySelector('.generate-text'); // Get the text span
+  const promptStatusText = document.getElementById('prompt-status-text'); // Get the status text element
 
   // Ensure the thumbnail container exists
   if (!thumbnailContainer) {
@@ -4214,7 +4312,7 @@ function updatePromptBox(image) {
   const thumbnail = document.createElement('img');
   thumbnail.src = image.thumbnailUrl;
   thumbnail.alt = 'Selected Image';
-  thumbnail.classList.add('selected-thumbnail', 'rounded-lg', 'object-cover', 'ml-4', 'thumbnail-image'); // Removed w-16 h-16
+  thumbnail.classList.add('selected-thumbnail', 'rounded-lg', 'object-cover', 'ml-4', 'thumbnail-image');
 
   thumbnailContainer.appendChild(thumbnail);
 
@@ -4225,7 +4323,15 @@ function updatePromptBox(image) {
   if (generateText) {
     generateText.textContent = 'Modify'; // Update the text span
   }
+
+  // Update the status text and color
+  if (promptStatusText) {
+    promptStatusText.textContent = 'Modify an Image'; // Updated text
+    promptStatusText.classList.add('red');
+  }
 }
+
+
 
 
 function hideCreateImagePrompt() {

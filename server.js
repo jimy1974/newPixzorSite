@@ -11,10 +11,12 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
+
 const db = require('./models'); // Centralized model loader
 const { User, PersonalImage, Comment, PublicImage, Image, Like } = db;
 const sequelize = require('./db'); // Import sequelize
 const { Op } = sequelize; // Extract Op from sequelize
+
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
@@ -1922,16 +1924,33 @@ function ensureAdmin(req, res, next) {
   res.status(403).json({ error: 'Unauthorized' }); // Deny access
 }
 
+
+
 app.get('/admin', ensureAdmin, async (req, res) => {
   try {
-    // Fetch all users with their image counts and flag counts
+    // Extract query parameters
+    const sortBy = req.query.sortBy || 'flagCount'; // Default sort by flagCount
+    const order = req.query.order || 'DESC'; // Default order is DESC
+    const page = parseInt(req.query.page) || 1; // Default page is 1
+    const limit = 50; // Number of users per page
+    const offset = (page - 1) * limit; // Calculate offset for pagination
+
+    // Validate sortBy and order to prevent SQL injection
+    const validSortColumns = ['tokens', 'createdAt', 'totalImages', 'publicImages', 'privateImages', 'flagCount'];
+    const validOrder = ['ASC', 'DESC'];
+
+    if (!validSortColumns.includes(sortBy) || !validOrder.includes(order.toUpperCase())) {
+      return res.status(400).json({ error: 'Invalid sort parameters' });
+    }
+
+    // Fetch users with sorting and pagination
     const users = await User.findAll({
       attributes: [
         'id',
         'username',
         'email',
         'tokens',
-        'flagCount', // Include flagCount
+        'flagCount',
         'createdAt',
         [
           sequelize.literal('(SELECT COUNT(*) FROM personalimages WHERE personalimages.userId = User.id)'),
@@ -1951,15 +1970,29 @@ app.get('/admin', ensureAdmin, async (req, res) => {
           model: PersonalImage,
           as: 'personalImages',
           attributes: ['id', 'thumbnailUrl'],
-          limit: 3, // Show up to 3 thumbnails per user
-          order: [['createdAt', 'DESC']], // Show most recent images first
+          limit: 3,
+          order: [['createdAt', 'DESC']],
         },
       ],
-      order: [['flagCount', 'DESC']], // Sort users by flagCount in descending order
+      order: [[sortBy, order]], // Dynamic sorting
+      limit: limit, // Limit the number of users per page
+      offset: offset, // Pagination offset
     });
+
+    // Fetch the total number of users for pagination
+    const totalUsers = await User.count();
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    // Fetch the API balance
+    const apiBalance = await getApiBalance();
 
     res.render('admin', {
       users,
+      apiBalance,
+      sortBy,
+      order,
+      page,
+      totalPages,
     });
   } catch (error) {
     console.error('Error fetching admin data:', error);
@@ -1967,6 +2000,45 @@ app.get('/admin', ensureAdmin, async (req, res) => {
   }
 });
 
+
+
+
+async function getApiBalance() {
+  try {
+    const response = await axios.get('https://api.getimg.ai/v1/account/balance', {
+      headers: {
+        accept: 'application/json',
+        authorization: 'Bearer key-3YrgJB7Jb4KDgwPdUpWvyUGn41hbImYvjE0f2LJW8dbm18T9oJ36pXAtDsjILaGfo27foxvhsoW4oOEwZ2kbRCtKI8V6zSh3',
+      },
+    });
+
+    console.log('API Response:', response.data); // Log the full response
+    return response.data.amount || 0; // Use "amount" instead of "balance"
+  } catch (error) {
+    console.error('Error fetching API balance:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
+app.get('/admin/api-balance', ensureAdmin, async (req, res) => {
+  try {
+    const url = 'https://api.getimg.ai/v1/account/balance';
+    const options = {
+      method: 'GET',
+      headers: {
+        accept: 'application/json',
+        authorization: 'Bearer key-3YrgJB7Jb4KDgwPdUpWvyUGn41hbImYvjE0f2LJW8dbm18T9oJ36pXAtDsjILaGfo27foxvhsoW4oOEwZ2kbRCtKI8V6zSh3',
+      },
+    };
+
+    const response = await fetch(url, options);
+    const data = await response.json();
+    res.json(data); // Return the balance data as JSON
+  } catch (error) {
+    console.error('Error fetching API balance:', error);
+    res.status(500).json({ error: 'Failed to fetch API balance' });
+  }
+});
 
 app.get('/admin/user/:id/images', ensureAdmin, async (req, res) => {
   try {
@@ -1998,25 +2070,10 @@ app.get('/admin/user/:id/images', ensureAdmin, async (req, res) => {
   }
 });
 
-app.get('/admin/api-balance', ensureAdmin, async (req, res) => {
-  try {
-    const url = 'https://api.getimg.ai/v1/account/balance';
-    const options = {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-        authorization: 'Bearer key-3YrgJB7Jb4KDgwPdUpWvyUGn41hbImYvjE0f2LJW8dbm18T9oJ36pXAtDsjILaGfo27foxvhsoW4oOEwZ2kbRCtKI8V6zSh3'
-      }
-    };
 
-    const response = await fetch(url, options);
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    console.error('Error fetching API balance:', error);
-    res.status(500).json({ error: 'Failed to fetch API balance' });
-  }
-});
+
+
+
 /*
 
 // Route to fetch token balance (proxy to crypto service)
