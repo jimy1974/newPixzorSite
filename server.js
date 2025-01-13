@@ -154,22 +154,7 @@ app.use(express.json());
 // Middleware to parse URL-encoded data (form submissions)
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-    
-  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
-    
-  // Only log `req.body` for requests that might have a body
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-    if (req.originalUrl === '/webhook') {
-      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
-    } else {
-      console.log('Parsed body:', req.body ? req.body : 'No body sent');
-    }
-  }else{
-    console.log('Caught: '+req.originalUrl );  
-  }
-  next();
-});
+
 
 
 app.post('/test-update-tokens', async (req, res) => {
@@ -1786,52 +1771,6 @@ app.get('/user-profile/:id', (req, res) => {
 });
 
 
-// Catch-all route
-// Catch-all route for serving the frontend (only for GET requests)
-// Catch-all route for serving the frontend (only for GET requests)
-app.get('*', (req, res, next) => {
-  console.log(`[Catch-All Route] Request URL: ${req.originalUrl}, Method: ${req.method}`);
-
-  if (req.originalUrl.startsWith('/webhook') || req.originalUrl.startsWith('/test-update-tokens')) {
-    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
-    return next(); // Pass through for webhook
-  }
-
-  if (req.originalUrl.startsWith('/admin')) {
-    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
-    return next(); // Pass through to the admin route handler
-  }
-
-  if (req.originalUrl.startsWith('/api/')) {
-    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
-    return next(); // Pass through for API routes
-  }
-
-  console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);
-  res.render('index'); // Serve the frontend for all other routes
-});
-
-
-(async () => {
-  try {
-    await db.sequelize.sync({ alter: false }); // Set to false to prevent altering tables
-    console.log('Database synchronized successfully.');
-  } catch (error) {
-    console.error('Error synchronizing database:', error);
-  }
-
-  // Start the server after synchronization
-  app.listen(PORT, () => {
-    console.log(`Server is running on https://localhost:${PORT}`);
-  });
-})();
-
-
-
-
-
-
-
 
 app.post('/upload-image', ensureAuthenticated, upload.single('image'), async (req, res) => {
   console.log('[DEBUG] Received upload request:', req.body); // Log the parsed body
@@ -2114,31 +2053,61 @@ app.get('/admin/user/:id/images', ensureAdmin, async (req, res) => {
 
 
 
+// Catch-all route for serving the frontend (only for GET requests)
+app.get('*', (req, res, next) => {
+  console.log(`[Catch-All Route] Request URL: ${req.originalUrl}, Method: ${req.method}`);
 
-/*
-
-// Route to fetch token balance (proxy to crypto service)
-app.get("/balance/:address", async (req, res) => {
-  try {
-    const response = await axios.get(`http://localhost:4000/balance/${req.params.address}`);
-    res.json(response.data);
-  } catch (error) {
-    console.error("Error fetching balance from crypto service:", error);
-    res.status(500).json({ error: "Failed to fetch balance" });
+  if (req.originalUrl.startsWith('/webhook') || req.originalUrl.startsWith('/test-update-tokens')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for webhook
   }
+
+  if (req.originalUrl.startsWith('/admin')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through to the admin route handler
+  }
+
+  if (req.originalUrl.startsWith('/api/')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for API routes
+  }
+
+  console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);
+  res.render('index'); // Serve the frontend for all other routes
+});
+app.use((req, res, next) => {
+    
+  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
+    
+  // Only log `req.body` for requests that might have a body
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    if (req.originalUrl === '/webhook') {
+      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
+    } else {
+      console.log('Parsed body:', req.body ? req.body : 'No body sent');
+    }
+  }else{
+    console.log('Caught: '+req.originalUrl );  
+  }
+  next();
 });
 
-// Route to withdraw tokens (proxy to crypto service)
-app.post("/withdraw", async (req, res) => {
+
+(async () => {
   try {
-    const response = await axios.post("http://localhost:4000/withdraw", req.body);
-    res.json(response.data);
+    await db.sequelize.sync({ alter: false }); // Set to false to prevent altering tables
+    console.log('Database synchronized successfully.');
   } catch (error) {
-    console.error("Error withdrawing tokens via crypto service:", error);
-    res.status(500).json({ error: "Failed to withdraw tokens" });
+    console.error('Error synchronizing database:', error);
   }
-});
-*/
+
+  // Start the server after synchronization
+  app.listen(PORT, () => {
+    console.log(`Server is running on https://localhost:${PORT}`);
+  });
+})();
+
+
 
 
 
