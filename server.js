@@ -96,21 +96,6 @@ const openai = new OpenAI({
 });
 
 
-app.use((req, res, next) => {
-  // Only log `req.body` for requests that might have a body
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-    if (req.originalUrl === '/webhook') {
-      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
-    } else {
-      console.log('Parsed body:', req.body ? req.body : 'No body sent');
-    }
-  }else{
-    console.log('Caught: '+req.originalUrl );  
-  }
-  next();
-});
-
-
 // Webhook route must be placed before body-parser middleware
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   console.log('Webhook route hit');
@@ -118,12 +103,17 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  console.log('Raw body:', req.body.toString()); // Log the raw body
+  console.log('Signature:', sig); // Log the signature
+  console.log('Webhook secret:', webhookSecret); // Log the webhook secret
+
   try {
     const rawBody = req.body.toString();
     const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
     console.log('Verified event:', event);
 
+    // Handle the event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
 
@@ -160,6 +150,27 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     res.status(400).send(`Webhook Error: ${err.message}`);
   }
 });
+
+// Middleware to parse JSON data (for non-webhook routes)
+app.use(express.json());
+
+// Middleware to parse URL-encoded data (form submissions)
+app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  // Only log `req.body` for requests that might have a body
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    if (req.originalUrl === '/webhook') {
+      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
+    } else {
+      console.log('Parsed body:', req.body ? req.body : 'No body sent');
+    }
+  }else{
+    console.log('Caught: '+req.originalUrl );  
+  }
+  next();
+});
+
 
 app.post('/test-update-tokens', async (req, res) => {
   console.log('Received request to /test-update-tokens'); // Log the request
