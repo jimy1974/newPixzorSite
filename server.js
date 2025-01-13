@@ -119,13 +119,11 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   try {
-    // Use the raw body for Stripe's signature verification
-    const rawBody = req.body.toString(); 
+    const rawBody = req.body.toString();
     const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
     console.log('Verified event:', event);
 
-    // Handle the event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
 
@@ -133,20 +131,19 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const fullSession = await stripe.checkout.sessions.retrieve(session.id);
         console.log('Full session retrieved:', fullSession);
 
-        const userId = fullSession.metadata.userId; // Metadata from the session
-        const tokens = parseInt(fullSession.metadata.tokens, 10);
+        const userId = fullSession.metadata.userId;
+        const tokens = parseFloat(fullSession.metadata.tokens); // Parse as float
 
         if (!userId || isNaN(tokens)) {
           throw new Error('Invalid metadata in session');
         }
 
-        // Update user's token balance
         const user = await User.findByPk(userId);
         if (user) {
-          user.tokens += tokens;
+          user.tokens = parseFloat(user.tokens) + tokens; // Handle decimal values
           await user.save();
           console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
-          console.log(`New token balance: ${user.tokens}`); // Log the updated token balance    
+          console.log(`New token balance: ${user.tokens}`);
         } else {
           console.error(`User with ID ${userId} not found.`);
         }
