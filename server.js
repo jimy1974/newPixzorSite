@@ -143,21 +143,26 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 app.post('/test-update-tokens', async (req, res) => {
   console.log('Received request to /test-update-tokens'); // Log the request
+
   const { userId, tokens } = req.body;
+  console.log(`Request body: userId=${userId}, tokens=${tokens}`); // Log the request body
 
   try {
+    console.log('Fetching user from database...'); // Log database query
     const user = await User.findByPk(userId);
     if (user) {
+      console.log(`User found: ${user.username}`); // Log user details
       user.tokens += parseInt(tokens, 10);
       await user.save();
       console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
       console.log(`New token balance: ${user.tokens}`);
       res.status(200).json({ success: true, message: 'Tokens updated successfully.' });
     } else {
+      console.error(`User with ID ${userId} not found.`); // Log user not found
       res.status(404).json({ success: false, message: 'User not found.' });
     }
   } catch (err) {
-    console.error(`Error updating user tokens: ${err.message}`);
+    console.error(`Error updating user tokens: ${err.message}`); // Log errors
     res.status(500).json({ success: false, message: 'Failed to update tokens.' });
   }
 });
