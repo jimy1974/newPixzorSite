@@ -142,6 +142,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 app.post('/test-update-tokens', async (req, res) => {
+  console.log('Received request to /test-update-tokens'); // Log the request
   const { userId, tokens } = req.body;
 
   try {
