@@ -175,7 +175,7 @@ app.post('/test-update-tokens', async (req, res) => {
     const user = await User.findByPk(userId);
     if (user) {
       console.log(`User found: ${user.username}`); // Log user details
-      user.tokens += parseInt(tokens, 10);
+      user.tokens = parseFloat(user.tokens) + parseFloat(tokens); // Handle decimal values
       await user.save();
       console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
       console.log(`New token balance: ${user.tokens}`);

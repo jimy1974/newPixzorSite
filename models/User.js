@@ -18,8 +18,8 @@ module.exports = (sequelize) => {
       allowNull: true, // Allow null for OAuth users
     },
     tokens: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0, // Changed from 200 to match DB default
+      type: DataTypes.DECIMAL(10, 2), // Change to DECIMAL(10,2)
+      defaultValue: 50.00, // Match the database default
     },
     googleId: {
       type: DataTypes.STRING,
@@ -42,6 +42,5 @@ module.exports = (sequelize) => {
     User.hasMany(models.Image, { foreignKey: 'userId', as: 'images' });
     User.hasMany(models.PublicImage, { foreignKey: 'userId', as: 'publicImages' });
   };
-
   return User;
 };
