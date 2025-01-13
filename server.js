@@ -114,13 +114,13 @@ app.use((req, res, next) => {
 
 // Webhook route must be placed before body-parser middleware
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
+
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
-
   try {
-    // Use the raw request body for signature verification
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
@@ -131,6 +131,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   switch (event.type) {
     case 'checkout.session.completed':
       const session = event.data.object;
+      console.log('Checkout session completed:', session.id);
 
       try {
         const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
@@ -150,18 +151,20 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
           await user.save();
           console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
           console.log(`New token balance: ${user.tokens}`);
+          res.status(200).json({ success: true, message: 'Tokens updated successfully.' });
         } else {
           console.error(`User with ID ${userId} not found.`);
+          res.status(404).json({ success: false, message: 'User not found.' });
         }
       } catch (err) {
         console.error(`Error processing checkout.session.completed: ${err.message}`);
+        res.status(500).json({ success: false, message: 'Failed to update tokens.' });
       }
       break;
     default:
       console.log(`Unhandled event type: ${event.type}`);
+      res.status(200).json({ received: true });
   }
-
-  res.json({ received: true });
 });
 
 // Middleware to parse JSON data (for non-webhook routes)
