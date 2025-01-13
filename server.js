@@ -94,11 +94,20 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
 });
 
+// Apply body-parsing middleware conditionally
 app.use((req, res, next) => {
   if (req.originalUrl === '/webhook') {
     next(); // Skip body parsing for the webhook route
   } else {
     express.json()(req, res, next); // Apply express.json() to all other routes
+  }
+});
+
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') {
+    next(); // Skip body parsing for the webhook route
+  } else {
+    express.urlencoded({ extended: true })(req, res, next); // Apply express.urlencoded() to all other routes
   }
 });
 
@@ -157,11 +166,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   }
 });
 
-// Middleware to parse JSON data (for non-webhook routes)
-app.use(express.json());
-
-// Middleware to parse URL-encoded data (form submissions)
-app.use(express.urlencoded({ extended: true }));
 
 
 app.post('/test-update-tokens', async (req, res) => {
