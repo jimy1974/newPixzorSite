@@ -157,18 +157,45 @@ app.use(express.json());
 // Middleware to parse URL-encoded data (form submissions)
 app.use(express.urlencoded({ extended: true }));
 
+
+
 app.use((req, res, next) => {
+  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
+
   // Only log `req.body` for requests that might have a body
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
     if (req.originalUrl === '/webhook') {
-      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
+      console.log('[Body Parsing Middleware] Webhook raw body:', req.body ? req.body.toString() : 'undefined');
     } else {
-      console.log('Parsed body:', req.body ? req.body : 'No body sent');
+      console.log('[Body Parsing Middleware] Parsed body:', req.body ? req.body : 'No body sent');
     }
-  }else{
-    console.log('Caught: '+req.originalUrl );  
+  } else {
+    console.log(`[Body Parsing Middleware] Caught: ${req.originalUrl}`);
   }
+
   next();
+});
+// Catch-all route for serving the frontend (only for GET requests)
+app.get('*', (req, res, next) => {
+  console.log(`[Catch-All Route] Request URL: ${req.originalUrl}, Method: ${req.method}`);
+
+  if (req.originalUrl.startsWith('/webhook') || req.originalUrl.startsWith('/test-update-tokens')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for webhook
+  }
+
+  if (req.originalUrl.startsWith('/admin')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through to the admin route handler
+  }
+
+  if (req.originalUrl.startsWith('/api/')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for API routes
+  }
+
+  console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);
+  res.render('index'); // Serve the frontend for all other routes
 });
 
 
@@ -1786,25 +1813,7 @@ app.get('/user-profile/:id', (req, res) => {
 });
 
 
-// Catch-all route
-// Catch-all route for serving the frontend (only for GET requests)
-app.get('*', (req, res, next) => {
-    
-    
-  if (req.originalUrl.startsWith('/webhook') ||  req.originalUrl.startsWith('/test-update-tokens') ) {
-    return next(); // Pass through for webhook
-  }
 
-  if (req.originalUrl.startsWith('/admin')) {
-    return next(); // Pass through to the admin route handler
-  }
-
-  if (req.originalUrl.startsWith('/api/')) {
-    return next(); // Pass through for API routes
-  }
-
-  res.render('index'); // Serve the frontend for all other routes
-});
 
 
 (async () => {
