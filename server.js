@@ -98,31 +98,30 @@ const openai = new OpenAI({
 
 // Webhook route must be placed before body-parser middleware
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  console.log('Webhook route hit');
-
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  console.log('Raw body:', req.body.toString()); // Log the raw body
-  console.log('Signature:', sig); // Log the signature
-  console.log('Webhook secret:', webhookSecret); // Log the webhook secret
+  let event;
 
   try {
-    const rawBody = req.body.toString();
-    const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
 
-    console.log('Verified event:', event);
-
-    // Handle the event
-    if (event.type === 'checkout.session.completed') {
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
       const session = event.data.object;
 
       try {
-        const fullSession = await stripe.checkout.sessions.retrieve(session.id);
-        console.log('Full session retrieved:', fullSession);
+        const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+          expand: ['line_items'],
+        });
 
         const userId = fullSession.metadata.userId;
-        const tokens = parseFloat(fullSession.metadata.tokens); // Parse as float
+        const tokens = parseFloat(fullSession.metadata.tokens);
 
         if (!userId || isNaN(tokens)) {
           throw new Error('Invalid metadata in session');
@@ -130,7 +129,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
         const user = await User.findByPk(userId);
         if (user) {
-          user.tokens = parseFloat(user.tokens) + tokens; // Handle decimal values
+          user.tokens = parseFloat(user.tokens) + tokens;
           await user.save();
           console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
           console.log(`New token balance: ${user.tokens}`);
@@ -140,15 +139,12 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       } catch (err) {
         console.error(`Error processing checkout.session.completed: ${err.message}`);
       }
-    } else {
+      break;
+    default:
       console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    res.status(200).json({ received: true });
-  } catch (err) {
-    console.error('Error verifying webhook:', err.message);
-    res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  res.json({ received: true });
 });
 
 // Middleware to parse JSON data (for non-webhook routes)
@@ -336,16 +332,12 @@ app.post('/enhance-prompt', async (req, res) => {
 
 
 app.post('/create-checkout-session', async (req, res) => {
-  console.log('Request body:', req.body);
-
   const { tokens, price } = req.body;
 
   if (!tokens) {
-    console.error('Missing tokens in request body:', req.body);
     return res.status(400).json({ error: 'Tokens are required' });
   }
 
-  // Predefined valid bundles
   const validBundles = {
     "500": "5.00",
     "1200": "10.00",
@@ -354,19 +346,15 @@ app.post('/create-checkout-session', async (req, res) => {
     "20000": "100.00",
   };
 
-  // Validate tokens and derive price from server-side data
   const expectedPrice = validBundles[tokens];
   if (!expectedPrice) {
-    console.error('Invalid token amount:', tokens);
     return res.status(400).json({ error: 'Invalid number of tokens selected' });
   }
   if (expectedPrice !== price) {
-    console.error('Price mismatch:', { expectedPrice, price });
     return res.status(400).json({ error: 'Price does not match the selected token bundle' });
   }
 
   if (!req.user || !req.user.id) {
-    console.error('Unauthorized user');
     return res.status(403).json({ error: 'User not authenticated' });
   }
 
@@ -380,7 +368,7 @@ app.post('/create-checkout-session', async (req, res) => {
             product_data: {
               name: `${tokens} Tokens for Pixzor`,
             },
-            unit_amount: parseFloat(expectedPrice) * 100, // Convert dollars to cents
+            unit_amount: parseFloat(expectedPrice) * 100,
           },
           quantity: 1,
         },
@@ -394,10 +382,9 @@ app.post('/create-checkout-session', async (req, res) => {
       },
     });
 
-    console.log('Stripe session created:', session.id);
     res.json({ id: session.id });
   } catch (error) {
-    console.error('Error creating checkout session:', error.message, error.stack);
+    console.error('Error creating checkout session:', error);
     res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
