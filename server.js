@@ -1758,7 +1758,12 @@ app.get('/user-profile/:id', (req, res) => {
 
 
 // Catch-all route
+// Catch-all route for serving the frontend (only for GET requests)
 app.get('*', (req, res, next) => {
+  if (req.originalUrl.startsWith('/webhook')) {
+    return next(); // Pass through for webhook
+  }
+
   if (req.originalUrl.startsWith('/admin')) {
     return next(); // Pass through to the admin route handler
   }
