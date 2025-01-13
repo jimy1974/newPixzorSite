@@ -1780,7 +1780,9 @@ app.get('/user-profile/:id', (req, res) => {
 // Catch-all route
 // Catch-all route for serving the frontend (only for GET requests)
 app.get('*', (req, res, next) => {
-  if (req.originalUrl.startsWith('/webhook')) {
+    
+    
+  if (req.originalUrl.startsWith('/webhook') ||  req.originalUrl.startsWith('/test-update-tokens') ) {
     return next(); // Pass through for webhook
   }
 
