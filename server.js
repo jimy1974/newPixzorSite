@@ -96,6 +96,22 @@ const openai = new OpenAI({
 });
 
 
+app.use((req, res, next) => {
+  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
+
+  // Only log `req.body` for requests that might have a body
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
+    if (req.originalUrl === '/webhook') {
+      console.log('Webhook raw body:', req.body ? req.body.toString('utf8') : 'undefined');
+    } else if (req.is('application/json') || req.is('application/x-www-form-urlencoded')) {
+      console.log('Parsed body:', req.body ? req.body : 'No body sent');
+    }
+  } else {
+    console.log('Caught:', req.originalUrl);
+  }
+  next();
+});
+
 // Webhook route must be placed before body-parser middleware
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
@@ -153,8 +169,6 @@ app.use(express.json());
 
 // Middleware to parse URL-encoded data (form submissions)
 app.use(express.urlencoded({ extended: true }));
-
-
 
 
 app.post('/test-update-tokens', async (req, res) => {
@@ -2075,22 +2089,7 @@ app.get('*', (req, res, next) => {
   console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);
   res.render('index'); // Serve the frontend for all other routes
 });
-app.use((req, res, next) => {
-    
-  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
-    
-  // Only log `req.body` for requests that might have a body
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-    if (req.originalUrl === '/webhook') {
-      console.log('Webhook raw body:', req.body ? req.body.toString() : 'undefined');
-    } else {
-      console.log('Parsed body:', req.body ? req.body : 'No body sent');
-    }
-  }else{
-    console.log('Caught: '+req.originalUrl );  
-  }
-  next();
-});
+
 
 
 (async () => {
