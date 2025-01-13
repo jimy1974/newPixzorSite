@@ -21,7 +21,7 @@ const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const bodyParser = require('body-parser');
+//const bodyParser = require('body-parser');
 const cors = require("cors");
 const { OpenAI } = require("openai");
 const app = express();
@@ -57,6 +57,29 @@ const publicImagesPath = path.resolve(__dirname, '../SiteData/public-images');
 app.use('/personal-images', express.static(personalImagesPath));
 app.use('/public-images', express.static(publicImagesPath));
 //app.use('/personal-images', express.static(path.join(__dirname, 'public/personal-images')));
+
+// Middleware
+app.use(cors());
+
+// Middleware to parse JSON data
+app.use(express.json());
+
+
+// Middleware to parse URL-encoded data (form submissions)
+app.use(express.urlencoded({ extended: true }));
+
+app.use(session({
+  secret: `${process.env.SESSION_SECRET}`, // Use an environment variable in production
+  resave: false,
+  saveUninitialized: false,
+}));
+
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+const LocalStrategy = require('passport-local').Strategy;
+
 
 // Ensure the directories exist
 if (!fs.existsSync(personalImagesPath)) {
@@ -168,26 +191,7 @@ app.post('/test-update-tokens', async (req, res) => {
 });
 
 
-// Middleware
-app.use(cors());
 
-// Middleware to parse JSON data
-app.use(express.json());
-
-// Middleware to parse URL-encoded data (form submissions)
-app.use(express.urlencoded({ extended: true }));
-
-app.use(session({
-  secret: `${process.env.SESSION_SECRET}`, // Use an environment variable in production
-  resave: false,
-  saveUninitialized: false,
-}));
-
-app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
-app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
-const LocalStrategy = require('passport-local').Strategy;
 
 
 const nudityKeywords = [
