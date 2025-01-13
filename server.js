@@ -21,7 +21,6 @@ const multer = require('multer');
 const upload = multer({ dest: 'uploads/' }); // Configure storage location and filename options
 const fs = require('fs');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-//const bodyParser = require('body-parser');
 const cors = require("cors");
 const { OpenAI } = require("openai");
 const app = express();
@@ -95,21 +94,12 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
 });
 
-
 app.use((req, res, next) => {
-  console.log(`[Body Parsing Middleware] Request URL: ${req.originalUrl}, Method: ${req.method}`);
-
-  // Only log `req.body` for requests that might have a body
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') {
-    if (req.originalUrl === '/webhook') {
-      console.log('Webhook raw body:', req.body ? req.body.toString('utf8') : 'undefined');
-    } else if (req.is('application/json') || req.is('application/x-www-form-urlencoded')) {
-      console.log('Parsed body:', req.body ? req.body : 'No body sent');
-    }
+  if (req.originalUrl === '/webhook') {
+    next(); // Skip body parsing for the webhook route
   } else {
-    console.log('Caught:', req.originalUrl);
+    express.json()(req, res, next); // Apply express.json() to all other routes
   }
-  next();
 });
 
 // Webhook route must be placed before body-parser middleware
