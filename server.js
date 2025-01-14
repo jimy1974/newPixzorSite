@@ -124,6 +124,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     case 'checkout.session.completed':
       const session = event.data.object;
       console.log('Checkout session completed:', session.id);
+      //console.log('Session metadata:', session.metadata); // Log metadata
 
       try {
         const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
@@ -133,12 +134,15 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         const userId = fullSession.metadata.userId;
         const tokens = parseFloat(fullSession.metadata.tokens);
 
+        console.log(`User ID: ${userId}, Tokens: ${tokens}`); // Log extracted values
+
         if (!userId || isNaN(tokens)) {
           throw new Error('Invalid metadata in session');
         }
 
         const user = await User.findByPk(userId);
         if (user) {
+          console.log(`Current tokens before update: ${user.tokens}`); // Log current balance
           user.tokens = parseFloat(user.tokens) + tokens;
           await user.save();
           console.log(`Successfully added ${tokens} tokens to user ${user.username}`);
