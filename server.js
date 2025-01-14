@@ -104,26 +104,15 @@ app.use((req, res, next) => {
   }
 });
 
-
-// Strip Webhook Express app
-const webhookApp = express();
-const webhookPort = 4000; // Port for the webhook
-
-// Middleware for the webhook app
-webhookApp.use(express.raw({ type: 'application/json' }));
-
 // Webhook route must be placed before body-parser middleware
-webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
+
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  console.log('webhookSecret:', webhookSecret); // Log the raw body    
-  console.log('Stripe Signature:', sig); // Log the signature
-  console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
-
   let event;
   try {
-    // Ensure the raw body is passed as a Buffer or string
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
@@ -170,12 +159,8 @@ webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (re
   }
 });
 
-// Start the webhook app
-webhookApp.listen(webhookPort, () => {
-  console.log(`Webhook app running on port ${webhookPort}`);
-});
 
-webhookApp.post('/test-update-tokens', async (req, res) => {
+app.post('/test-update-tokens', async (req, res) => {
   console.log('Received request to /test-update-tokens'); // Log the request
 
   const { userId, tokens } = req.body;
