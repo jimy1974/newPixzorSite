@@ -114,13 +114,12 @@ webhookApp.use(express.raw({ type: 'application/json' }));
 
 // Webhook route must be placed before body-parser middleware
 webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
-
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  console.log('webhookSecret:', webhookSecret );
-    
+  console.log('Stripe Signature:', sig); // Log the signature
+  console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
+
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -168,6 +167,7 @@ webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (re
       res.status(200).json({ received: true });
   }
 });
+
 // Start the webhook app
 webhookApp.listen(webhookPort, () => {
   console.log(`Webhook app running on port ${webhookPort}`);
