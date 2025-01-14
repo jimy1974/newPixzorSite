@@ -104,16 +104,8 @@ app.use((req, res, next) => {
   }
 });
 
-
-// Strip Webhook Express app
-const webhookApp = express();
-const webhookPort = 4000; // Port for the webhook
-
-// Middleware for the webhook app
-webhookApp.use(express.raw({ type: 'application/json' }));
-
 // Webhook route must be placed before body-parser middleware
-webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
 
   const sig = req.headers['stripe-signature'];
@@ -167,12 +159,8 @@ webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (re
   }
 });
 
-// Start the webhook app
-webhookApp.listen(webhookPort, () => {
-  console.log(`Webhook app running on port ${webhookPort}`);
-});
 
-webhookApp.post('/test-update-tokens', async (req, res) => {
+app.post('/test-update-tokens', async (req, res) => {
   console.log('Received request to /test-update-tokens'); // Log the request
 
   const { userId, tokens } = req.body;
