@@ -1487,6 +1487,7 @@ app.get('/api/public-posts', async (req, res) => {
 app.get('/api/image-details/:id', async (req, res) => {
   try {
     const imageId = req.params.id;
+    const currentUserId = req.user ? req.user.id : null; // Get the logged-in user's ID
 
     console.log(`[DEBUG] Fetching details for Image ID: ${imageId}`);
 
@@ -1503,7 +1504,7 @@ app.get('/api/image-details/:id', async (req, res) => {
         'personalImageId',
         'createdAt',
         'updatedAt',
-        'likes' // Explicitly include the likes field
+        'likes', // Explicitly include the likes field
       ],
       include: [{ model: User, as: 'user', attributes: ['username'] }],
     });
@@ -1513,11 +1514,12 @@ app.get('/api/image-details/:id', async (req, res) => {
       return res.json({
         imageUrl: image.imageUrl,
         thumbnailUrl: image.thumbnailUrl,
-        likes: image.likes || 0, // Include likes count  
+        likes: image.likes || 0, // Include likes count
         prompt: image.prompt,
         username: image.user?.username || 'Unknown User',
         userId: image.userId,
         isPublic: true,
+        isOwner: currentUserId === image.userId, // Check if the current user owns the image
       });
     } else {
       console.log(`[DEBUG] Image ID ${imageId} not found in PublicImage, checking PersonalImage.`);
@@ -1532,7 +1534,7 @@ app.get('/api/image-details/:id', async (req, res) => {
           'userId',
           'createdAt',
           'updatedAt',
-          'likes' // Include likes for PersonalImage too
+          'likes', // Include likes for PersonalImage too
         ],
         include: [{ model: User, as: 'user', attributes: ['username'] }],
       });
@@ -1547,6 +1549,7 @@ app.get('/api/image-details/:id', async (req, res) => {
           username: image.user?.username || 'Unknown User',
           userId: image.userId,
           isPublic: image.isPublic,
+          isOwner: currentUserId === image.userId, // Check if the current user owns the image
         });
       }
     }

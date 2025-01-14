@@ -1997,12 +1997,21 @@ button.active {
 
       <!-- Action Buttons with Icons and Tooltips -->
       <div class="flex flex-wrap gap-2">
+          
         <div class="relative group">
           <a id="download-button" href="#" class="bg-green-600 text-white p-2 rounded flex items-center" download>
             <i class="fas fa-download"></i>
           </a>
           <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Download</span>
         </div>
+          
+         <!-- Delete Button (Conditional) -->
+        <div id="delete-button-container" class="relative group hidden">
+          <button id="delete-button-modal" class="bg-red-600 text-white p-2 rounded flex items-center" aria-label="Delete Image">
+            <i class="fas fa-trash"></i>
+          </button>
+          <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">Delete</span>
+        </div>  
           
           
         <div class="relative group">
@@ -2786,67 +2795,74 @@ async function loadUserProfile(userId) {
 
 
     function openCommentsModal(imageId, imageUrl, source) {
-
-
       const modalImage = document.getElementById('modal-image');
       const modalPrompt = document.getElementById('modal-prompt');
       const modalUserProfile = document.getElementById('modal-user-profile');
       const downloadButton = document.getElementById('download-button');
+      const deleteButtonContainer = document.getElementById('delete-button-container');
+      const deleteButtonModal = document.getElementById('delete-button-modal');
 
+      // Set image and download link
       modalImage.src = imageUrl;
       downloadButton.href = imageUrl;
       downloadButton.download = `image-${imageId}.jpg`;
 
+      // Fetch image details
       fetch(`/api/image-details/${imageId}`)
-          .then(response => response.json())
-          .then(data => {
-            modalPrompt.textContent = data.prompt || 'No prompt available.';
-            modalUserProfile.textContent = data.username || 'Unknown User';
-            modalUserProfile.href = `/user-profile/${data.userId}`;
-            document.getElementById('like-count').textContent = data.likes || 0;
+        .then(response => response.json())
+        .then(data => {
+          // Update modal content
+          modalPrompt.textContent = data.prompt || 'No prompt available.';
+          modalUserProfile.textContent = data.username || 'Unknown User';
+          modalUserProfile.href = `/user-profile/${data.userId}`;
+          document.getElementById('like-count').textContent = data.likes || 0;
 
-            const likeButton = document.getElementById('like-button-modal');
-            if (data.isLiked) likeButton.classList.add('liked');
+          // Handle like button
+          const likeButton = document.getElementById('like-button-modal');
+          if (data.isLiked) likeButton.classList.add('liked');
 
-            // Attach click event
-            likeButton.addEventListener('click', () => {
-              const liked = !likeButton.classList.contains('liked');
-              likeButton.classList.toggle('liked', liked);
+          likeButton.addEventListener('click', () => {
+            const liked = !likeButton.classList.contains('liked');
+            likeButton.classList.toggle('liked', liked);
 
-              // Send like toggle request
-              fetch(`/api/like/${imageId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ liked, isPublic: data.isPublic }),
+            // Send like toggle request
+            fetch(`/api/like/${imageId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ liked, isPublic: data.isPublic }),
+            })
+              .then(response => response.json())
+              .then(update => {
+                document.getElementById('like-count').textContent = update.likes;
               })
-                .then(response => response.json())
-                .then(update => {
-                  document.getElementById('like-count').textContent = update.likes;
-                })
-                .catch(error => {
-                  console.error('Error toggling like:', error);
-                });
-            });
-          })
-          .catch(error => {
-            console.error('Error fetching image details:', error);
-            showToast('Failed to load image details.', 'error');
+              .catch(error => {
+                console.error('Error toggling like:', error);
+              });
           });
 
+          // Show/hide delete button based on ownership
+          if (data.isOwner) {
+            deleteButtonContainer.classList.remove('hidden'); // Show delete button
+            deleteButtonModal.setAttribute('data-id', imageId); // Set image ID for deletion
+          } else {
+            deleteButtonContainer.classList.add('hidden'); // Hide delete button
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching image details:', error);
+          showToast('Failed to load image details.', 'error');
+        });
 
-
+      // Update share links and browser history
       updateShareLinks(imageId, source);
       updateBrowserHistory(imageId, source);
-        
-      // Update the imageId to be the personalImageId if necessary
+
+      // Handle public/private image IDs for comments
       if (source === 'public') {
-        // Fetch the personalImageId from the public image
         fetch(`/api/public-image-details/${imageId}`)
           .then(response => response.json())
           .then(data => {
             const personalImageId = data.personalImageId;
-            
-            // Use personalImageId for comments
             setupComments(personalImageId);
           })
           .catch(error => {
@@ -2854,14 +2870,12 @@ async function loadUserProfile(userId) {
             showToast('Failed to load image details.', 'error');
           });
       } else {
-        // For personal images, use the imageId directly          
         setupComments(imageId);
-      }    
+      }
 
+      // Show the modal
       document.getElementById('comments-modal').classList.remove('hidden');
-        
     }
-
       
       
     
@@ -2948,6 +2962,59 @@ async function loadUserProfile(userId) {
             populateModelDropdownForImageSelection(selectedStyle);
           }
         });
+        
+        
+        const deleteButtonModal = document.getElementById('delete-button-modal');
+        if (deleteButtonModal) {
+          deleteButtonModal.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const imageId = deleteButtonModal.getAttribute('data-id');
+
+            // Show confirmation dialog
+            const isConfirmed = confirm('Are you sure you want to delete this image?');
+            if (!isConfirmed) {
+              return; // Stop if the user cancels
+            }
+
+            try {
+              // Close the comments modal
+              closeModal('comments-modal');
+
+              // Send delete request
+              const response = await fetch('/delete-private-image/' + imageId, { method: 'DELETE' });
+              if (response.ok) {
+                showToast('Image deleted successfully!', 'success');
+
+                // Remove the image card from the gallery
+                const imageCard = document.querySelector(`[data-id="${imageId}"]`);
+                if (imageCard) {
+                  // Notify Masonry about the element removal
+                  msnry.remove(imageCard);
+
+                  // Recalculate the layout to fill the gap
+                  msnry.layout();
+
+                  // Remove the card from the DOM
+                  imageCard.remove();
+
+                  // Clean up any references to the deleted image
+                  selectedImages.delete(imageId);
+
+                  // Reload the gallery to reflect the changes
+                  switchTab('profile');
+                    
+                } else {
+                  console.warn('Image card not found');
+                }
+              } else {
+                showToast('Failed to delete image', 'error');
+              }
+            } catch (error) {
+              console.error('Error deleting image:', error);
+              showToast('An error occurred while deleting the image', 'error');
+            }
+          });
+        }
 
  
 
@@ -3991,38 +4058,35 @@ function removeThumbnail() {
           badge.textContent = image.isPublic ? 'Public' : 'Private';
 
           // Build card content
-          imageCard.innerHTML = `
-            <div class="relative">
-              <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
-                   class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
-              <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
-                <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Style">
-                  Keep Style
-                </button>
-                <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Face">
-                  Keep Face
-                </button>
-                <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-2 py-1 rounded text-sm w-full" title="Keep Pose">
-                  Keep Pose
-                </button>
-              </div>
-              <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
-                <a href="${image.imageUrl}" download class="download-button bg-green-600 text-white p-1 rounded shadow hover:bg-green-500" title="Download">
-                  <i class="fas fa-download"></i>
-                </a>
-                <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
-                  <i class="fas fa-info-circle"></i>
-                </button>
-                <button class="delete-button bg-white text-red-600 p-1 rounded shadow hover:bg-green-100" data-id="${image.id}" title="Delete">
-                  <i class="fas fa-trash"></i>
-                </button>
-                <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
-                  <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
-                </button>
-              </div>
-            </div>
-          `;
-
+imageCard.innerHTML = `
+  <div class="relative">
+    <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
+         class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+    
+    <!-- Bottom Buttons (Keep Style, Face, Pose) -->
+    <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
+      <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Style">
+        <i class="fas fa-palette"></i>→
+      </button>
+      <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Face">
+        <i class="fas fa-user text-gray-200"></i>→
+      </button>
+      <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Pose">
+        <i class="fas fa-running"></i>→
+      </button>
+    </div>
+    
+    <!-- Top-Right Action Buttons (Info and Visibility Toggle) -->
+    <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
+      <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
+        <i class="fas fa-info-circle"></i>
+      </button>
+      <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
+        <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
+      </button>
+    </div>
+  </div>
+`;
           // Append the badge to the card
           imageCard.appendChild(badge);
 
@@ -4159,15 +4223,15 @@ function removeThumbnail() {
               populateModelDropdownForImageSelection(selectedStyle);
             }
           }
-
+          /*
           // Update the thumbnail container
           if (thumbnailContainer) {
             thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`;
             thumbnailContainer.style.display = 'block';
-          }
+          }*/
         }
       });
-
+      /*
       const deleteButton = imageCard.querySelector('.delete-button');
       deleteButton.addEventListener('click', async (event) => {
         event.stopPropagation();
@@ -4194,7 +4258,7 @@ function removeThumbnail() {
           console.error('Error deleting image:', error);
           showToast('An error occurred while deleting the image', 'error');
         }
-      });
+      });*/
 
       const toggleVisibilityButton = imageCard.querySelector('.toggle-visibility-button');
       toggleVisibilityButton.addEventListener('click', async (event) => {
