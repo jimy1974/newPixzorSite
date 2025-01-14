@@ -38,7 +38,6 @@ const subscriptionKey = process.env.CONTENT_SAFETY_KEY;
 const apiVersion = '2024-09-01';
 const contentSafety = new ContentSafety(endpoint, subscriptionKey, apiVersion);
 
-
 // Set up the view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -55,17 +54,13 @@ const publicImagesPath = path.resolve(__dirname, '../SiteData/public-images');
 // Serve static files for personal and public images
 app.use('/personal-images', express.static(personalImagesPath));
 app.use('/public-images', express.static(publicImagesPath));
-//app.use('/personal-images', express.static(path.join(__dirname, 'public/personal-images')));
 
 // Middleware
 app.use(cors());
 
-// Middleware to parse JSON data
-app.use(express.json());
-
-
-// Middleware to parse URL-encoded data (form submissions)
-app.use(express.urlencoded({ extended: true }));
+// Remove these global middleware lines:
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
   secret: `${process.env.SESSION_SECRET}`, // Use an environment variable in production
@@ -79,7 +74,6 @@ app.use(passport.session());
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 const LocalStrategy = require('passport-local').Strategy;
 
-
 // Ensure the directories exist
 if (!fs.existsSync(personalImagesPath)) {
   fs.mkdirSync(personalImagesPath, { recursive: true });
@@ -88,7 +82,6 @@ if (!fs.existsSync(personalImagesPath)) {
 if (!fs.existsSync(publicImagesPath)) {
   fs.mkdirSync(publicImagesPath, { recursive: true });
 }
-
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
@@ -165,7 +158,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
       res.status(200).json({ received: true });
   }
 });
-
 
 
 app.post('/test-update-tokens', async (req, res) => {
