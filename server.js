@@ -117,11 +117,13 @@ webhookApp.post('/webhook', express.raw({ type: 'application/json' }), async (re
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  console.log('webhookSecret:', webhookSecret); // Log the raw body    
   console.log('Stripe Signature:', sig); // Log the signature
   console.log('Raw body:', req.body.toString('utf8')); // Log the raw body
 
   let event;
   try {
+    // Ensure the raw body is passed as a Buffer or string
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err.message);
