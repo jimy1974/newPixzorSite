@@ -331,6 +331,7 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 
   const validBundles = {
+    "300": "3.00",
     "500": "5.00",
     "1200": "10.00",
     "3000": "20.00",
@@ -356,7 +357,7 @@ app.post('/create-checkout-session', async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'gbp',
             product_data: {
               name: `${tokens} Tokens for Pixzor`,
             },

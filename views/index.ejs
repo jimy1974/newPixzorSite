@@ -1831,14 +1831,13 @@ button.active {
       <form id="buy-tokens-form" class="mb-6">
         <label for="token-bundle" class="block mb-2">Select a Token Bundle:</label>
         <select id="token-bundle" class="w-full border rounded-lg p-2 mb-4 dropdown-menu">
-          <!-- Adjusted Token Options -->
-          <option value="500" data-price="5.00">500 Tokens - $5.00</option>
-          <option value="1000" data-price="10.00">1,000 Tokens - $10.00</option>
-          <option value="2500" data-price="20.00">2,500 Tokens - $20.00</option>            
-          <option value="4000" data-price="30.00">4,000 Tokens - $30.00</option>            
-          <option value="6000" data-price="40.00">6,000 Tokens - $40.00</option>            
-          <option value="10000" data-price="50.00">10,000 Tokens - $50.00</option>
-        </select>
+  <option value="300" data-price="3.00">300 Tokens - £3.00</option>
+  <option value="500" data-price="5.00">500 Tokens - £5.00</option>
+  <option value="1200" data-price="10.00">1,200 Tokens - £10.00</option>
+  <option value="3000" data-price="20.00">3,000 Tokens - £20.00</option>
+  <option value="5000" data-price="30.00">5,000 Tokens - £30.00</option>
+  <option value="20000" data-price="100.00">20,000 Tokens - £100.00</option>
+</select>
         <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-500">
           Purchase Tokens
         </button>
@@ -3347,48 +3346,43 @@ function closeModal(modalId) {
       document.getElementById('buy-tokens-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
-          const bundle = document.getElementById('token-bundle');
-          const tokens = bundle.value;
-          const price = bundle.options[bundle.selectedIndex].dataset.price;
+  const bundle = document.getElementById('token-bundle');
+  const tokens = bundle.value;
+  const price = bundle.options[bundle.selectedIndex].dataset.price;
 
-          // Predefined bundles for validation
-          const validBundles = {
-            "500": "5.00",
-            "1200": "10.00",
-            "3000": "20.00",
-            "5000": "30.00",
-            "20000": "100.00",
-          };
+  const validBundles = {
+    "300": "3.00",
+    "500": "5.00",
+    "1200": "10.00",
+    "3000": "20.00",
+    "5000": "30.00",
+    "20000": "100.00",
+  };
 
-          // Validate token-price pair
-          if (!validBundles[tokens] || validBundles[tokens] !== price) {
-            alert("Invalid token bundle selected. Please try again.");
-            return;
-          }
+  if (!validBundles[tokens] || validBundles[tokens] !== price) {
+    alert("Invalid token bundle selected. Please try again.");
+    return;
+  }
 
-          try {
-            const response = await fetch('/create-checkout-session', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tokens, price }), // Send tokens and price to the server
-            });
+  try {
+    const response = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tokens, price }),
+    });
 
-            const session = await response.json();
-            if (response.ok) {
-              // Replace with your actual Stripe publishable key
-              //const stripe = Stripe('pk_live_51QNNomGgZQx5JKvIyEzYuHbqZRdugWTVlseapCphcAL3gYdrXfSIN8R6toeaReScar1gFyxRODHv0XG1cf54xUsM00zJcyWw8j');
-                    
-              const stripe = Stripe('pk_test_51QNNomGgZQx5JKvI2PAzM2GO5f0ukOcam2RUMj0ceduOPIuoRmWgqt7nqs46lRF7eyKd46Q8MRs1OYX76xi7fxHQ00LwfUHss5');
-                
-              await stripe.redirectToCheckout({ sessionId: session.id });
-            } else {
-              alert('Failed to initiate payment');
-            }
-          } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while processing your payment');
-          }
-        });
+    const session = await response.json();
+    if (response.ok) {
+      const stripe = Stripe('pk_test_51QNNomGgZQx5JKvI2PAzM2GO5f0ukOcam2RUMj0ceduOPIuoRmWgqt7nqs46lRF7eyKd46Q8MRs1OYX76xi7fxHQ00LwfUHss5');
+      await stripe.redirectToCheckout({ sessionId: session.id });
+    } else {
+      alert('Failed to initiate payment');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred while processing your payment');
+  }
+});
 
 
 
