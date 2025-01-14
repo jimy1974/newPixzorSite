@@ -4872,7 +4872,10 @@ async function uploadImageWithProgress(formData) {
       if (xhr.status === 200) {
         status.textContent = 'Upload successful!';
         
-        loadPrivatePosts(); // Refresh the private posts to display the new image
+        // Perform the actual tab switching
+        switchTab('profile'); // Switch to profile view if not already done
+        
+
       } else {
         status.textContent = 'Upload failed.';
         
