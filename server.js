@@ -934,17 +934,6 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     }    
     
     
-
-    
-    /*
-  console.log('Editing image at path:', imagePath);
-  console.log('Selected style:', style);
-  console.log('Selected model:', model);
-  console.log('Keep Style:', keepStyle);
-  console.log('Keep Face:', keepFace);
-  console.log('Keep Pose:', keepPose);
-    */
-    
   try {
     
 
@@ -992,8 +981,8 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
 
     // Create a base payload object (without "adapter")
     const basePayload = {
-      width: Math.round(width), // Ensure width is an integer
-      height: Math.round(height), // Ensure height is an integer      
+      width: Math.round(Number(width)),
+      height: Math.round(Number(height)),  
       model: model || 'stable-diffusion-xl-v1-0', // Use model from request or default        
       prompt: updatedPrompt,
       negative_prompt: 'disfigured, blurry',

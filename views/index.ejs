@@ -3353,9 +3353,10 @@ document.getElementById('generate-button').addEventListener('click', async () =>
           model,
           keepStyle,
           keepFace,
-          keepPose,
-          width: dimensions.width, // Include width for /edit-image
-          height: dimensions.height, // Include height for /edit-image
+          keepPose,          
+          width: parseInt( dimensions.width , 10),
+          height: parseInt( dimensions.height, 10),
+          
         }
       : {
           prompt: prompt,
