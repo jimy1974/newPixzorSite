@@ -5701,6 +5701,38 @@ window.addEventListener('resize', () => {
   adjustTextareaHeight();       
 });
 
+      
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const imageId = urlParams.get('image');
+    
+    if (imageId) {
+        
+        fetch(`/api/image-details/${imageId}`)
+            .then(response => {
+                console.log('Fetch response:', response);
+                if (!response.ok) {
+                    showToast('The requested image could not be found or is no longer available.', 'error');
+                    throw new Error('Image not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Fetch data:', data);
+                if (data) {
+                    openCommentsModal(imageId, data.imageUrl, data.isPublic ? 'public' : 'personal');
+                } else {
+                    console.error('Image details could not be found.');
+                    showToast('The image details could not be loaded. Please try again later.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching image details:', error);
+                showToast('An error occurred while loading the image. Please try again later.', 'error');
+            });
+    } 
+});
   </script>
 </body>
 </html>
