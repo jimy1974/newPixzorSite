@@ -920,6 +920,8 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
   }
 
 
+    console.log('Width:', width, 'Type:', typeof width);
+    console.log('Height:', height, 'Type:', typeof height);
     
     // Modify the prompt to include the style if provided
     const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
@@ -933,6 +935,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     
     
 
+    
     /*
   console.log('Editing image at path:', imagePath);
   console.log('Selected style:', style);
@@ -989,7 +992,9 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
 
     // Create a base payload object (without "adapter")
     const basePayload = {
-      model: model || 'stable-diffusion-xl-v1-0', // Use model from request or default
+      width: Math.round(width), // Ensure width is an integer
+      height: Math.round(height), // Ensure height is an integer      
+      model: model || 'stable-diffusion-xl-v1-0', // Use model from request or default        
       prompt: updatedPrompt,
       negative_prompt: 'disfigured, blurry',
       image: base64Image,
@@ -998,9 +1003,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       guidance: guidance || 10,
       output_format: 'jpeg',
       response_format: 'url',
-      scheduler: 'euler',
-      width: Math.round(width), // Ensure width is an integer
-      height: Math.round(height), // Ensure height is an integer
+      scheduler: 'euler',      
     };
 
     // Convert the basePayload to a JSON string, then inject repeated "adapter" lines if needed
@@ -1023,7 +1026,8 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     }
 
     console.log('API Request Payload (string):', finalPayloadString);
-
+    
+      
     // Make the request to getimg.ai
     const options = {
       method: 'POST',
