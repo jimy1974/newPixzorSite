@@ -898,10 +898,11 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     keepFace,
     keepPose,
     isPublic,
+    width, // Add width here
+    height, // Add height here
   } = req.body;
-    
-    
-    // Validate width and height
+
+  // Validate width and height
   if (typeof width !== 'number' || typeof height !== 'number') {
     return res.status(400).json({ error: 'Width and height must be numbers' });
   }
@@ -918,10 +919,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     return res.status(400).json({ error: 'Width and height must be less than or equal to 4096' });
   }
 
-  if (!imagePath) {
-    console.error('No image path provided');
-    return res.status(400).json({ error: 'Image path is required for editing' });
-  }
+
     
     // Modify the prompt to include the style if provided
     const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
