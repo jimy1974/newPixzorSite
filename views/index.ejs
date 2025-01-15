@@ -1733,37 +1733,36 @@ button.active {
               </svg>
             </button>
 
-            <!-- Aspect Ratio Dropdown -->
-            <div class="custom-dropdown" id="aspect-ratio-select">
-              <div class="selected-option">
-                <i class="fas fa-crop-alt"></i>
-                <span>Ratio</span>
-                <i class="fas fa-chevron-down"></i>
-              </div>
-              <ul class="dropdown-options">
-                <li data-value="1:1">
-                  <i class="fas fa-square"></i>
-                  <span>1:1</span>
-                </li>
-                <li data-value="4:3">
-                  <i class="fas fa-image"></i>
-                  <span>4:3</span>
-                </li>
-                <li data-value="3:4">
-                  <i class="fas fa-image"></i>
-                  <span>3:4</span>
-                </li>
-                <li data-value="16:9">
-                  <i class="fas fa-desktop"></i>
-                  <span>16:9</span>
-                </li>
-                <li data-value="9:16">
-                  <i class="fas fa-mobile-alt"></i>
-                  <span>9:16</span>
-                </li>
-              </ul>
-            </div>
-
+          <!-- Aspect Ratio Dropdown -->
+        <div class="custom-dropdown" id="aspect-ratio-select">
+          <div class="selected-option">
+            <i class="fas fa-crop-alt"></i>
+            <span>1:1</span> <!-- Default to 1:1 -->
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <ul class="dropdown-options">
+            <li data-value="1:1">
+              <i class="fas fa-square"></i>
+              <span>1:1</span>
+            </li>
+            <li data-value="4:3">
+              <i class="fas fa-image"></i>
+              <span>4:3</span>
+            </li>
+            <li data-value="3:4">
+              <i class="fas fa-image"></i>
+              <span>3:4</span>
+            </li>
+            <li data-value="16:9">
+              <i class="fas fa-desktop"></i>
+              <span>16:9</span>
+            </li>
+            <li data-value="9:16">
+              <i class="fas fa-mobile-alt"></i>
+              <span>9:16</span>
+            </li>
+          </ul>
+        </div>
             <!-- Style Dropdown -->
             <select id="style-select" class="custom-select">
               <option value="" disabled selected>Style</option>
