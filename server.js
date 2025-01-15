@@ -999,8 +999,8 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       output_format: 'jpeg',
       response_format: 'url',
       scheduler: 'euler',
-      width: width, // Add width here
-      height: height, // Add height here
+      width: Math.round(width), // Ensure width is an integer
+      height: Math.round(height), // Ensure height is an integer
     };
 
     // Convert the basePayload to a JSON string, then inject repeated "adapter" lines if needed
