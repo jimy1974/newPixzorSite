@@ -899,6 +899,24 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     keepPose,
     isPublic,
   } = req.body;
+    
+    
+    // Validate width and height
+  if (typeof width !== 'number' || typeof height !== 'number') {
+    return res.status(400).json({ error: 'Width and height must be numbers' });
+  }
+
+  if (!Number.isInteger(width) || !Number.isInteger(height)) {
+    return res.status(400).json({ error: 'Width and height must be integers' });
+  }
+
+  if (width <= 0 || height <= 0) {
+    return res.status(400).json({ error: 'Width and height must be positive values' });
+  }
+
+  if (width > 4096 || height > 4096) {
+    return res.status(400).json({ error: 'Width and height must be less than or equal to 4096' });
+  }
 
   if (!imagePath) {
     console.error('No image path provided');
@@ -914,13 +932,17 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     if (flagResult.flagged) {
       return res.status(400).json({ error: flagResult.error });
     }    
+    
+    
 
+    /*
   console.log('Editing image at path:', imagePath);
   console.log('Selected style:', style);
   console.log('Selected model:', model);
   console.log('Keep Style:', keepStyle);
   console.log('Keep Face:', keepFace);
   console.log('Keep Pose:', keepPose);
+    */
     
   try {
     
@@ -1501,6 +1523,7 @@ app.get('/api/image-details/:id', async (req, res) => {
         'description',
         'prompt',
         'userId',
+          
         'personalImageId',
         'createdAt',
         'updatedAt',

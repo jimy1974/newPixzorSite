@@ -3259,9 +3259,14 @@ document.getElementById('generate-button').addEventListener('click', async () =>
 
   // Use selectedImageState.dimensions or fallback to options/defaults
   const dimensions = selectedImageState.dimensions || {
-    width: parseInt(options.width) || 800,
-    height: parseInt(options.height) || 600,
+      width: parseInt(options.width) || 800,
+      height: parseInt(options.height) || 600,
   };
+
+  // Ensure width and height are integers
+  dimensions.width = Math.round(dimensions.width);
+  dimensions.height = Math.round(dimensions.height);
+               
 
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
