@@ -1854,7 +1854,6 @@ button.active {
 
 
 
-
 <div id="options-modal" class="fixed z-50 inset-0 overflow-y-auto hidden" aria-modal="true" aria-labelledby="options-modal-title">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-gray-200 border-2 border-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
@@ -1882,16 +1881,26 @@ button.active {
           </div>
         </div>
 
-        <!-- Guidance Scale and Inference Steps -->
+        <!-- Guidance Scale Slider -->
         <div class="mb-4">
-          <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale</label>
-          <input type="number" step="0.1" id="guidance-scale-modal" value="10.0" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Guidance Scale">
-          <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps</label>
-          <input type="number" id="inference-steps-modal" value="25" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600" placeholder="Inference Steps">
+          <label for="guidance-scale-modal" class="block font-medium mb-1 text-gray-900">Guidance Scale (0–20)</label>
+          <div class="flex items-center space-x-2">
+            <input type="range" id="guidance-scale-modal" min="0" max="20" step="0.1" value="10" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="guidance-scale-value" class="text-sm text-gray-900">10</span>
+          </div>
+        </div>
+
+        <!-- Inference Steps Slider -->
+        <div class="mb-4">
+          <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps (1–50)</label>
+          <div class="flex items-center space-x-2">
+            <input type="range" id="inference-steps-modal" min="1" max="50" step="1" value="28" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="inference-steps-value" class="text-sm text-gray-900">28</span>
+          </div>
         </div>
 
         <!-- Image Strength Slider -->
-        <div class="mb-2">
+        <div class="mb-4">
           <label for="image-strength-modal" class="block font-medium mb-1 text-gray-900">Image Strength</label>
           <div class="flex items-center space-x-2">
             <input type="range" id="image-strength-modal" min="0" max="1" step="0.01" value="0.75" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
@@ -1907,15 +1916,15 @@ button.active {
           </div>
         </div>
 
-        <!-- Save Button -->
-        <div class="flex justify-end">
+        <!-- Reset and Save Buttons -->
+        <div class="flex justify-between">
+          <button type="button" id="reset-options" class="custom-button font-medium py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600">Reset</button>
           <button type="submit" class="custom-button font-medium py-2 px-4 bg-gray-700 text-white rounded-lg hover:bg-green-600">Save Options</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-    
     
 
   <!-- Setup Character Modal -->
@@ -3154,7 +3163,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     return;
   }
 
-   // Check if the user has enough tokens
+  // Check if the user has enough tokens
   const tokenCountElement = document.getElementById('token-count');
   const currentTokens = parseFloat(tokenCountElement.textContent.replace(' Tokens', ''));
 
@@ -3162,15 +3171,18 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     showToast('You do not have enough tokens to generate an image.', 'error');
     console.error('Not enough tokens');
     return;
-  }    
-    
+  }
+
   // Get the prompt and options
   const prompt = document.getElementById('prompt-input').value.trim();
   const options = JSON.parse(localStorage.getItem('options')) || {};
-  const dimensions = {
+
+  // Use selectedImageState.dimensions or fallback to options/defaults
+  const dimensions = selectedImageState.dimensions || {
     width: parseInt(options.width) || 800,
     height: parseInt(options.height) || 600,
   };
+
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
   const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75;
@@ -3196,13 +3208,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   }
 
   if (activeTab !== 'profile') {
-      
-      // Perform the actual tab switching
-      await switchTab('profile'); // Switch to profile view if not already done
-      
-      await delay(500);
-          
-      
+    // Perform the actual tab switching
+    await switchTab('profile'); // Switch to profile view if not already done
+    await delay(500);
   }
 
   // Add Placeholder
@@ -3217,9 +3225,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const imageContainer = document.createElement('div');
   imageContainer.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
   imageContainer.style.backgroundColor = '#2d2d2d';
-    
+
   const gridSizer = document.querySelector('.grid-sizer');
-  const masonryColumnWidth = gridSizer ? gridSizer.offsetWidth : 300;     
+  const masonryColumnWidth = gridSizer ? gridSizer.offsetWidth : 300;
   const thumbnailHeight = (dimensions.height / dimensions.width) * masonryColumnWidth; // Preserve aspect ratio
 
   imageContainer.style.width = `${masonryColumnWidth}px`;
@@ -3261,6 +3269,8 @@ document.getElementById('generate-button').addEventListener('click', async () =>
           keepStyle,
           keepFace,
           keepPose,
+          width: dimensions.width, // Include width for /edit-image
+          height: dimensions.height, // Include height for /edit-image
         }
       : {
           prompt: prompt,
@@ -3272,6 +3282,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
           style,
           model,
         };
+
+    // Debug: Log the payload
+    console.log('Payload:', payload);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -3324,9 +3337,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
     generateButton.textContent = selectedImage ? 'Modify' : 'Generate';
     generateButton.disabled = false;
   }
-  
 });
-
 
 
 // Update the strength value display when the slider changes
@@ -4170,12 +4181,9 @@ imageCard.innerHTML = `
             populateModelDropdownForImageSelection("");
             resetStylesToAllStyles();
             removeThumbnail();
-            /*
-            if (thumbnailContainer) {
-              thumbnailContainer.innerHTML = '';
-              thumbnailContainer.style.display = 'none';
-              delete thumbnailContainer.dataset.imagePath;
-            }*/
+            // Reset selectedImageState.dimensions
+            selectedImageState.dimensions = null;  
+
           }
         } else {
           const allCards = document.querySelectorAll('.image-card');
@@ -4196,12 +4204,42 @@ imageCard.innerHTML = `
           showCreateImage();
           updatePromptBox(image);
 
-          // Debug: Log the state of the toggle buttons
-          console.log('Toggle Button States on Image Selection:');
-          console.log('Keep Face Button Active:', faceButton.classList.contains('active'));
-          console.log('Keep Style Button Active:', styleButton.classList.contains('active'));
-          console.log('Keep Pose Button Active:', poseButton.classList.contains('active'));
+          // Calculate aspect ratio from the thumbnail
+        const thumbnailImg = new Image();
+        thumbnailImg.src = image.thumbnailUrl; // Use the thumbnail URL
 
+        thumbnailImg.onload = () => {
+          const thumbnailAspectRatio = thumbnailImg.width / thumbnailImg.height;
+
+          // Set dimensions for the original image based on the thumbnail's aspect ratio
+          const defaultWidth = 800; // Or any other default value
+          const calculatedHeight = defaultWidth / thumbnailAspectRatio;
+
+          selectedImageState.dimensions = {
+            width: defaultWidth,
+            height: calculatedHeight,
+          };
+
+          // Debug: Log the calculated dimensions
+          console.log('selectedImageState.dimensions.width:', selectedImageState.dimensions.width);
+          console.log('selectedImageState.dimensions.height:', selectedImageState.dimensions.height);
+        };
+
+        thumbnailImg.onerror = () => {
+          console.error('Failed to load thumbnail for aspect ratio calculation.');
+          // Fallback to default dimensions
+          selectedImageState.dimensions = {
+            width: 800,
+            height: 600,
+          };
+        };
+
+      // Debug: Log the state of the toggle buttons
+      console.log('Toggle Button States on Image Selection:');
+      console.log('Keep Face Button Active:', faceButton.classList.contains('active'));
+      console.log('Keep Style Button Active:', styleButton.classList.contains('active'));
+      console.log('Keep Pose Button Active:', poseButton.classList.contains('active'));
+      
           // Update the selected image state with the current toggle button states
           selectedImageState = {
             imageId: image.id,
@@ -4978,27 +5016,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
   // Default options with HD toggle support
   const options = JSON.parse(localStorage.getItem('options')) || {
     width: 800,
     height: 600,
     guidanceScale: 10,
-    inferenceSteps: 25,
-    isHD: false, // Add HD toggle state
+    inferenceSteps: 28,
+    imageStrength: 0.75,
+    isHD: false,
   };
 
-  // Sync width, height, and other inputs
+  // Get input elements
   const widthInput = document.getElementById('width-modal');
   const heightInput = document.getElementById('height-modal');
   const guidanceScaleInput = document.getElementById('guidance-scale-modal');
+  const guidanceScaleValue = document.getElementById('guidance-scale-value');
   const inferenceStepsInput = document.getElementById('inference-steps-modal');
+  const inferenceStepsValue = document.getElementById('inference-steps-value');
+  const imageStrengthInput = document.getElementById('image-strength-modal');
+  const imageStrengthValue = document.getElementById('image-strength-value');
   const hdToggle = document.getElementById('hd-toggle');
   const tokenCostDisplay = document.getElementById('token-cost-display');
   const styleSelect = document.getElementById('style-select');
   const modelSelect = document.getElementById('model-select');
+  const resetButton = document.getElementById('reset-options');
 
   // Get the custom dropdown elements
   const aspectRatioSelect = document.getElementById('aspect-ratio-select');
@@ -5034,7 +5076,11 @@ document.addEventListener('DOMContentLoaded', () => {
   widthInput.value = options.width;
   heightInput.value = options.height;
   guidanceScaleInput.value = options.guidanceScale;
+  guidanceScaleValue.textContent = options.guidanceScale;
   inferenceStepsInput.value = options.inferenceSteps;
+  inferenceStepsValue.textContent = options.inferenceSteps;
+  imageStrengthInput.value = options.imageStrength;
+  imageStrengthValue.textContent = options.imageStrength;
   hdToggle.checked = options.isHD;
 
   // Sync aspect ratio dropdown
@@ -5090,8 +5136,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Function to update dimensions based on HD toggle and aspect ratio
-  function updateDimensions() {    
-    const selectedRatio = getSelectedAspectRatio(); // Use the custom dropdown value    
+  function updateDimensions() {
+    const selectedRatio = getSelectedAspectRatio(); // Use the custom dropdown value
 
     const dimensions = {
       '1:1': { standard: [800, 800], hd: [2000, 2000] },
@@ -5115,8 +5161,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update token cost display
     updateTokenCost();
-
   }
+
+  // Update slider values when they change
+  guidanceScaleInput.addEventListener('input', () => {
+    guidanceScaleValue.textContent = guidanceScaleInput.value;
+    options.guidanceScale = parseFloat(guidanceScaleInput.value);
+    localStorage.setItem('options', JSON.stringify(options));
+  });
+
+  inferenceStepsInput.addEventListener('input', () => {
+    inferenceStepsValue.textContent = inferenceStepsInput.value;
+    options.inferenceSteps = parseInt(inferenceStepsInput.value, 10);
+    localStorage.setItem('options', JSON.stringify(options));
+  });
+
+  imageStrengthInput.addEventListener('input', () => {
+    imageStrengthValue.textContent = imageStrengthInput.value;
+    options.imageStrength = parseFloat(imageStrengthInput.value);
+    localStorage.setItem('options', JSON.stringify(options));
+  });
+
+  // Reset button functionality
+  resetButton.addEventListener('click', () => {
+    // Reset to default values
+    widthInput.value = 800;
+    heightInput.value = 600;
+    guidanceScaleInput.value = 10;
+    guidanceScaleValue.textContent = 10;
+    inferenceStepsInput.value = 28;
+    inferenceStepsValue.textContent = 28;
+    imageStrengthInput.value = 0.75;
+    imageStrengthValue.textContent = 0.75;
+    hdToggle.checked = false;
+
+    // Save reset values to localStorage
+    options.width = 800;
+    options.height = 600;
+    options.guidanceScale = 10;
+    options.inferenceSteps = 28;
+    options.imageStrength = 0.75;
+    options.isHD = false;
+    localStorage.setItem('options', JSON.stringify(options));
+
+    // Update token cost display
+    updateTokenCost();
+  });
 
   // Update token cost when width, height, or model changes
   widthInput.addEventListener('input', updateTokenCost);
