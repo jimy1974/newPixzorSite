@@ -1035,7 +1035,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
           .join(',\n');
 
         // Step 5: Append the adapter lines and close the JSON object
-        finalPayloadString += adapterLines + '\n}';
+        finalPayloadString += adapterLines + ',\n}';
      }
       
     console.log('Final JSON Payload:', finalPayloadString);

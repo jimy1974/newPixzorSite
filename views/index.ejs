@@ -3233,6 +3233,24 @@ modalImage.addEventListener('click', (event) => {
   event.stopPropagation(); // Prevent the click from propagating to parent elements
   openFullscreenModal(modalImage.src); // Open the fullscreen modal with the current image URL
 });
+        
+        
+// Function to adjust dimensions to be multiples of 64 and within the range of 256 to 1536
+function adjustDimensions(dimensions) {
+  const minSize = 256;
+  const maxSize = 1536;
+  const multiple = 64;
+
+  // Ensure width is a multiple of 64 and within the range
+  dimensions.width = Math.max(minSize, Math.min(maxSize, dimensions.width));
+  dimensions.width = Math.round(dimensions.width / multiple) * multiple;
+
+  // Ensure height is a multiple of 64 and within the range
+  dimensions.height = Math.max(minSize, Math.min(maxSize, dimensions.height));
+  dimensions.height = Math.round(dimensions.height / multiple) * multiple;
+
+  return dimensions;
+}
   
 
 document.getElementById('generate-button').addEventListener('click', async () => {
@@ -3267,7 +3285,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   dimensions.width = Math.round(dimensions.width);
   dimensions.height = Math.round(dimensions.height);
                
-
+   // Adjust dimensions to be multiples of 64 and within the range of 256 to 1536
+  const adjustedDimensions = adjustDimensions(dimensions);
+    
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
   const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75;
