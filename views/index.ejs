@@ -2534,7 +2534,7 @@ function resetStylesToAllStyles() {
 
 
 
-function populateModelDropdownForImageSelection(selectedStyle) {
+function populateModelDropdownForImageSelection(selectedStyle, isImageSelected = false) {
   const modelDropdown = document.getElementById('model-select');
 
   if (!modelDropdown) {
@@ -2542,14 +2542,46 @@ function populateModelDropdownForImageSelection(selectedStyle) {
     return;
   }
 
-  // If no style is selected or "All-Styles" is selected, use the initial dropdown
+  // Clear the dropdown
+  modelDropdown.innerHTML = "";
+
+  // If no image is selected, default to Flux models
+  if (!isImageSelected) {
+    const fluxModels = [
+      { id: "flux-dev", label: "FLUX DEV (High Quality)" },
+      { id: "flux-schnell", label: "FLUX Schnell (High Quality)" },
+        
+      { id: "stable-diffusion-xl-v1-0", label: "Stable Diffusion XL (General)" },
+      { id: "real-cartoon-xl-v6", label: "RealCartoonXL v6 (Cartoon/Artistic)" },
+      { id: "sdvn7-niji-style-xl-v1", label: "SDVN7 NijiStyle XL (Anime)" },
+      { id: "animagine-xl-v-3-1", label: "Animagine XL v3.1 (Claymation/Artistic)" },
+      { id: "reproduction-v3-31", label: "Reproduction v3.31 (Crystal/Origami)" },
+      { id: "realvis-xl-v4", label: "RealVis XL v4 (Photo-Realistic)" },
+      { id: "juggernaut-xl-v10", label: "Juggernaut XL v10 (Versatile)" },
+      { id: "counterfeit-xl-v2-5", label: "Counterfeit XL v2.5 (Stylized)" },
+
+    ];
+
+    fluxModels.forEach((model) => {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = model.label;
+      modelDropdown.appendChild(option);
+    });
+
+    // Auto-select the first Flux model
+    if (fluxModels.length > 0) {
+      modelDropdown.value = fluxModels[0].id;
+    }
+
+    return;
+  }
+  /*
+  // If an image is selected, proceed with the original logic
   if (!selectedStyle || selectedStyle.toLowerCase() === "all-styles" || selectedStyle.toLowerCase() === "select-a-style") {
     populateInitialModelDropdown(); // Populate with the full list of models
     return;
-  }
-
-  // Clear the dropdown
-  modelDropdown.innerHTML = "";
+  }*/
 
   // Add the recommended model for the selected style
   const defaultModelId = styleToModelMap[selectedStyle];
@@ -4174,110 +4206,103 @@ imageCard.innerHTML = `
       });
 
       imgElement.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const toggleButtons = imageCard.querySelector('.toggle-buttons');
-        //const thumbnailContainer = document.getElementById('selected-thumbnail-container');
-        const generateButton = document.getElementById('generate-button');
+          event.stopPropagation();
+          const toggleButtons = imageCard.querySelector('.toggle-buttons');
+          const generateButton = document.getElementById('generate-button');
 
-        if (selectedImages.has(image.id)) {
-          selectedImages.delete(image.id);
-          imageCard.style.border = 'none';
-          imageCard.style.backgroundColor = 'transparent';
-          actionButtons.classList.add('hidden');
-          if (toggleButtons) toggleButtons.classList.add('hidden');
+          if (selectedImages.has(image.id)) {
+            selectedImages.delete(image.id);
+            imageCard.style.border = 'none';
+            imageCard.style.backgroundColor = 'transparent';
+            actionButtons.classList.add('hidden');
+            if (toggleButtons) toggleButtons.classList.add('hidden');
 
-          if (selectedImages.size === 0) {
-            populateModelDropdownForImageSelection("");
-            resetStylesToAllStyles();
-            removeThumbnail();
-            // Reset selectedImageState.dimensions
-            selectedImageState.dimensions = null;  
+            if (selectedImages.size === 0) {
+              // No image is selected, default to Flux models
+              populateModelDropdownForImageSelection("", false);
+              resetStylesToAllStyles();
+              removeThumbnail();
+              selectedImageState.dimensions = null;
+            }
+          } else {
+            const allCards = document.querySelectorAll('.image-card');
+            allCards.forEach((card) => {
+              card.style.border = 'none';
+              card.style.backgroundColor = 'transparent';
+              card.querySelector('.action-buttons')?.classList.add('hidden');
+              card.querySelector('.toggle-buttons')?.classList.add('hidden');
+            });
 
-          }
-        } else {
-          const allCards = document.querySelectorAll('.image-card');
-          allCards.forEach((card) => {
-            card.style.border = 'none';
-            card.style.backgroundColor = 'transparent';
-            card.querySelector('.action-buttons')?.classList.add('hidden');
-            card.querySelector('.toggle-buttons')?.classList.add('hidden');
-          });
+            selectedImages.clear();
+            selectedImages.add(image.id);
+            imageCard.style.border = '2px solid red';
+            imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
 
-          selectedImages.clear();
-          selectedImages.add(image.id);
-          imageCard.style.border = '2px solid red';
-          imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+            actionButtons.classList.remove('hidden');
+            if (toggleButtons) toggleButtons.classList.remove('hidden');
+            showCreateImage();
+            updatePromptBox(image);
 
-          actionButtons.classList.remove('hidden');
-          if (toggleButtons) toggleButtons.classList.remove('hidden');
-          showCreateImage();
-          updatePromptBox(image);
+            // Calculate aspect ratio from the thumbnail
+            const thumbnailImg = new Image();
+            thumbnailImg.src = image.thumbnailUrl;
 
-          // Calculate aspect ratio from the thumbnail
-        const thumbnailImg = new Image();
-        thumbnailImg.src = image.thumbnailUrl; // Use the thumbnail URL
+            thumbnailImg.onload = () => {
+              const thumbnailAspectRatio = thumbnailImg.width / thumbnailImg.height;
+              const defaultWidth = 800;
+              const calculatedHeight = defaultWidth / thumbnailAspectRatio;
 
-        thumbnailImg.onload = () => {
-          const thumbnailAspectRatio = thumbnailImg.width / thumbnailImg.height;
+              selectedImageState.dimensions = {
+                width: defaultWidth,
+                height: calculatedHeight,
+              };
 
-          // Set dimensions for the original image based on the thumbnail's aspect ratio
-          const defaultWidth = 800; // Or any other default value
-          const calculatedHeight = defaultWidth / thumbnailAspectRatio;
+              console.log('selectedImageState.dimensions.width:', selectedImageState.dimensions.width);
+              console.log('selectedImageState.dimensions.height:', selectedImageState.dimensions.height);
+            };
 
-          selectedImageState.dimensions = {
-            width: defaultWidth,
-            height: calculatedHeight,
-          };
+            thumbnailImg.onerror = () => {
+              console.error('Failed to load thumbnail for aspect ratio calculation.');
+              selectedImageState.dimensions = {
+                width: 800,
+                height: 600,
+              };
+            };
 
-          // Debug: Log the calculated dimensions
-          console.log('selectedImageState.dimensions.width:', selectedImageState.dimensions.width);
-          console.log('selectedImageState.dimensions.height:', selectedImageState.dimensions.height);
-        };
+            // Update the selected image state with the current toggle button states
+            selectedImageState = {
+              imageId: image.id,
+              keepFace: faceButton.classList.contains('active'),
+              keepStyle: styleButton.classList.contains('active'),
+              keepPose: poseButton.classList.contains('active'),
+            };
 
-        thumbnailImg.onerror = () => {
-          console.error('Failed to load thumbnail for aspect ratio calculation.');
-          // Fallback to default dimensions
-          selectedImageState.dimensions = {
-            width: 800,
-            height: 600,
-          };
-        };
+            console.log('Updated selectedImageState:', selectedImageState);
 
-      // Debug: Log the state of the toggle buttons
-      console.log('Toggle Button States on Image Selection:');
-      console.log('Keep Face Button Active:', faceButton.classList.contains('active'));
-      console.log('Keep Style Button Active:', styleButton.classList.contains('active'));
-      console.log('Keep Pose Button Active:', poseButton.classList.contains('active'));
-      
-          // Update the selected image state with the current toggle button states
-          selectedImageState = {
-            imageId: image.id,
-            keepFace: faceButton.classList.contains('active'),
-            keepStyle: styleButton.classList.contains('active'),
-            keepPose: poseButton.classList.contains('active'),
-          };
+            // Update the model dropdown based on the selected style
+            const styleSelect = document.getElementById('style-select');
+            if (styleSelect) {
+                
+              // Force the model dropdown to switch to a compatible model for image-to-image
 
-          // Debug: Log the updated selectedImageState
-          console.log('Updated selectedImageState:', selectedImageState);
-
-          // Update the model dropdown based on the selected style
-          const styleSelect = document.getElementById('style-select');
-          if (styleSelect) {
-            const selectedStyle = styleSelect.value;
-            if (selectedStyle.toLowerCase() === "all-styles" || selectedStyle === "") {
-              populateModelDropdownForImageSelection("stable-diffusion-xl-v1-0");
-            } else {
-              populateModelDropdownForImageSelection(selectedStyle);
+              if (styleSelect) {
+                const selectedStyle = styleSelect.value;
+                populateModelDropdownForImageSelection(selectedStyle, true); // Image is selected
+                              
+                styleSelect.addEventListener('change', (event) => {
+                    const selectedStyle = event.target.value;
+                    const isImageSelected = selectedImages.size > 0;
+                    populateModelDropdownForImageSelection(selectedStyle, isImageSelected);
+                });
+                  
+                
+              }
             }
           }
-          /*
-          // Update the thumbnail container
-          if (thumbnailContainer) {
-            thumbnailContainer.innerHTML = `<img src="${image.thumbnailUrl}" alt="Selected Thumbnail" class="thumbnail-image rounded-lg border border-gray-600">`;
-            thumbnailContainer.style.display = 'block';
-          }*/
-        }
       });
+            
+            
+            
       /*
       const deleteButton = imageCard.querySelector('.delete-button');
       deleteButton.addEventListener('click', async (event) => {
