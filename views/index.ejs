@@ -2110,13 +2110,17 @@ button.active {
       Pixzor is an AI-powered platform designed to help you create stunning, personalized images. 
       Upload a photo of yourself, and transform it into different styles or environments while maintaining 
       your unique face and body pose. This ensures <strong>character consistency</strong>, making it perfect 
-      for storytelling, avatars, or creative projects.
+      for storytelling. In the near future we also plane to provide <strong>AI-powered video animation.</strong>
     </p>
-    <p class="mb-4">
-      Our goal is to make creativity accessible to everyone. In the near future, we plan to expand 
-      into <strong>AI-powered video animation</strong>, allowing subscribers to bring their characters 
-      to life in dynamic, animated stories. Stay tuned for updates!
-    </p>
+
+    <!-- Example link in the Footer -->
+    <footer class="bg-gray-900 text-white p-4 text-center">
+      <p>
+        By using Pixzor, you agree to our 
+      <a id="terms-link" href="#" class="text-blue-400 hover:text-blue-300">Terms of Service</a>.    
+      </p>
+    </footer>
+      
     <p class="mb-4">
       For any inquiries, please contact us at: 
       <a href="mailto:contact@pixzor.com" class="text-blue-400 hover:text-blue-300">contact@pixzor.com</a>
@@ -2126,6 +2130,24 @@ button.active {
     </button>
   </div>
 </div>
+    
+    
+<!-- New Popup with Iframe -->
+<div id="iframe-popup" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+  <div class="bg-gray-800 text-white rounded-lg shadow-lg p-6 max-w-3xl w-full h-[80vh]">
+    <h2 class="text-xl font-bold mb-4">Terms of Service</h2>
+    <iframe 
+      id="iframe-content" 
+      src="/terms-of-service.html" 
+      class="w-full h-[calc(100%-3rem)] border border-gray-700 rounded-lg"
+      frameborder="0"
+    ></iframe>
+    <button id="close-iframe-popup" class="mt-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg">
+      Close
+    </button>
+  </div>
+</div>
+    
     
 <!-- Fullscreen Modal -->
 <div id="fullscreen-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50">
@@ -2995,6 +3017,23 @@ async function loadUserProfile(userId) {
         document.getElementById('about-popup').addEventListener('click', (e) => {
           if (e.target === document.getElementById('about-popup')) {
             document.getElementById('about-popup').classList.add('hidden');
+          }
+        });
+        
+        // Open the iframe popup (e.g., when clicking a "Terms of Service" link)
+        document.getElementById('terms-link').addEventListener('click', () => {
+          document.getElementById('iframe-popup').classList.remove('hidden');
+        });
+
+        // Close the iframe popup when clicking the close button
+        document.getElementById('close-iframe-popup').addEventListener('click', () => {
+          document.getElementById('iframe-popup').classList.add('hidden');
+        });
+
+        // Close the iframe popup when clicking outside
+        document.getElementById('iframe-popup').addEventListener('click', (e) => {
+          if (e.target === document.getElementById('iframe-popup')) {
+            document.getElementById('iframe-popup').classList.add('hidden');
           }
         });
 
