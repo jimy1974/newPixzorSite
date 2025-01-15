@@ -995,6 +995,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       scheduler: 'euler',      
     };
 
+      /*
     // Convert the basePayload to a JSON string, then inject repeated "adapter" lines if needed
     let finalPayloadString = JSON.stringify(basePayload, null, 2);
 
@@ -1013,9 +1014,32 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       // Now add those lines and close off the JSON object
       finalPayloadString += adapterLines + '\n}';
     }
+    console.log('API Request Payload (string):', finalPayloadString);*/
+      
+      
+      // Step 1: Convert the base payload to a JSON string
+    let finalPayloadString = JSON.stringify(basePayload, null, 2);
+     if (adapters.length > 0) {
+       // Step 2: Remove the closing brace and trim any trailing spaces or newlines
+       finalPayloadString = finalPayloadString.replace(/\}\s*$/, '').trimEnd();
 
-    console.log('API Request Payload (string):', finalPayloadString);
-    
+
+        // Step 3: If the JSON isn’t empty, add a comma
+        if (!finalPayloadString.trimEnd().endsWith('{')) {
+          finalPayloadString += ',\n';
+        }
+
+        // Step 4: Add multiple "adapter" lines
+        const adapterLines = adapters
+          .map((adapterValue) => `  "adapter": "${adapterValue}"`)
+          .join(',\n');
+
+        // Step 5: Append the adapter lines and close the JSON object
+        finalPayloadString += adapterLines + '\n}';
+     }
+      
+    console.log('Final JSON Payload:', finalPayloadString);
+   
       
     // Make the request to getimg.ai
     const options = {
