@@ -3235,11 +3235,15 @@ modalImage.addEventListener('click', (event) => {
 });
         
         
-// Function to adjust dimensions to be multiples of 64 and within the range of 256 to 1536
-function adjustDimensions(dimensions) {
+
+// Function to adjust dimensions to be multiples of 64 and within the specified range
+function adjustDimensions(dimensions, model) {
   const minSize = 256;
-  const maxSize = 1536;
   const multiple = 64;
+
+  // Determine the max size based on the selected model
+  const isFluxModel = model.toLowerCase().includes('flux'); // Check if the model is a FLUX model
+  const maxSize = isFluxModel ? 1280 : 1536; // Set max size to 1280 for FLUX models, 1536 for others
 
   // Ensure width is a multiple of 64 and within the range
   dimensions.width = Math.max(minSize, Math.min(maxSize, dimensions.width));
@@ -3275,6 +3279,9 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const prompt = document.getElementById('prompt-input').value.trim();
   const options = JSON.parse(localStorage.getItem('options')) || {};
 
+  const modelSelect = document.getElementById('model-select');
+  const model = modelSelect ? modelSelect.value : '';    
+    
   // Use selectedImageState.dimensions or fallback to options/defaults
   const dimensions = selectedImageState.dimensions || {
       width: parseInt(options.width) || 800,
@@ -3285,17 +3292,16 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   dimensions.width = Math.round(dimensions.width);
   dimensions.height = Math.round(dimensions.height);
                
-   // Adjust dimensions to be multiples of 64 and within the range of 256 to 1536
-  const adjustedDimensions = adjustDimensions(dimensions);
-    
+  // Adjust dimensions to be multiples of 64 and within the range
+  const adjustedDimensions = adjustDimensions(dimensions, model);
+
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
   const inferenceSteps = parseInt(options.inferenceSteps) || 25;
   const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75;
 
-  const styleSelect = document.getElementById('style-select');
-  const modelSelect = document.getElementById('model-select');
+  const styleSelect = document.getElementById('style-select');  
   const style = styleSelect ? styleSelect.value : '';
-  const model = modelSelect ? modelSelect.value : '';
+  
 
   const selectedThumbnailContainer = document.getElementById('selected-thumbnail-container');
   const selectedImage = selectedThumbnailContainer && selectedThumbnailContainer.dataset.imagePath;
