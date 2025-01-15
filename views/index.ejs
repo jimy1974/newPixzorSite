@@ -1870,23 +1870,27 @@ button.active {
       <h2 id="options-modal-title" class="text-xl font-bold mb-4 text-gray-900">Options</h2>
 
       <form id="options-form">
-        <!-- HD Toggle -->
+       
+          <div class="flex items-center mt-2">
+  <input type="checkbox" id="lock-aspect-ratio" class="mr-2" checked>
+  <label for="lock-aspect-ratio" class="text-sm text-gray-900">Lock Aspect Ratio</label>
+</div>
+          
+        <!-- Width Slider -->
         <div class="mb-4">
-          <label class="flex items-center space-x-2">
-            <input type="checkbox" id="hd-toggle" class="form-checkbox h-5 w-5 text-blue-600">
-            <span class="text-gray-900">Enable HD Resolution</span>
-          </label>
+          <label for="width-slider" class="block font-medium mb-1 text-gray-900">Width</label>
+          <div class="flex items-center space-x-2">
+            <input type="range" id="width-slider" min="256" max="1536" step="64" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="width-value" class="text-sm text-gray-900">800</span>
+          </div>
         </div>
 
-        <!-- Width and Height Inputs -->
+        <!-- Height Slider -->
         <div class="mb-4">
-          <label for="width-modal" class="block font-medium mb-1 text-gray-900">Width</label>
-          <input type="number" id="width-modal" value="800" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Width (e.g., 800)">
-          <label for="height-modal" class="block font-medium mb-1 text-gray-900">Height</label>
-          <input type="number" id="height-modal" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 mb-2 text-gray-900 placeholder-gray-600" placeholder="Height (e.g., 600)">
-          <div class="flex items-center mt-2">
-            <input type="checkbox" id="lock-aspect-ratio" class="mr-2" checked>
-            <label for="lock-aspect-ratio" class="text-sm text-gray-900">Lock Aspect Ratio</label>
+          <label for="height-slider" class="block font-medium mb-1 text-gray-900">Height</label>
+          <div class="flex items-center space-x-2">
+            <input type="range" id="height-slider" min="256" max="1536" step="64" value="600" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="height-value" class="text-sm text-gray-900">600</span>
           </div>
         </div>
 
@@ -2321,7 +2325,15 @@ const styleToModelMap = {
   "woodcarving": "stable-diffusion-xl-v1-0", // Best for 3D wood textures
 };
 
-
+// Function to close a modal
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    document.body.classList.remove('overflow-hidden');
+  }
+}
 
       
       
@@ -3491,15 +3503,7 @@ function openModal(modalId) {
   }
 }
 
-// Function to close a modal
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.add('hidden');
-    document.body.classList.remove('modal-open');
-    document.body.classList.remove('overflow-hidden');
-  }
-}
+
 
 
        document.getElementById('options-button').addEventListener('click', () => {
@@ -3605,63 +3609,7 @@ function closeModal(modalId) {
         }
       });
 
-      // Handle Options Form Submission
-        document.getElementById('options-form').addEventListener('submit', (e) => {
-          e.preventDefault();
-
-          const width = parseInt(document.getElementById('width-modal').value, 10);
-          const height = parseInt(document.getElementById('height-modal').value, 10);
-          const guidanceScale = parseFloat(document.getElementById('guidance-scale-modal').value);
-          const inferenceSteps = parseInt(document.getElementById('inference-steps-modal').value, 10);
-
-          // Validate inputs
-          if (!width || !height || !guidanceScale || !inferenceSteps) {
-            showToast('Please fill in all option fields.', 'error');
-            return;
-          }
-
-          // Calculate aspect ratio
-          const ratioMap = {
-            '1:1': 1,
-            '4:3': 4 / 3,
-            '3:4': 3 / 4,
-            '16:9': 16 / 9,
-            '9:16': 9 / 16,
-          };
-          const currentAspectRatio = width / height;
-          let selectedRatio = 'custom'; // Default to custom if no match
-
-          for (const [key, ratio] of Object.entries(ratioMap)) {
-            if (Math.abs(currentAspectRatio - ratio) < 0.01) { // Allow for small rounding differences
-              selectedRatio = key;
-              break;
-            }
-          }
-
-          // Update the custom aspect ratio dropdown
-          const aspectRatioSelect = document.getElementById('aspect-ratio-select');
-          const selectedOption = aspectRatioSelect.querySelector('.selected-option span');
-
-          // Update the selected option text
-          selectedOption.textContent = selectedRatio;
-
-          // Save options to localStorage
-          const options = {
-            width,
-            height,
-            guidanceScale,
-            inferenceSteps,
-            aspectRatio: selectedRatio, // Save the selected aspect ratio
-          };
-          localStorage.setItem('options', JSON.stringify(options));
-          
-          showToast('Options saved successfully!', 'success');
-
-          // Close the modal
-          closeModal('options-modal');
-        });
-
-
+     
 
 
       // Handle Setup Character Form Submission
@@ -5119,76 +5067,61 @@ document.addEventListener('DOMContentLoaded', () => {
       
       
 
+// Function to validate and adjust dimensions
+function validateAndAdjustDimensions(width, height, model) {
+  const minSize = 256;
+  const multiple = 64;
 
+  // Determine the max size based on the selected model
+  const isFluxModel = model.toLowerCase().includes('flux'); // Check if the model is a FLUX model
+  const maxSize = isFluxModel ? 1280 : 1536; // Set max size to 1280 for FLUX models, 1536 for others
+
+  // Ensure width is a multiple of 64 and within the range
+  width = Math.max(minSize, Math.min(maxSize, width));
+  width = Math.round(width / multiple) * multiple;
+
+  // Ensure height is a multiple of 64 and within the range
+  height = Math.max(minSize, Math.min(maxSize, height));
+  height = Math.round(height / multiple) * multiple;
+
+  return { width, height };
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Default options with HD toggle support
+  // Default options
   const options = JSON.parse(localStorage.getItem('options')) || {
     width: 800,
     height: 600,
     guidanceScale: 10,
     inferenceSteps: 28,
     imageStrength: 0.75,
-    isHD: false,
+    lockAspectRatio: true, // Default to locked aspect ratio
+    aspectRatio: '1:1', // Default aspect ratio
   };
 
   // Get input elements
-  const widthInput = document.getElementById('width-modal');
-  const heightInput = document.getElementById('height-modal');
+  const widthSlider = document.getElementById('width-slider');
+  const widthValue = document.getElementById('width-value');
+  const heightSlider = document.getElementById('height-slider');
+  const heightValue = document.getElementById('height-value');
   const guidanceScaleInput = document.getElementById('guidance-scale-modal');
   const guidanceScaleValue = document.getElementById('guidance-scale-value');
   const inferenceStepsInput = document.getElementById('inference-steps-modal');
   const inferenceStepsValue = document.getElementById('inference-steps-value');
   const imageStrengthInput = document.getElementById('image-strength-modal');
   const imageStrengthValue = document.getElementById('image-strength-value');
-  const hdToggle = document.getElementById('hd-toggle');
   const tokenCostDisplay = document.getElementById('token-cost-display');
   const styleSelect = document.getElementById('style-select');
   const modelSelect = document.getElementById('model-select');
   const resetButton = document.getElementById('reset-options');
+  const lockAspectRatioCheckbox = document.getElementById('lock-aspect-ratio');
 
   // Get the custom dropdown elements
   const aspectRatioSelect = document.getElementById('aspect-ratio-select');
   const selectedOption = aspectRatioSelect.querySelector('.selected-option span');
   const dropdownOptions = aspectRatioSelect.querySelectorAll('.dropdown-options li');
 
-  // Function to update the selected aspect ratio
-  function updateSelectedAspectRatio(value) {
-    // Update the selected option text
-    selectedOption.textContent = value;
-
-    // Close the dropdown (optional)
-    aspectRatioSelect.classList.remove('open');
-
-    // Trigger the updateDimensions function
-    updateDimensions();
-  }
-
-  // Add click event listeners to the dropdown options
-  dropdownOptions.forEach(option => {
-    option.addEventListener('click', () => {
-      const value = option.getAttribute('data-value');
-      updateSelectedAspectRatio(value);
-    });
-  });
-
-  // Function to get the current selected aspect ratio
-  function getSelectedAspectRatio() {
-    return selectedOption.textContent;
-  }
-
-  // Sync width, height, and other inputs
-  widthInput.value = options.width;
-  heightInput.value = options.height;
-  guidanceScaleInput.value = options.guidanceScale;
-  guidanceScaleValue.textContent = options.guidanceScale;
-  inferenceStepsInput.value = options.inferenceSteps;
-  inferenceStepsValue.textContent = options.inferenceSteps;
-  imageStrengthInput.value = options.imageStrength;
-  imageStrengthValue.textContent = options.imageStrength;
-  hdToggle.checked = options.isHD;
-
-  // Sync aspect ratio dropdown
+  // Aspect ratio map
   const ratioMap = {
     '1:1': 1,
     '4:3': 4 / 3,
@@ -5196,18 +5129,6 @@ document.addEventListener('DOMContentLoaded', () => {
     '16:9': 16 / 9,
     '9:16': 9 / 16,
   };
-  const currentAspectRatio = options.width / options.height;
-
-  let selectedRatio = '1:1'; // Default to 1:1 if no match
-  for (const [key, ratio] of Object.entries(ratioMap)) {
-    if (Math.abs(currentAspectRatio - ratio) < 0.01) {
-      selectedRatio = key;
-      break;
-    }
-  }
-
-  // Set the initial selected aspect ratio in the custom dropdown
-  updateSelectedAspectRatio(selectedRatio);
 
   // Function to calculate token cost
   function calculateTokenCost(width, height, model) {
@@ -5232,36 +5153,147 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Function to update token cost display
   function updateTokenCost() {
-    const width = parseInt(widthInput.value, 10);
-    const height = parseInt(heightInput.value, 10);
+    const width = parseInt(widthSlider.value, 10);
+    const height = parseInt(heightSlider.value, 10);
     const model = modelSelect.value;
 
     const tokenCost = calculateTokenCost(width, height, model);
     tokenCostDisplay.textContent = `${tokenCost.toFixed(2)} Tokens`;
   }
 
-  // Function to update dimensions based on HD toggle and aspect ratio
-  function updateDimensions() {
-    const selectedRatio = getSelectedAspectRatio(); // Use the custom dropdown value
+  // Function to validate and adjust dimensions
+  function validateAndAdjustDimensions(width, height, model) {
+    const minSize = 256;
+    const multiple = 64;
 
+    // Determine the max size based on the selected model
+    const isFluxModel = model.toLowerCase().includes('flux'); // Check if the model is a FLUX model
+    const maxSize = isFluxModel ? 1280 : 1536; // Set max size to 1280 for FLUX models, 1536 for others
+
+    // Ensure width is a multiple of 64 and within the range
+    width = Math.max(minSize, Math.min(maxSize, width));
+    width = Math.round(width / multiple) * multiple;
+
+    // Ensure height is a multiple of 64 and within the range
+    height = Math.max(minSize, Math.min(maxSize, height));
+    height = Math.round(height / multiple) * multiple;
+
+    return { width, height };
+  }
+
+  // Function to update the selected aspect ratio
+  function updateSelectedAspectRatio(value) {
+    // Update the selected option text
+    selectedOption.textContent = value;
+
+    // Close the dropdown (optional)
+    aspectRatioSelect.classList.remove('open');
+
+    // Update dimensions based on the new aspect ratio
+    updateDimensions(value);
+  }
+
+  // Add click event listeners to the dropdown options
+  dropdownOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      const value = option.getAttribute('data-value');
+      updateSelectedAspectRatio(value);
+    });
+  });
+
+  // Function to get the current selected aspect ratio
+  function getSelectedAspectRatio() {
+    return selectedOption.textContent;
+  }
+
+  // Function to update dimensions based on aspect ratio
+  function updateDimensions(selectedRatio) {
     const dimensions = {
-      '1:1': { standard: [800, 800], hd: [2000, 2000] },
-      '4:3': { standard: [800, 600], hd: [2000, 1500] },
-      '3:4': { standard: [600, 800], hd: [1500, 2000] },
-      '16:9': { standard: [1280, 720], hd: [1920, 1080] },
-      '9:16': { standard: [720, 1280], hd: [1080, 1920] },
+      '1:1': [1024, 1024],
+      '4:3': [1024, 768],
+      '3:4': [768, 1024],
+      '16:9': [1280, 720],
+      '9:16': [720, 1280],
     };
 
-    const [width, height] = hdToggle.checked ? dimensions[selectedRatio].hd : dimensions[selectedRatio].standard;
+    let [width, height] = dimensions[selectedRatio];
 
-    // Update width and height inputs in the modal
-    widthInput.value = width;
-    heightInput.value = height;
+    // Validate and adjust dimensions
+    const model = modelSelect.value;
+    const adjustedDimensions = validateAndAdjustDimensions(width, height, model);
+    width = adjustedDimensions.width;
+    height = adjustedDimensions.height;
 
-    // Save updated dimensions and HD state to localStorage
+    // Update width and height sliders
+    widthSlider.value = width;
+    widthValue.textContent = width;
+    heightSlider.value = height;
+    heightValue.textContent = height;
+
+    // Save updated dimensions to localStorage
     options.width = width;
     options.height = height;
-    options.isHD = hdToggle.checked;
+    options.aspectRatio = selectedRatio;
+    localStorage.setItem('options', JSON.stringify(options));
+
+    // Update token cost display
+    updateTokenCost();
+  }
+
+  // Function to adjust height based on width and aspect ratio
+  function adjustHeightBasedOnWidth() {
+    if (!lockAspectRatioCheckbox.checked) return; // Only adjust if aspect ratio is locked
+
+    const selectedRatio = getSelectedAspectRatio();
+    const ratio = ratioMap[selectedRatio];
+    const width = parseInt(widthSlider.value, 10);
+
+    // Ensure width is a valid number
+    if (isNaN(width)) return;
+
+    const height = Math.round(width / ratio);
+
+    // Validate and adjust dimensions
+    const model = modelSelect.value;
+    const adjustedDimensions = validateAndAdjustDimensions(width, height, model);
+
+    // Update height slider
+    heightSlider.value = adjustedDimensions.height;
+    heightValue.textContent = adjustedDimensions.height;
+
+    // Save updated dimensions to localStorage
+    options.width = adjustedDimensions.width;
+    options.height = adjustedDimensions.height;
+    localStorage.setItem('options', JSON.stringify(options));
+
+    // Update token cost display
+    updateTokenCost();
+  }
+
+  // Function to adjust width based on height and aspect ratio
+  function adjustWidthBasedOnHeight() {
+    if (!lockAspectRatioCheckbox.checked) return; // Only adjust if aspect ratio is locked
+
+    const selectedRatio = getSelectedAspectRatio();
+    const ratio = ratioMap[selectedRatio];
+    const height = parseInt(heightSlider.value, 10);
+
+    // Ensure height is a valid number
+    if (isNaN(height)) return;
+
+    const width = Math.round(height * ratio);
+
+    // Validate and adjust dimensions
+    const model = modelSelect.value;
+    const adjustedDimensions = validateAndAdjustDimensions(width, height, model);
+
+    // Update width slider
+    widthSlider.value = adjustedDimensions.width;
+    widthValue.textContent = adjustedDimensions.width;
+
+    // Save updated dimensions to localStorage
+    options.width = adjustedDimensions.width;
+    options.height = adjustedDimensions.height;
     localStorage.setItem('options', JSON.stringify(options));
 
     // Update token cost display
@@ -5269,55 +5301,98 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Update slider values when they change
+  widthSlider.addEventListener('input', () => {
+    widthValue.textContent = widthSlider.value;
+    adjustHeightBasedOnWidth();
+  });
+
+  heightSlider.addEventListener('input', () => {
+    heightValue.textContent = heightSlider.value;
+    adjustWidthBasedOnHeight();
+  });
+
+  // Handle guidance scale input
   guidanceScaleInput.addEventListener('input', () => {
     guidanceScaleValue.textContent = guidanceScaleInput.value;
     options.guidanceScale = parseFloat(guidanceScaleInput.value);
     localStorage.setItem('options', JSON.stringify(options));
   });
 
+  // Handle inference steps input
   inferenceStepsInput.addEventListener('input', () => {
     inferenceStepsValue.textContent = inferenceStepsInput.value;
     options.inferenceSteps = parseInt(inferenceStepsInput.value, 10);
     localStorage.setItem('options', JSON.stringify(options));
   });
 
+  // Handle image strength input
   imageStrengthInput.addEventListener('input', () => {
     imageStrengthValue.textContent = imageStrengthInput.value;
     options.imageStrength = parseFloat(imageStrengthInput.value);
     localStorage.setItem('options', JSON.stringify(options));
   });
 
-  // Reset button functionality
-  resetButton.addEventListener('click', () => {
-    // Reset to default values
-    widthInput.value = 800;
-    heightInput.value = 600;
-    guidanceScaleInput.value = 10;
-    guidanceScaleValue.textContent = 10;
-    inferenceStepsInput.value = 28;
-    inferenceStepsValue.textContent = 28;
-    imageStrengthInput.value = 0.75;
-    imageStrengthValue.textContent = 0.75;
-    hdToggle.checked = false;
+  // Handle form submission
+  document.getElementById('options-form').addEventListener('submit', (e) => {
+    e.preventDefault();
 
-    // Save reset values to localStorage
-    options.width = 800;
-    options.height = 600;
-    options.guidanceScale = 10;
-    options.inferenceSteps = 28;
-    options.imageStrength = 0.75;
-    options.isHD = false;
+    // Validate and adjust dimensions before saving
+    const model = modelSelect.value;
+    const width = parseInt(widthSlider.value, 10);
+    const height = parseInt(heightSlider.value, 10);
+    const adjustedDimensions = validateAndAdjustDimensions(width, height, model);
+
+    // Save options to localStorage
+    options.width = adjustedDimensions.width;
+    options.height = adjustedDimensions.height;
+    options.guidanceScale = parseFloat(guidanceScaleInput.value);
+    options.inferenceSteps = parseInt(inferenceStepsInput.value, 10);
+    options.imageStrength = parseFloat(imageStrengthInput.value);
+    options.aspectRatio = getSelectedAspectRatio();
+    options.lockAspectRatio = lockAspectRatioCheckbox.checked;
+
     localStorage.setItem('options', JSON.stringify(options));
 
-    // Update token cost display
-    updateTokenCost();
+    showToast('Options saved successfully!', 'success');
+
+    // Close the modal
+    closeModal('options-modal');
   });
 
-  // Update token cost when width, height, or model changes
-  widthInput.addEventListener('input', updateTokenCost);
-  heightInput.addEventListener('input', updateTokenCost);
-  hdToggle.addEventListener('change', updateDimensions);
+  
+// Reset button functionality
+resetButton.addEventListener('click', () => {
+  // Reset to default values
+  widthSlider.value = 800;
+  widthValue.textContent = 800;
+  heightSlider.value = 600;
+  heightValue.textContent = 600;
+  guidanceScaleInput.value = 10;
+  guidanceScaleValue.textContent = 10;
+  inferenceStepsInput.value = 28;
+  inferenceStepsValue.textContent = 28;
+  imageStrengthInput.value = 0.75;
+  imageStrengthValue.textContent = 0.75;
 
+  // Uncheck the "Lock Aspect Ratio" checkbox
+  lockAspectRatioCheckbox.checked = false;
+
+  // Update the selected aspect ratio text (without triggering dimension changes)
+  selectedOption.textContent = '1:1';
+
+  // Save reset values to localStorage
+  options.width = 800;
+  options.height = 600;
+  options.guidanceScale = 10;
+  options.inferenceSteps = 28;
+  options.imageStrength = 0.75;
+  options.lockAspectRatio = false; // Save the unchecked state
+  options.aspectRatio = '1:1';
+  localStorage.setItem('options', JSON.stringify(options));
+
+  // Update token cost display
+  updateTokenCost();
+});
   // Update token cost when style or model changes
   styleSelect.addEventListener('change', () => {
     const selectedStyle = styleSelect.value;
