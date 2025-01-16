@@ -486,14 +486,15 @@ app.get('/user-data', (req, res) => {
   if (req.isAuthenticated()) {
     res.json({
       loggedIn: true,
+      id: req.user.id,
       username: req.user.username,
       email: req.user.email,
       photo: req.user.photo || '/images/avatar.png',
       tokens: req.user.tokens,
-      isRegistered: true, // Authenticated users are considered registered
+      isRegistered: true,
     });
   } else {
-    res.json({ loggedIn: false, isRegistered: false }); // Unauthenticated users are not registered
+    res.json({ loggedIn: false, isRegistered: false }); // Always return JSON
   }
 });
 
@@ -2157,7 +2158,12 @@ app.get('*', (req, res, next) => {
     console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
     return next(); // Pass through for user profile routes
   }
-
+    
+  if (req.originalUrl.startsWith('/user-data/')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for user profile routes
+  }
+    
   console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);
   res.render('index'); // Serve the frontend for all other routes
 });
