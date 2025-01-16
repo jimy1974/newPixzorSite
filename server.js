@@ -852,8 +852,9 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
       imageUrl: savedImageUrl,
       thumbnailUrl: savedThumbnailUrl,
       prompt,
-      style, // Add style to the database
-      type: 'ai-generated', // Default to AI-generated
+      style,
+      model, // Save the AI model
+      type: 'ai-generated',
       isPublic: isPublic || false,
     });
 
@@ -865,7 +866,8 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
         imageUrl: savedImageUrl,
         thumbnailUrl: savedThumbnailUrl,
         prompt,
-        style, // Add style
+        style,
+        model, // Save the AI model
         type: 'ai-generated',
         likes: 0,
       });
@@ -994,28 +996,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
       response_format: 'url',
       scheduler: 'euler',      
     };
-
-      /*
-    // Convert the basePayload to a JSON string, then inject repeated "adapter" lines if needed
-    let finalPayloadString = JSON.stringify(basePayload, null, 2);
-
-    if (adapters.length > 0) {
-      // Remove the very last "}" from the JSON string
-      finalPayloadString = finalPayloadString.replace(/\}\s*$/, '');
-
-      // Insert a comma if the JSON isn't empty (it won't be)
-      finalPayloadString += ',\n';
-
-      // For each adapter, add a separate line:  "adapter": "face"
-      const adapterLines = adapters
-        .map((adapterValue) => `  "adapter": "${adapterValue}"`)
-        .join(',\n');
-
-      // Now add those lines and close off the JSON object
-      finalPayloadString += adapterLines + '\n}';
-    }
-    console.log('API Request Payload (string):', finalPayloadString);*/
-      
+  
       
       // Step 1: Convert the base payload to a JSON string
     let finalPayloadString = JSON.stringify(basePayload, null, 2);
@@ -1035,7 +1016,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
           .join(',\n');
 
         // Step 5: Append the adapter lines and close the JSON object
-        finalPayloadString += adapterLines + ',\n}';
+        finalPayloadString += adapterLines + '\n}';
      }
       
     console.log('Final JSON Payload:', finalPayloadString);
@@ -1090,18 +1071,19 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     const savedImageUrl = `/personal-images/${req.user.id}/${fileName}`;
     const savedThumbnailUrl = `/personal-images/${req.user.id}/thumbnails/thumb_${fileName}`;
 
-    // Save to PersonalImages table
+     // Save to PersonalImages table
     const newPersonalImage = await PersonalImage.create({
       userId: req.user.id,
       imageUrl: savedImageUrl,
       thumbnailUrl: savedThumbnailUrl,
       prompt,
       style,
+      model, // Save the AI model
       type: 'stylized-photo',
       isPublic: isPublic || false,
     });
 
-    // If public, also save to PublicImages table
+    // If public, save to PublicImages table
     if (isPublic) {
       await PublicImage.create({
         userId: req.user.id,
@@ -1110,6 +1092,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
         thumbnailUrl: savedThumbnailUrl,
         prompt,
         style,
+        model, // Save the AI model
         type: 'stylized-photo',
         likes: 0,
       });
@@ -1540,11 +1523,12 @@ app.get('/api/image-details/:id', async (req, res) => {
         'description',
         'prompt',
         'userId',
-          
         'personalImageId',
         'createdAt',
         'updatedAt',
         'likes', // Explicitly include the likes field
+        'style', // Include the style field
+        'model', // Include the model field
       ],
       include: [{ model: User, as: 'user', attributes: ['username'] }],
     });
@@ -1558,6 +1542,8 @@ app.get('/api/image-details/:id', async (req, res) => {
         prompt: image.prompt,
         username: image.user?.username || 'Unknown User',
         userId: image.userId,
+        style: image.style || null, // Return null if style is not set
+        model: image.model || null, // Return null if model is not set
         isPublic: true,
         isOwner: currentUserId === image.userId, // Check if the current user owns the image
       });
@@ -1575,6 +1561,8 @@ app.get('/api/image-details/:id', async (req, res) => {
           'createdAt',
           'updatedAt',
           'likes', // Include likes for PersonalImage too
+          'style', // Include the style field
+          'model', // Include the model field
         ],
         include: [{ model: User, as: 'user', attributes: ['username'] }],
       });
@@ -1588,6 +1576,8 @@ app.get('/api/image-details/:id', async (req, res) => {
           likes: image.likes || 0, // Include likes count
           username: image.user?.username || 'Unknown User',
           userId: image.userId,
+          style: image.style || null, // Return null if style is not set
+          model: image.model || null, // Return null if model is not set
           isPublic: image.isPublic,
           isOwner: currentUserId === image.userId, // Check if the current user owns the image
         });
@@ -1601,7 +1591,6 @@ app.get('/api/image-details/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch image details.' });
   }
 });
-
 
 
 

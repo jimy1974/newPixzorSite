@@ -30,6 +30,10 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING, // Matches the style column in the database
       allowNull: true, // Since it defaults to NULL
     },
+    model: {
+      type: DataTypes.STRING, // New field for the AI model
+      allowNull: true,
+    },
     type: {
       type: DataTypes.ENUM('ai-generated', 'user-uploaded', 'stylized-photo'), // Matches the ENUM
       defaultValue: 'ai-generated',

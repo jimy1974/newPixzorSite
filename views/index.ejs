@@ -1980,14 +1980,31 @@ button.active {
 </button>
 
 
-    <!-- Left Section: Image -->
-    <div class="md:w-2/3 bg-gray-100 flex items-start justify-center p-4 relative">
-      <!-- Fullscreen Icon -->
-      <button id="fullscreen-icon" class="absolute top-2 left-2 bg-black text-white p-1 rounded-full text-sm z-20" aria-label="Fullscreen Image">
-        <i class="fas fa-expand"></i>
-      </button>
-      <img id="modal-image" src="" alt="Full Image" class="w-full h-auto rounded-lg object-contain">
+<!-- Left Section: Image -->
+<div class="md:w-2/3 bg-gray-100 flex flex-col items-start p-4 relative">
+  <!-- Fullscreen Icon -->
+  <button id="fullscreen-icon" class="absolute top-2 left-2 bg-black text-white p-1 rounded-full text-sm z-20" aria-label="Fullscreen Image">
+    <i class="fas fa-expand"></i>
+  </button>
+
+  <!-- Image -->
+  <img id="modal-image" src="" alt="Full Image" class="w-full h-auto rounded-lg object-contain">
+
+  <!-- Style and Model Information -->
+  <div class="w-full mt-4 space-y-2">
+    <!-- Style (with a container for dynamic hiding) -->
+    <div id="style-container" class="flex flex-col hidden">
+      <h3 class="text-sm font-semibold text-gray-700">Style</h3>
+      <p id="modal-style" class="text-xs text-gray-500"></p>
     </div>
+
+    <!-- Model (with a container for dynamic hiding) -->
+    <div id="model-container" class="flex flex-col hidden">
+      <h3 class="text-sm font-semibold text-gray-700">Model</h3>
+      <p id="modal-model" class="text-xs text-gray-500"></p>
+    </div>
+  </div>
+</div>
 
     <!-- Right Section: Details and Comments -->
     <div class="md:w-1/3 p-6 flex flex-col space-y-4">
@@ -2015,6 +2032,8 @@ button.active {
       <div>
         <h3 class="text-lg font-bold text-black">Created By <a id="modal-user-profile" href="#" class="text-blue-500 hover:underline"></a></h3>    
       </div>
+        
+      
 
       <!-- Action Buttons with Icons and Tooltips -->
       <div class="flex flex-wrap gap-2">
@@ -2877,88 +2896,108 @@ async function loadUserProfile(userId) {
     }  
 
 
-    function openCommentsModal(imageId, imageUrl, source) {
-      const modalImage = document.getElementById('modal-image');
-      const modalPrompt = document.getElementById('modal-prompt');
-      const modalUserProfile = document.getElementById('modal-user-profile');
-      const downloadButton = document.getElementById('download-button');
-      const deleteButtonContainer = document.getElementById('delete-button-container');
-      const deleteButtonModal = document.getElementById('delete-button-modal');
+  function openCommentsModal(imageId, imageUrl, source) {
+    const modalImage = document.getElementById('modal-image');
+    const modalPrompt = document.getElementById('modal-prompt');
+    const modalUserProfile = document.getElementById('modal-user-profile');
+    const downloadButton = document.getElementById('download-button');
+    const modalStyle = document.getElementById('modal-style');
+    const modalModel = document.getElementById('modal-model');
+    const deleteButtonContainer = document.getElementById('delete-button-container');
+    const deleteButtonModal = document.getElementById('delete-button-modal');
+    const styleContainer = document.getElementById('style-container'); // Container for style
+    const modelContainer = document.getElementById('model-container'); // Container for model
 
-      // Set image and download link
-      modalImage.src = imageUrl;
-      downloadButton.href = imageUrl;
-      downloadButton.download = `image-${imageId}.jpg`;
+    // Set image and download link
+    modalImage.src = imageUrl;
+    downloadButton.href = imageUrl;
+    downloadButton.download = `image-${imageId}.jpg`;
 
-      // Fetch image details
-      fetch(`/api/image-details/${imageId}`)
-        .then(response => response.json())
-        .then(data => {
-          // Update modal content
-          modalPrompt.textContent = data.prompt || 'No prompt available.';
-          modalUserProfile.textContent = data.username || 'Unknown User';
-          modalUserProfile.href = `/user-profile/${data.userId}`;
-          document.getElementById('like-count').textContent = data.likes || 0;
+    // Fetch image details
+    fetch(`/api/image-details/${imageId}`)
+      .then(response => response.json())
+      .then(data => {
+        // Update modal content
+        modalPrompt.textContent = data.prompt || 'No prompt available.';
+        modalUserProfile.textContent = data.username || 'Unknown User';
+        modalUserProfile.href = `/user-profile/${data.userId}`;
+        document.getElementById('like-count').textContent = data.likes || 0;
 
-          // Handle like button
-          const likeButton = document.getElementById('like-button-modal');
-          if (data.isLiked) likeButton.classList.add('liked');
+        // Handle style display
+        if (data.style) {
+          modalStyle.textContent = data.style;
+          styleContainer.classList.remove('hidden'); // Show the style section
+        } else {
+          styleContainer.classList.add('hidden'); // Hide the style section
+        }
 
-          likeButton.addEventListener('click', () => {
-            const liked = !likeButton.classList.contains('liked');
-            likeButton.classList.toggle('liked', liked);
+        // Handle model display
+        if (data.model) {
+          modalModel.textContent = data.model;
+          modelContainer.classList.remove('hidden'); // Show the model section
+        } else {
+          modelContainer.classList.add('hidden'); // Hide the model section
+        }
 
-            // Send like toggle request
-            fetch(`/api/like/${imageId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ liked, isPublic: data.isPublic }),
-            })
-              .then(response => response.json())
-              .then(update => {
-                document.getElementById('like-count').textContent = update.likes;
-              })
-              .catch(error => {
-                console.error('Error toggling like:', error);
-              });
-          });
+      // Handle like button
+      const likeButton = document.getElementById('like-button-modal');
+      if (data.isLiked) likeButton.classList.add('liked');
 
-          // Show/hide delete button based on ownership
-          if (data.isOwner) {
-            deleteButtonContainer.classList.remove('hidden'); // Show delete button
-            deleteButtonModal.setAttribute('data-id', imageId); // Set image ID for deletion
-          } else {
-            deleteButtonContainer.classList.add('hidden'); // Hide delete button
-          }
+      likeButton.addEventListener('click', () => {
+        const liked = !likeButton.classList.contains('liked');
+        likeButton.classList.toggle('liked', liked);
+
+        // Send like toggle request
+        fetch(`/api/like/${imageId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ liked, isPublic: data.isPublic }),
         })
-        .catch(error => {
-          console.error('Error fetching image details:', error);
-          showToast('Failed to load image details.', 'error');
-        });
-
-      // Update share links and browser history
-      updateShareLinks(imageId, source);
-      updateBrowserHistory(imageId, source);
-
-      // Handle public/private image IDs for comments
-      if (source === 'public') {
-        fetch(`/api/public-image-details/${imageId}`)
           .then(response => response.json())
-          .then(data => {
-            const personalImageId = data.personalImageId;
-            setupComments(personalImageId);
+          .then(update => {
+            document.getElementById('like-count').textContent = update.likes;
           })
           .catch(error => {
-            console.error('Error fetching image details:', error);
-            showToast('Failed to load image details.', 'error');
+            console.error('Error toggling like:', error);
           });
-      } else {
-        setupComments(imageId);
-      }
+      });
 
-      // Show the modal
-      document.getElementById('comments-modal').classList.remove('hidden');
-    }
+      // Show/hide delete button based on ownership
+      if (data.isOwner) {
+        deleteButtonContainer.classList.remove('hidden'); // Show delete button
+        deleteButtonModal.setAttribute('data-id', imageId); // Set image ID for deletion
+      } else {
+        deleteButtonContainer.classList.add('hidden'); // Hide delete button
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching image details:', error);
+      showToast('Failed to load image details.', 'error');
+    });
+
+  // Update share links and browser history
+  updateShareLinks(imageId, source);
+  updateBrowserHistory(imageId, source);
+
+  // Handle public/private image IDs for comments
+  if (source === 'public') {
+    fetch(`/api/public-image-details/${imageId}`)
+      .then(response => response.json())
+      .then(data => {
+        const personalImageId = data.personalImageId;
+        setupComments(personalImageId);
+      })
+      .catch(error => {
+        console.error('Error fetching image details:', error);
+        showToast('Failed to load image details.', 'error');
+      });
+  } else {
+    setupComments(imageId);
+  }
+
+  // Show the modal
+  document.getElementById('comments-modal').classList.remove('hidden');
+}
       
       
     
