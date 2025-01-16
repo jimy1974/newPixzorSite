@@ -2436,6 +2436,31 @@ async function switchTab(tab) {
     // Update activeTab
     activeTab = tab;
 
+    // Update the browser's URL based on the active tab
+    let newUrl;
+    switch (tab) {
+      case 'public':
+        newUrl = '/'; // Root URL for public posts
+        break;
+      case 'profile':
+        if (!window.isLoggedIn) {
+          showToast('Please log in to view your profile.', 'error');
+          reject(new Error('User not logged in'));
+          return;
+        }
+        newUrl = `/user-profile/${currentUserId}`; // Profile URL
+        break;
+      case 'search':
+        const query = document.getElementById('search-query').value.trim();
+        newUrl = `/search?query=${encodeURIComponent(query)}`; // Search URL
+        break;
+      default:
+        newUrl = '/'; // Default to root URL
+    }
+
+    // Update the browser's URL
+    history.pushState(null, '', newUrl);
+
     // Clear out the Masonry container
     const imageList = document.getElementById('image-list');
     if (imageList) {
@@ -2513,7 +2538,6 @@ async function switchTab(tab) {
     }
   });
 }
-
 
 
 // Helper function to retrieve model name from ID
