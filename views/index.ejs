@@ -2894,6 +2894,8 @@ async function loadUserProfile(userId) {
 
 
   function openCommentsModal(imageId, imageUrl, source) {
+    // Set the current image ID globally
+    window.currentImageId = imageId;
     const modalImage = document.getElementById('modal-image');
     const modalPrompt = document.getElementById('modal-prompt');
     const modalUserProfile = document.getElementById('modal-user-profile');
@@ -4647,8 +4649,15 @@ function hideCreateImagePrompt() {
               const commentText = commentInput.value.trim();
               const imageId = window.currentImageId;
 
+              console.log('Posting comment for image ID:', imageId); // Debugging
+
               if (!commentText) {
                 showToast('Please enter a comment.', 'error');
+                return;
+              }
+
+              if (!imageId) {
+                showToast('Invalid image ID. Please refresh the page and try again.', 'error');
                 return;
               }
 

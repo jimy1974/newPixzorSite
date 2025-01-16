@@ -1332,11 +1332,15 @@ app.post('/images/:id/comments', ensureAuthenticated, async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
 
+  console.log(`Posting comment for image ID: ${id}`); // Debugging
+  console.log(`Comment content: ${content}`); // Debugging
+
   try {
     // First, check if the image exists in `personalimages`
     const personalImage = await PersonalImage.findByPk(id);
 
     if (!personalImage) {
+      console.error(`Image ID ${id} not found.`); // Debugging
       return res.status(404).json({ error: 'Image not found.' });
     }
 
@@ -1346,7 +1350,20 @@ app.post('/images/:id/comments', ensureAuthenticated, async (req, res) => {
       content,
     });
 
-    res.json(comment);
+    console.log(`Comment created:`, comment.toJSON()); // Debugging
+
+    // Fetch the user's details for the response
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'username', 'photo'],
+    });
+
+    res.json({
+      id: comment.id,
+      content: comment.content,
+      username: user.username,
+      avatar: user.photo || '/default-avatar.png',
+      userId: user.id,
+    });
   } catch (error) {
     console.error('Error posting comment:', error);
     res.status(500).json({ error: 'Failed to post comment.' });
