@@ -1260,9 +1260,6 @@ app.post('/api/like/:publicImageId', ensureAuthenticated, async (req, res) => {
 
 
 
-
-            
-
 app.get('/images/:id/comments', async (req, res) => {
   const { id } = req.params;
 
@@ -1274,12 +1271,12 @@ app.get('/images/:id/comments', async (req, res) => {
     });
 
     res.json(comments.map(comment => ({
-      id: comment.id, // Include comment ID if needed
+      id: comment.id,
       content: comment.content,
       username: comment.user.username,
       avatar: comment.user.photo || '/default-avatar.png',
       createdAt: comment.createdAt,
-      userProfileUrl: `/users/${comment.user.id}`, // Link to user's profile
+      userId: comment.user.id, // Include the user ID for profile linking
     })));
   } catch (error) {
     console.error('Error fetching comments:', error);
@@ -1736,29 +1733,31 @@ app.get('/api/public-image-details/:id', async (req, res) => {
 // API route to fetch user profile details
 // Example usage:
 app.get('/api/user-profile/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
+  const userId = req.params.id;
 
-    // Fetch user details from the database
+  try {
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'username', 'photo'], // Adjust attributes as needed
+      attributes: ['id', 'username', 'photo'],
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'User not found.' });
     }
 
-    // Fetch public images associated with the user
     const publicImages = await PublicImage.findAll({
       where: { userId },
-      attributes: ['id', 'thumbnailUrl', 'imageUrl', 'prompt'], // Adjust attributes as needed
+      attributes: ['id', 'imageUrl', 'thumbnailUrl', 'prompt', 'likes'],
       order: [['createdAt', 'DESC']],
     });
 
-    res.json({ user, publicImages });
+    res.json({
+      user,
+      images: publicImages, // Ensure this matches the format expected by loadImages
+      hasMore: false, // Adjust based on pagination logic if needed
+    });
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    res.status(500).json({ error: 'Failed to fetch user profile' });
+    res.status(500).json({ error: 'Failed to fetch user profile.' });
   }
 });
 
@@ -1805,11 +1804,36 @@ app.get('/api/private-posts', ensureAuthenticated, async (req, res) => {
 
 
 
-app.get('/user-profile/:id', (req, res) => {
+app.get('/user-profile/:id', async (req, res) => {
   const userId = req.params.id;
-  res.render('index', { showProfile: true, profileUserId: userId });
-});
+  console.log(`User profile requested for ID: ${userId}`);
 
+  try {
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'username', 'photo'],
+    });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    res.render('index', {
+      showProfile: true,
+      profileUserId: userId,
+      title: `${user.username}'s Profile`, // Use the user's username in the title
+      description: `View ${user.username}'s profile on Pixzor.`, // Use the user's username in the description
+      imageUrl: user.photo || '', // Use the user's photo if available
+      url: req.protocol + '://' + req.get('host') + req.originalUrl,
+      stylesWithCounts: [], // Add an empty array or fetch styles if needed
+      isLoggedIn: !!req.user,
+      user: req.user || null,
+      isRegistered: req.user ? true : false,
+    });
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 
 app.post('/upload-image', ensureAuthenticated, upload.single('image'), async (req, res) => {
@@ -2110,6 +2134,11 @@ app.get('*', (req, res, next) => {
   if (req.originalUrl.startsWith('/api/')) {
     console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
     return next(); // Pass through for API routes
+  }
+
+  if (req.originalUrl.startsWith('/user-profile/')) {
+    console.log(`[Catch-All Route] Passing through: ${req.originalUrl}`);
+    return next(); // Pass through for user profile routes
   }
 
   console.log(`[Catch-All Route] Rendering index for: ${req.originalUrl}`);

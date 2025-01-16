@@ -1971,7 +1971,7 @@ button.active {
   </div>
     
  
-<!-- Updated Comments Modal -->
+<!-- Comments Modal -->
 <div id="comments-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
   <div class="bg-white rounded-lg shadow-lg flex flex-col md:flex-row relative w-11/12 md:w-4/5 max-h-screen overflow-y-auto">
     <!-- Close Button -->
@@ -2714,9 +2714,19 @@ function populateModelDropdownForImageSelection(selectedStyle, isImageSelected =
         }
       });
 
-      // Load the first page from your API and fill the viewport
-      const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
-      loadImages(firstEndpoint, 'public', true); // Pass isInitialLoad = true
+      // Check if the current page is a user profile page
+      const path = window.location.pathname;
+      const profileUserId = path.startsWith('/user-profile/') ? path.split('/')[2] : null;
+
+      if (profileUserId) {
+        // Load the user's profile images
+        loadUserProfile(profileUserId);
+      } else {
+          // Load the first page from your API and fill the viewport
+          const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
+          loadImages(firstEndpoint, 'public', true); // Pass isInitialLoad = true
+      }
+        
     });
 
 
@@ -2814,19 +2824,19 @@ async function toggleLike(imageId, likeButton) {
 
 
 
-
-   
-
-
 async function loadUserProfile(userId) {
   try {
+    // Set the active tab to 'profile'
+    activeTab = 'profile';
+
     // Close comments modal if it is open
     const commentsModal = document.getElementById('comments-modal');
     if (!commentsModal.classList.contains('hidden')) {
       commentsModal.classList.add('hidden'); // Hide the modal
-      history.pushState(null, '', window.location.origin);    
+      history.pushState(null, '', window.location.origin);
     }
 
+    // Fetch user data
     const response = await fetch(`/api/user-profile/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user profile.');
@@ -2841,26 +2851,13 @@ async function loadUserProfile(userId) {
     profileAvatar.src = user.photo || '/default-avatar.png'; // Fallback to default avatar
     profileAvatar.classList.remove('hidden');
 
-    // Render public images
+    // Clear the image list
     const imageList = document.getElementById('image-list');
-    imageList.innerHTML = ''; // Clear existing images
+    imageList.innerHTML = '<div class="grid-sizer"></div>';
 
-    publicImages.forEach(image => {
-      const imageCard = document.createElement('div');
-      imageCard.classList.add('image-card', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
-
-      imageCard.innerHTML = `
-        <img src="${image.thumbnailUrl}" alt="Public Image" class="w-full h-auto rounded-lg" />
-        <p class="text-sm text-gray-400 mt-2">${image.prompt}</p>
-      `;
-
-      imageList.appendChild(imageCard);
-
-      // Optional: Add click listener for full-size image view
-      imageCard.querySelector('img').addEventListener('click', () => {
-        openCommentsModal(image.id, image.imageUrl, 'public');
-      });
-    });
+    // Use the loadImages function to render the user's public images
+    const apiEndpoint = `/api/user-profile/${userId}`;
+    loadImages(apiEndpoint, 'profile', true); // Pass isInitialLoad = true
   } catch (error) {
     console.error('Error loading user profile:', error);
     showToast('Failed to load user profile.', 'error');
@@ -3737,9 +3734,11 @@ window.addEventListener('scroll', () => {
   if (scrollTop + clientHeight >= scrollHeight - 50) {
     // Check if the current tab is public, profile, or search
     if (activeTab === 'profile') {
-      // Load more private if we have more
+      // Load more profile images if we have more
       if (hasMoreImages && !isLoadingImages) {
-        loadPrivatePosts();
+        const userId = window.location.pathname.split('/')[2]; // Extract user ID from URL
+        const apiEndpoint = `/api/user-profile/${userId}?page=${page}`;
+        loadImages(apiEndpoint, 'profile');
       }
     } else if (activeTab === 'search') {
       // Search results
@@ -3957,13 +3956,35 @@ async function loadComments(imageId) {
     comments.forEach(comment => {
       const li = document.createElement('li');
       li.classList.add('flex', 'items-start', 'space-x-2'); // For layout
-      li.innerHTML = `
-        <img src="${comment.avatar}" alt="${comment.username}" class="w-8 h-8 rounded-full" crossorigin="anonymous" referrerPolicy="no-referrer" />
-        <div>
-          <p class="font-bold text-black">${comment.username}</p>
-          <p class="text-gray-600">${comment.content}</p>
-        </div>
+
+      // Create a link to the user's profile
+      const userProfileLink = document.createElement('a');
+      userProfileLink.href = `/user-profile/${comment.userId}`; // Link to the user's profile
+      userProfileLink.classList.add('flex', 'items-start', 'space-x-2', 'hover:underline'); // Add hover effect
+
+      // Add the user's avatar
+      const avatar = document.createElement('img');
+      avatar.src = comment.avatar || '/default-avatar.png'; // Fallback to default avatar
+      avatar.alt = comment.username;
+      avatar.classList.add('w-8', 'h-8', 'rounded-full');
+      avatar.crossOrigin = 'anonymous';
+      avatar.referrerPolicy = 'no-referrer';
+
+      // Add the user's username and comment content
+      const commentContent = document.createElement('div');
+      commentContent.innerHTML = `
+        <p class="font-bold text-black">${comment.username}</p>
+        <p class="text-gray-600">${comment.content}</p>
       `;
+
+      // Append the avatar and comment content to the profile link
+      userProfileLink.appendChild(avatar);
+      userProfileLink.appendChild(commentContent);
+
+      // Append the profile link to the list item
+      li.appendChild(userProfileLink);
+
+      // Append the list item to the comments list
       commentsList.appendChild(li);
     });
   } catch (error) {
@@ -4002,7 +4023,7 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
 
     // Clear the image list only on the first page load
     if (page === 1) {
-      imageList.innerHTML = '<div class="grid-sizer"></div>'; 
+      imageList.innerHTML = '<div class="grid-sizer"></div>';
     }
 
     if (images.length === 0 && page === 1) {
@@ -5055,7 +5076,10 @@ document.querySelectorAll('.filter-button').forEach(button => {
 
 // Function to apply all active filters
 function applyFilters() {
-  
+  // Only apply filters if the active tab is 'public' or 'search'
+  if (activeTab !== 'public' && activeTab !== 'search') {
+    return;
+  }
 
   // Map the active filters correctly
   const type = activeFilters['image-source'] || 'ai-generated'; // Default to "ai-generated"
@@ -5066,7 +5090,7 @@ function applyFilters() {
   isLoading = false;
   hasMoreImages = true;
   page = 1;
-  
+
   // Clear the image list for the new filter results
   const imageList = document.getElementById('image-list');
   if (imageList) {
@@ -5075,9 +5099,9 @@ function applyFilters() {
 
   // Construct the API endpoint
   const apiEndpoint = `/api/public-posts?type=${type}&style=${style}&sort=${sort}`;
-  
+
   // Trigger loading images with the new filters
-  loadImages(apiEndpoint, 'public');
+  loadImages(apiEndpoint, activeTab);
 }
 
 
