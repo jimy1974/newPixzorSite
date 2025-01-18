@@ -195,7 +195,7 @@ app.post('/test-update-tokens', async (req, res) => {
 
 
 const nudityKeywords = [
-  'nude', 'naked', 'nudism', 'nudist', 'naturist', 'bare', 'explicit', 'porn', 'xxx', 'erotic', 'sexual', 'sex', 'breasts', 'genitals', 'buttocks', 'topless', 'without bra', 'undressed', 'undressing', 'fetish',  'lewd',
+  'nude', 'naked', 'nudism', 'nudist', 'naturist', 'bare', 'explicit', 'porn', 'xxx', 'erotic', 'genitals', 'topless', 'without bra', 'undressed', 'undressing',
 ];
 
 const underageKeywords = [
@@ -559,6 +559,8 @@ app.get('/', async (req, res) => {
       `,
       { type: sequelize.QueryTypes.SELECT }
     );
+      
+    console.log('Styles with counts:', stylesWithCounts);  
 
     // Validate and format the styles array
     const updatedStylesWithCounts = stylesWithCounts.map((style) => ({
@@ -568,7 +570,8 @@ app.get('/', async (req, res) => {
     }));
 
     
-
+    console.log('Updated Styles With Counts:', updatedStylesWithCounts);
+      
     // Render the page with the fetched data
     res.render('index', {
       isLoggedIn: !!req.user, // True if user is logged in
@@ -733,6 +736,7 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
     // Calculate token cost based on image size and model
     const tokenCost = calculateTokenCost(parsedWidth, parsedHeight, model);
 
+      
     // Check if the user has enough tokens
     if (req.user.tokens < tokenCost) {
       return res.status(400).json({ error: 'You do not have enough tokens to generate an image.' });
@@ -876,7 +880,9 @@ app.post('/generate-image', ensureAuthenticated, async (req, res) => {
 
     console.log('Image saved successfully:', savedImageUrl);
 
-    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1,remainingTokens: req.user.tokens  });
+      
+      
   } catch (error) {
     console.error('Error generating image:', error);
     res.status(500).json({ error: 'Failed to generate image.' });
@@ -922,22 +928,31 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     return res.status(400).json({ error: 'Width and height must be less than or equal to 4096' });
   }
 
+  console.log('Width:', width, 'Type:', typeof width);
+  console.log('Height:', height, 'Type:', typeof height);
 
-    console.log('Width:', width, 'Type:', typeof width);
-    console.log('Height:', height, 'Type:', typeof height);
-    
-    // Modify the prompt to include the style if provided
-    const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
-    console.log('Updated Prompt:', updatedPrompt);
-      
-    // Check and flag the prompt
-    const flagResult = await checkAndFlagPrompt(req, updatedPrompt, style);
-    if (flagResult.flagged) {
-      return res.status(400).json({ error: flagResult.error });
-    }    
-    
-    
+  // Modify the prompt to include the style if provided
+  const updatedPrompt = style ? `${prompt}, image style: ${style}` : prompt;
+  console.log('Updated Prompt:', updatedPrompt);
+
+  // Check and flag the prompt
+  const flagResult = await checkAndFlagPrompt(req, updatedPrompt, style);
+  if (flagResult.flagged) {
+    return res.status(400).json({ error: flagResult.error });
+  }
+
   try {
+    // Calculate token cost based on image size and model
+    const tokenCost = calculateTokenCost(width, height, model);
+
+    // Check if the user has enough tokens
+    if (req.user.tokens < tokenCost) {
+      return res.status(400).json({ error: 'You do not have enough tokens to edit this image.' });
+    }
+
+    // Deduct tokens from the user's balance
+    req.user.tokens -= tokenCost;
+    await req.user.save();
     
 
     // Resolve the full file path
@@ -1100,7 +1115,7 @@ app.post('/edit-image', ensureAuthenticated, async (req, res) => {
     }
 
     // Respond to the client
-    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1 });
+    res.json({ imageUrl: savedImageUrl, thumbnailUrl: savedThumbnailUrl, tokensUsed: 1,  remainingTokens: req.user.tokens });
   } catch (error) {
     console.error('Error in /edit-image:', error);
     res.status(500).json({ error: error.message || 'Failed to edit image' });

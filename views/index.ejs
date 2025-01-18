@@ -2304,10 +2304,13 @@ function populateSearchStyles() {
 
 // Map each style to its default model
 const styleToModelMap = {
-  "abstract": "animagine-xl-v-3-1", // Artistic and flexible
-  "anime": "sdvn7-niji-style-xl-v1", // Specialized for anime
+
+  "anime": "animagine-xl-v-3-1", // Specialized for anime    
+  "pixar": "real-cartoon-xl-v6", // Best for Pixar-like effects
+  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
   "balloon-art": "real-cartoon-xl-v6", // Best for cartoon-like visuals
-    
+  "photorealistic": "realvis-xl-v4", // Best for photorealism (updated to realvis-xl-v4)      
+  "abstract": "animagine-xl-v-3-1", // Artistic and flexible    
   "cartoon": "counterfeit-xl-v2-5", // Good for cartoon styles
     
   "ceramic": "stable-diffusion-xl-v1-0", // Use SD XL for versatility
@@ -2326,13 +2329,10 @@ const styleToModelMap = {
   "metal-sculpture": "stable-diffusion-xl-v1-0", // Best for 3D textures
   "minimalist": "stable-diffusion-xl-v1-0", // SD XL for simplicity
   "mosaic": "animagine-xl-v-3-1", // Good for artistic mosaic-like visuals
-  "neon-light": "real-cartoon-xl-v6", // Works for bright and cartoonish neon effects
-  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
+  "neon-light": "real-cartoon-xl-v6", // Works for bright and cartoonish neon effects  
   "origami": "reproduction-v3-31", // Best for delicate details
-  "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs
-  "photorealistic": "realvis-xl-v4", // Best for photorealism (updated to realvis-xl-v4)
+  "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs  
   "photo": "realvis-xl-v4", // Reliable for photographic styles (updated to realvis-xl-v4)
-  "pixar": "animagine-xl-v-3-1", // Best for Pixar-like effects
   "plant-based": "animagine-xl-v-3-1", // Flexible for plant-based styles
   "plush-toy": "animagine-xl-v-3-1", // Perfect for soft, plush visuals
   "quilted-fabric": "stable-diffusion-xl-v1-0", // SD XL for texture
@@ -2343,6 +2343,8 @@ const styleToModelMap = {
   "vintage-poster": "real-cartoon-xl-v6", // Best for retro/vintage looks
   "watercolor": "animagine-xl-v-3-1", // Artistic and soft for watercolor
   "woodcarving": "stable-diffusion-xl-v1-0", // Best for 3D wood textures
+    
+    
 };
 
 // Function to close a modal
@@ -3030,73 +3032,72 @@ async function loadUserProfile(userId) {
   
     // Function to fetch user data
     async function fetchUserData() {
-      try {
-        const response = await fetch('/user-data');
-        const data = await response.json();
-         
-        // Set the currentUserId globally
-        currentUserId = data.id;
-        
-        const tokenCountElement = document.getElementById('token-count');
-        const googleAuthButton = document.getElementById('google-auth-button');
-        const commentInput = document.getElementById('comment-input');
-        const postCommentButton = document.getElementById('post-comment');
+  try {
+    const response = await fetch('/user-data');
+    const data = await response.json();
+    
+    // Set the currentUserId globally
+    currentUserId = data.id;
+    
+    const tokenCountElement = document.getElementById('token-count');
+    const googleAuthButton = document.getElementById('google-auth-button');
+    const commentInput = document.getElementById('comment-input');
+    const postCommentButton = document.getElementById('post-comment');
 
-        if (data.loggedIn) {
-          // Format token count: round to 1 or 2 decimal places
-          const tokens = parseFloat(data.tokens);
-          const formattedTokens = tokens.toFixed(1); // Use toFixed(2) for 2 decimal places
+    if (data.loggedIn) {
+      // Format token count: round to 1 or 2 decimal places
+      const tokens = parseFloat(data.tokens);
+      const formattedTokens = tokens.toFixed(1); // Use toFixed(2) for 2 decimal places
 
-          // Update the token count for logged-in users
-          tokenCountElement.textContent = `${formattedTokens} Tokens`;
+      // Update the token count for logged-in users
+      tokenCountElement.textContent = `${formattedTokens} Tokens`;
 
-          // Update the Google Auth button to show user info
-          googleAuthButton.innerHTML = `
-            <img src="${data.photo}" alt="Profile" class="mr-2 w-6 h-6 rounded-full" />
-            <span>${data.username}</span>
-          `;
-          googleAuthButton.classList.remove('bg-gray-700');
-          googleAuthButton.classList.add('bg-green-600');
+      // Update the Google Auth button to show user info
+      googleAuthButton.innerHTML = `
+        <img src="${data.photo}" alt="Profile" class="mr-2 w-6 h-6 rounded-full" />
+        <span>${data.username}</span>
+      `;
+      googleAuthButton.classList.remove('bg-gray-700');
+      googleAuthButton.classList.add('bg-green-600');
 
-          // Enable the generate button
-          document.getElementById('generate-button').disabled = false;
+      // Enable the generate button
+      document.getElementById('generate-button').disabled = false;
 
-          // Enable the comment input and button
-          if (commentInput) {
-            commentInput.disabled = false;
-            commentInput.placeholder = 'Write a comment...';
-          }
-          if (postCommentButton) {
-            postCommentButton.disabled = false;
-          }
-        } else {
-          // User is not logged in
-          tokenCountElement.textContent = `- Tokens`; // Show "- Tokens" for unauthenticated users
-          googleAuthButton.innerHTML = 'Login';
-          googleAuthButton.classList.remove('bg-green-600');
-          googleAuthButton.classList.add('bg-gray-700');
+      // Enable the comment input and button
+      if (commentInput) {
+        commentInput.disabled = false;
+        commentInput.placeholder = 'Write a comment...';
+      }
+      if (postCommentButton) {
+        postCommentButton.disabled = false;
+      }
+    } else {
+      // User is not logged in
+      tokenCountElement.textContent = `- Tokens`; // Show "- Tokens" for unauthenticated users
+      googleAuthButton.innerHTML = 'Login';
+      googleAuthButton.classList.remove('bg-green-600');
+      googleAuthButton.classList.add('bg-gray-700');
 
-          // Disable the generate button
-          //document.getElementById('generate-button').disabled = true;
+      // Disable the generate button
+      //document.getElementById('generate-button').disabled = true;
 
-          // Clear the currentUserId if the user is not logged in
-          currentUserId = null;
+      // Clear the currentUserId if the user is not logged in
+      currentUserId = null;
 
-          // Disable the comment input and button
-          if (commentInput) {
-            commentInput.disabled = true;
-            commentInput.placeholder = 'Please log in to comment';
-          }
-          if (postCommentButton) {
-            postCommentButton.disabled = true;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        showToast('An error occurred while fetching user data.', 'error');
+      // Disable the comment input and button
+      if (commentInput) {
+        commentInput.disabled = true;
+        commentInput.placeholder = 'Please log in to comment';
+      }
+      if (postCommentButton) {
+        postCommentButton.disabled = true;
       }
     }
-
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    showToast('An error occurred while fetching user data.', 'error');
+  }
+}
       
     function applyFilter(type, style, sort) {
       const apiEndpoint = `/api/public-posts?type=${type}&style=${style}&sort=${sort}`;
@@ -3521,7 +3522,12 @@ document.getElementById('generate-button').addEventListener('click', async () =>
         imgElement.style.display = 'block';
         const spinner = imageContainer.querySelector('.spinner');
         if (spinner) spinner.remove();
-        updateTokenCount(-data.tokensUsed);
+          
+          // Update the token count with the remaining tokens from the server response
+        const tokenCountElement = document.getElementById('token-count');
+        tokenCountElement.textContent = `${data.remainingTokens.toFixed(1)} Tokens`;
+          
+        //updateTokenCount(-data.tokensUsed);
 
         setTimeout(() => {
           document.getElementById('profile-toggle').click();
