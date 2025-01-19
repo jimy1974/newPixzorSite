@@ -2559,7 +2559,18 @@ async function switchTab(tab) {
             return;
           }
           currentUserId = userData.id; // Set the currentUserId
-          loadPrivatePosts().then(resolve).catch(reject); // Resolve when loadPrivatePosts is done
+                    
+          loadPrivatePosts().then(() => {
+            // Check if the screen is large and load an additional page
+            const isLargeScreen = window.innerWidth > 1024; // Adjust the threshold as needed
+            if (isLargeScreen) {
+              loadPrivatePosts().then(resolve).catch(reject);
+            } else {
+              resolve();
+            }
+          }).catch(reject);
+                  
+          
         })
         .catch((err) => {
           console.error('Error fetching user data:', err);
@@ -2805,6 +2816,13 @@ function populateModelDropdownForImageSelection(selectedStyle, isImageSelected =
           // Load the first page from your API and fill the viewport
           const firstEndpoint = `/api/public-posts?type=ai-generated&page=1&`;
           loadImages(firstEndpoint, 'public', true); // Pass isInitialLoad = true
+          
+          const isLargeScreen = window.innerWidth > 1024; // Adjust the threshold as needed
+          if (isLargeScreen ) {
+            const secondEndpoint = `/api/public-posts?type=ai-generated&page=2&`;
+            loadImages(secondEndpoint, 'public', false);
+          }
+          
       }
         
     });
