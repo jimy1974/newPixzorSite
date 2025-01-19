@@ -4104,7 +4104,10 @@ async function loadComments(imageId) {
     delete thumbnailContainer.dataset.imagePath; // Remove the image path
     
     // Reset the button text to "Generate"
-    const generateText = document.querySelector('#generate-button .generate-text');
+    const generateButton = document.getElementById('generate-button');
+    const generateText = generateButton.querySelector('.generate-text'); // Get the text span
+     
+    
     if (generateText) {
       generateText.textContent = 'Generate';
     }
