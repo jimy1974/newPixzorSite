@@ -1901,6 +1901,7 @@ app.get('/user-profile/:id', async (req, res) => {
   console.log(`User profile requested for ID: ${userId}`);
 
   try {
+    // Fetch user details
     const user = await User.findByPk(userId, {
       attributes: ['id', 'username', 'photo'],
     });
@@ -1909,6 +1910,28 @@ app.get('/user-profile/:id', async (req, res) => {
       return res.status(404).send('User not found');
     }
 
+    // Fetch styles and their counts from the database (same logic as the index route)
+    const stylesWithCounts = await sequelize.query(
+      `
+      SELECT 
+        name AS value, 
+        label, 
+        count 
+      FROM styles 
+      ORDER BY count DESC, name ASC
+      LIMIT 20
+      `,
+      { type: sequelize.QueryTypes.SELECT }
+    );
+
+    // Validate and format the styles array
+    const updatedStylesWithCounts = stylesWithCounts.map((style) => ({
+      ...style,
+      label: style.label || style.value.charAt(0).toUpperCase() + style.value.slice(1).replace(/-/g, ' '), // Default to formatted `value` if `label` is missing
+      count: style.count || 0, // Default to 0 if `count` is missing
+    }));
+
+    // Render the user profile page with the fetched data
     res.render('index', {
       showProfile: true,
       profileUserId: userId,
@@ -1916,7 +1939,7 @@ app.get('/user-profile/:id', async (req, res) => {
       description: `View ${user.username}'s profile on Pixzor.`, // Use the user's username in the description
       imageUrl: user.photo || '', // Use the user's photo if available
       url: req.protocol + '://' + req.get('host') + req.originalUrl,
-      stylesWithCounts: [], // Add an empty array or fetch styles if needed
+      stylesWithCounts: updatedStylesWithCounts, // Pass styles with counts and formatted labels
       isLoggedIn: !!req.user,
       user: req.user || null,
       isRegistered: req.user ? true : false,
