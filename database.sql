@@ -34,7 +34,7 @@ CREATE TABLE `comments` (
   KEY `imageId` (`imageId`),
   CONSTRAINT `comments_ibfk_12` FOREIGN KEY (`imageId`) REFERENCES `personalimages` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `comments_ibfk_13` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -74,7 +74,7 @@ CREATE TABLE `likes` (
   UNIQUE KEY `userId_personalImageId` (`userId`,`personalImageId`),
   KEY `likes_personalImageId_fk` (`personalImageId`),
   CONSTRAINT `likes_personalImageId_fk` FOREIGN KEY (`personalImageId`) REFERENCES `personalimages` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -98,10 +98,11 @@ CREATE TABLE `personalimages` (
   `likes` int DEFAULT '0',
   `type` enum('ai-generated','user-uploaded','stylized-photo') DEFAULT 'ai-generated',
   `style` varchar(255) DEFAULT NULL,
+  `model` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   CONSTRAINT `personalimages_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=166 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=191 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -125,12 +126,13 @@ CREATE TABLE `publicimages` (
   `userId` int DEFAULT NULL,
   `likes` int DEFAULT '0',
   `type` enum('ai-generated','user-uploaded','stylized-photo') DEFAULT 'ai-generated',
+  `model` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `personalImageId` (`personalImageId`),
   KEY `userId` (`userId`),
   CONSTRAINT `publicimages_ibfk_1` FOREIGN KEY (`personalImageId`) REFERENCES `personalimages` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `publicimages_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -145,6 +147,12 @@ CREATE TABLE `styles` (
   `name` varchar(255) NOT NULL,
   `count` int DEFAULT '0',
   `label` varchar(255) NOT NULL,
+  `prompt` text,
+  `model` varchar(255) DEFAULT NULL,
+  `image_strength` float DEFAULT NULL,
+  `guidance_scale` float DEFAULT NULL,
+  `is_user_created` tinyint(1) DEFAULT '0',
+  `created_by` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -222,4 +230,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-01-10 19:34:37
+-- Dump completed on 2025-01-19 19:22:37

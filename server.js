@@ -555,7 +555,8 @@ app.get('/', async (req, res) => {
         label, 
         count 
       FROM styles 
-      ORDER BY name ASC
+      ORDER BY count DESC, name ASC
+      LIMIT 20
       `,
       { type: sequelize.QueryTypes.SELECT }
     );
@@ -594,9 +595,67 @@ app.get('/', async (req, res) => {
 
 
 
+app.get('/api/style/:name', async (req, res) => {
+  const { name } = req.params;
 
+  try {
+    const style = await sequelize.query(
+      `
+      SELECT 
+        name AS value, 
+        label, 
+        count,
+        prompt,
+        model,
+        image_strength,
+        guidance_scale
+      FROM styles 
+      WHERE name = :name
+      `,
+      {
+        replacements: { name },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
+    if (style.length > 0) {
+      res.json(style[0]); // Return the first (and only) result
+    } else {
+      res.status(404).json({ error: 'Style not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching style data:', error.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
+app.get('/api/styles/search', async (req, res) => {
+  const { query } = req.query;
+
+  try {
+    const styles = await sequelize.query(
+      `
+      SELECT 
+        name AS value, 
+        label, 
+        count 
+      FROM styles 
+      WHERE name LIKE :query OR label LIKE :query
+      ORDER BY count DESC, name ASC
+      LIMIT 20
+      `,
+      {
+        replacements: { query: `%${query}%` },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    res.json(styles);
+  } catch (error) {
+    console.error('Error searching styles:', error.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
 

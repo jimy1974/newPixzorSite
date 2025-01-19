@@ -2268,23 +2268,104 @@ function populateMenuStyles() {
   });
 }
 
+function isImageSelected() {
+  const thumbnailContainer = document.getElementById('selected-thumbnail-container');
+  return thumbnailContainer && thumbnailContainer.innerHTML.trim() !== '';
+}
 
-
-
-      
 function populateAIStyleDropdown() {
-  //const dropdown = document.getElementById("style-select-modal");
-  const dropdown = document.getElementById("style-select");    
-    
+  const dropdown = document.getElementById("style-select");
+
   if (dropdown) {
-    dropdown.innerHTML = '<option value="" disabled selected>Choose a style</option>'; // Reset options
+    // Reset options
+    dropdown.innerHTML = '<option value="" disabled selected>Choose a style</option>';
+
+    // Populate the dropdown with styles
     styles.forEach((style) => {
       const option = document.createElement("option");
-      option.value = style.value;
-      option.textContent = style.label;
+      option.value = style.value; // Use the style's `name` as the value
+      option.textContent = style.label; // Use the style's `label` as the display text
       dropdown.appendChild(option);
     });
-  } 
+
+    // Add the event listener for style selection
+    dropdown.addEventListener("change", async (event) => {
+      const selectedStyleName = event.target.value;
+
+      // Handle the "All Styles" case
+      if (selectedStyleName === "all-styles" || !selectedStyleName) {
+        const promptInput = document.getElementById("prompt-input");
+        if (promptInput && promptInput.value.includes('[')) {
+          // Remove the style prompt from the prompt box
+          promptInput.value = promptInput.value.replace(/\[.*\]/, '').trim();
+        }
+        return; // Exit the function early
+      }
+
+      // Fetch the style data from the server
+      try {
+        const response = await fetch(`/api/style/${selectedStyleName}`);
+        if (!response.ok) {
+          throw new Error('Style not found');
+        }
+
+        const selectedStyle = await response.json();
+
+        // Determine the context (modify or create)
+        const isModify = isImageSelected();
+
+        // Define prefixes for modify and create contexts
+        const stylePrefixes = {
+          modify: "Transform the image into a ",
+          create: "Create an image in the style of ",
+        };
+
+        // Get the appropriate prefix
+        const prefix = isModify ? stylePrefixes.modify : stylePrefixes.create;
+
+        // Construct the full style prompt
+        const fullStylePrompt = `${prefix}${selectedStyle.prompt}`;
+
+        // Update the prompt box
+        const promptInput = document.getElementById("prompt-input");
+        if (promptInput) {
+          if (promptInput.value.includes('[')) {
+            // If the prompt already contains a style, replace it
+            promptInput.value = promptInput.value.replace(/\[.*\]/, `[${fullStylePrompt}]`);
+          } else {
+            // Otherwise, append the style prompt in square brackets
+            promptInput.value = `${promptInput.value} [${fullStylePrompt}]`;
+          }
+        }
+
+        // Update the model dropdown
+        const modelSelect = document.getElementById("model-select");
+        if (modelSelect) {
+          modelSelect.value = selectedStyle.model || "";
+        }
+
+        // Update image strength and guidance scale sliders in the options modal
+        const imageStrengthInput = document.getElementById("image-strength-modal");
+        const imageStrengthValue = document.getElementById("image-strength-value");
+        const guidanceScaleInput = document.getElementById("guidance-scale-modal");
+        const guidanceScaleValue = document.getElementById("guidance-scale-value");
+
+        if (selectedStyle.image_strength && imageStrengthInput && imageStrengthValue) {
+          imageStrengthInput.value = selectedStyle.image_strength;
+          imageStrengthValue.textContent = selectedStyle.image_strength;
+        }
+
+        if (selectedStyle.guidance_scale && guidanceScaleInput && guidanceScaleValue) {
+          guidanceScaleInput.value = selectedStyle.guidance_scale;
+          guidanceScaleValue.textContent = selectedStyle.guidance_scale;
+        }
+
+      } catch (error) {
+        console.error('Error fetching style data:', error);
+        alert('Failed to load style data. Please try again.');
+      }
+    });
+  }
 }
 
 function populateSearchStyles() {
@@ -2301,51 +2382,6 @@ function populateSearchStyles() {
 }
       
 
-
-// Map each style to its default model
-const styleToModelMap = {
-
-  "anime": "animagine-xl-v-3-1", // Specialized for anime    
-  "pixar": "real-cartoon-xl-v6", // Best for Pixar-like effects
-  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
-  "balloon-art": "real-cartoon-xl-v6", // Best for cartoon-like visuals
-  "photorealistic": "realvis-xl-v4", // Best for photorealism (updated to realvis-xl-v4)      
-  "abstract": "animagine-xl-v-3-1", // Artistic and flexible    
-  "cartoon": "counterfeit-xl-v2-5", // Good for cartoon styles
-    
-  "ceramic": "stable-diffusion-xl-v1-0", // Use SD XL for versatility
-  "chibi": "sdvn7-niji-style-xl-v1", // Specialized for anime and chibi
-  "claymation": "animagine-xl-v-3-1", // Works great for claymation
-  "comic": "real-cartoon-xl-v6", // Comic book-like visuals
-  "crystal": "reproduction-v3-31", // Specialized for crystal-like details
-  "cubist": "animagine-xl-v-3-1", // Works well for artistic styles
-  "cyberpunk": "stable-diffusion-xl-v1-0", // Reliable alternative for cyberpunk
-  "digital-art": "animagine-xl-v-3-1", // Good for digital art styles
-  "dreamscape": "animagine-xl-v-3-1", // Artistic and dream-like
-  "felted": "stable-diffusion-xl-v1-0", // SD XL works well for felted textures
-  "graffiti": "real-cartoon-xl-v6", // Cartoonish and bold visuals
-  "impressionist": "animagine-xl-v-3-1", // Works well for impressionist art
-  "knitted-wool": "stable-diffusion-xl-v1-0", // Use SD XL for photorealistic knitting
-  "metal-sculpture": "stable-diffusion-xl-v1-0", // Best for 3D textures
-  "minimalist": "stable-diffusion-xl-v1-0", // SD XL for simplicity
-  "mosaic": "animagine-xl-v-3-1", // Good for artistic mosaic-like visuals
-  "neon-light": "real-cartoon-xl-v6", // Works for bright and cartoonish neon effects  
-  "origami": "reproduction-v3-31", // Best for delicate details
-  "paper-cut": "real-cartoon-xl-v6", // Works for bold, graphic designs  
-  "photo": "realvis-xl-v4", // Reliable for photographic styles (updated to realvis-xl-v4)
-  "plant-based": "animagine-xl-v-3-1", // Flexible for plant-based styles
-  "plush-toy": "animagine-xl-v-3-1", // Perfect for soft, plush visuals
-  "quilted-fabric": "stable-diffusion-xl-v1-0", // SD XL for texture
-  "sand-art": "animagine-xl-v-3-1", // Works for sand-like artistic visuals
-  "stained-glass": "reproduction-v3-31", // Best for stained glass visuals
-  "steampunk": "stable-diffusion-xl-v1-0", // SD XL for steampunk aesthetics
-  "vaporwave": "real-cartoon-xl-v6", // Works for bold, vaporwave designs
-  "vintage-poster": "real-cartoon-xl-v6", // Best for retro/vintage looks
-  "watercolor": "animagine-xl-v-3-1", // Artistic and soft for watercolor
-  "woodcarving": "stable-diffusion-xl-v1-0", // Best for 3D wood textures
-    
-    
-};
 
 // Function to close a modal
 function closeModal(modalId) {
@@ -2542,6 +2578,10 @@ async function switchTab(tab) {
     }
   });
 }
+      
+      
+      
+
 
 
 // Helper function to retrieve model name from ID
@@ -2558,6 +2598,17 @@ function getModelLabel(modelId) {
   };
   return modelList[modelId] || "Unknown Model";
 }
+      
+// Map each style to its default model
+const styleToModelMap = {
+  "abstract": "animagine-xl-v-3-1", // Artistic and flexible    
+  "anime": "animagine-xl-v-3-1", // Specialized for anime    
+  "cartoon": "counterfeit-xl-v2-5", // Good for cartoon styles
+  "oil-painting": "stable-diffusion-xl-v1-0", // SD XL is great for oil painting
+  "photorealistic": "realvis-xl-v4", // Best for photorealism (updated to realvis-xl-v4)      
+  "pixar": "real-cartoon-xl-v6", // Best for Pixar-like effects 
+    
+};
 
 function populateInitialModelDropdown() {
   const modelDropdown = document.getElementById("model-select");
