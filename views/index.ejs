@@ -1587,7 +1587,9 @@ button.active {
   <div id="error-message" class="text-red-500 text-center mb-4"></div>
 
   <!-- User Profile Container -->
-  <div id="profile-container">
+  <div id="profile-container
+           
+           ">
     <!-- User Profile Header -->
     <div class="flex items-center space-x-4 mb-8">
       <img id="profile-avatar" src="" alt="User Avatar" class="w-16 h-16 rounded-full hidden"  referrerPolicy="no-referrer" >
@@ -1906,8 +1908,8 @@ button.active {
         <div class="mb-4">
           <label for="inference-steps-modal" class="block font-medium mb-1 text-gray-900">Inference Steps (1–50)</label>
           <div class="flex items-center space-x-2">
-            <input type="range" id="inference-steps-modal" min="1" max="50" step="1" value="28" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
-            <span id="inference-steps-value" class="text-sm text-gray-900">28</span>
+            <input type="range" id="inference-steps-modal" min="1" max="100" step="1" value="28" class="w-full bg-gray-300 rounded-lg py-2 px-3 text-gray-900 placeholder-gray-600">
+            <span id="inference-steps-value" class="text-sm text-gray-900">50</span>
           </div>
         </div>
 
@@ -3470,7 +3472,7 @@ document.getElementById('generate-button').addEventListener('click', async () =>
   const adjustedDimensions = adjustDimensions(dimensions, model);
 
   const guidanceScale = parseFloat(options.guidanceScale) || 10;
-  const inferenceSteps = parseInt(options.inferenceSteps) || 25;
+  const inferenceSteps = parseInt(options.inferenceSteps) || 50;
   const strength = parseFloat(document.getElementById('image-strength-modal').value) || 0.75;
 
   const styleSelect = document.getElementById('style-select');  
@@ -4095,21 +4097,56 @@ async function loadComments(imageId) {
 }
 
   
-      function removeThumbnail() {
+function removeThumbnail() {
   const thumbnailContainer = document.getElementById('selected-thumbnail-container');
-  const promptStatusText = document.getElementById('prompt-status-text'); // Get the status text element
+  const promptStatusText = document.getElementById('prompt-status-text');
+  const generateButton = document.getElementById('generate-button');
+
+  // Debugging logs
+  console.log('Thumbnail Container:', thumbnailContainer);
+  console.log('Generate Button:', generateButton);
 
   if (thumbnailContainer) {
-    thumbnailContainer.innerHTML = ''; // Clear the thumbnail
-    delete thumbnailContainer.dataset.imagePath; // Remove the image path
-    
+    // Get the selected image ID from the thumbnail container
+    const selectedImageId = thumbnailContainer.dataset.imageId;
+
+    // Deselect the image card if an image is selected
+    if (selectedImageId) {
+      const selectedImageCard = document.querySelector(`.image-card[data-image-id="${selectedImageId}"]`);
+      if (selectedImageCard) {
+        // Remove selection styles
+        selectedImageCard.style.border = 'none';
+        selectedImageCard.style.backgroundColor = 'transparent';
+
+        // Hide the action buttons and toggle buttons
+        const actionButtons = selectedImageCard.querySelector('.action-buttons');
+        const toggleButtons = selectedImageCard.querySelector('.toggle-buttons');
+        if (actionButtons) actionButtons.classList.add('hidden');
+        if (toggleButtons) toggleButtons.classList.add('hidden');
+
+        // Remove the image ID from the selectedImages Set
+        selectedImages.delete(selectedImageId);
+      }
+    }
+
+    // Clear the thumbnail container
+    thumbnailContainer.innerHTML = '';
+    delete thumbnailContainer.dataset.imagePath;
+    delete thumbnailContainer.dataset.imageId; // Remove the image ID from the dataset
+
     // Reset the button text to "Generate"
-    const generateButton = document.getElementById('generate-button');
-    const generateText = generateButton.querySelector('.generate-text'); // Get the text span
-     
-    
-    if (generateText) {
-      generateText.textContent = 'Generate';
+    if (generateButton) {
+      const generateText = generateButton.querySelector('.generate-text');
+      console.log('Generate Text Span:', generateText);
+
+      if (generateText) {
+        console.log('Updating Generate Button Text to "Generate"');
+        generateText.textContent = 'Generate';
+      } else {
+        console.error('Generate Text Span not found!');
+      }
+    } else {
+      console.error('Generate Button not found!');
     }
 
     // Reset the status text and color
@@ -4117,6 +4154,8 @@ async function loadComments(imageId) {
       promptStatusText.textContent = 'Generate an image';
       promptStatusText.classList.remove('red');
     }
+  } else {
+    console.error('Thumbnail Container not found!');
   }
 }
       
@@ -4271,7 +4310,7 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
 
     // Loop through images and create image cards
     images.forEach((image) => {
-      const imageCard = createImageCard(image, 'private');
+      const imageCard = createImageCard(image, 'private'); // Use 'private' as the mode
       imageList.appendChild(imageCard);
       newItems.push(imageCard);
     });
@@ -4296,6 +4335,284 @@ async function loadImages(apiEndpoint, mode, isInitialLoad = false) {
 }
       
       
+      
+function createImageCard(image, mode) {
+  const imageCard = document.createElement('div');
+  imageCard.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
+  imageCard.dataset.imageId = image.id;
+
+  // Add Public/Private Badge
+  const badge = document.createElement('span');
+  badge.classList.add(
+    'badge',
+    image.isPublic ? 'badge-public' : 'badge-private',
+    'absolute',
+    'top-2',
+    'left-2',
+    'px-2',
+    'py-1',
+    'rounded',
+    'text-sm',
+    'font-bold',
+    'text-white',
+    image.isPublic ? 'bg-green-500' : 'bg-red-500'
+  );
+  badge.textContent = image.isPublic ? 'Public' : 'Private';
+
+  // Build card content
+  imageCard.innerHTML = `
+    <div class="relative">
+      <img src="${image.thumbnailUrl}" alt="${image.isPublic ? 'Public' : 'Private'} Image" 
+           class="w-full h-auto rounded-lg cursor-pointer" loading="lazy" />
+      
+      <!-- Convert Image Button (Hidden by Default) -->
+      <button id="convert-image-${image.id}" class="convert-image-button bg-blue-600 text-white px-2 py-1 rounded text-sm absolute bottom-2 left-2 right-2 hidden">
+        Convert Image
+      </button>
+      
+      <!-- Bottom Buttons (Keep Style, Face, Pose) -->
+      <div class="toggle-buttons absolute bottom-2 left-2 right-2 flex hidden gap-2">
+        <button id="toggle-style-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Style">
+          <i class="fas fa-palette"></i>→
+        </button>
+        <button id="toggle-face-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Face">
+          <i class="fas fa-user text-gray-200"></i>→
+        </button>
+        <button id="toggle-pose-${image.id}" class="bg-gray-700 hover:bg-green-600 text-white px-1.5 py-0.5 rounded text-sm w-full" title="Keep Pose">
+          <i class="fas fa-running"></i>→
+        </button>
+      </div>
+      
+      <!-- Top-Right Action Buttons (Info and Visibility Toggle) -->
+      <div class="action-buttons hidden absolute top-2 right-2 flex flex-col gap-2">
+        <button class="info-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" title="Comments">
+          <i class="fas fa-info-circle"></i>
+        </button>
+        <button class="toggle-visibility-button bg-blue-600 text-white p-1 rounded shadow hover:bg-blue-500" data-id="${image.id}" title="${image.isPublic ? 'Make Private' : 'Make Public'}">
+          <i class="${image.isPublic ? 'fas fa-lock' : 'fas fa-globe'}"></i>
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Append the badge to the card
+  imageCard.appendChild(badge);
+
+  // Add event listeners for buttons and actions
+  const convertImageButton = imageCard.querySelector(`#convert-image-${image.id}`);
+  const styleButton = imageCard.querySelector(`#toggle-style-${image.id}`);
+  const faceButton = imageCard.querySelector(`#toggle-face-${image.id}`);
+  const poseButton = imageCard.querySelector(`#toggle-pose-${image.id}`);
+  const imgElement = imageCard.querySelector('img');
+  const actionButtons = imageCard.querySelector('.action-buttons');
+  const toggleButtons = imageCard.querySelector('.toggle-buttons');
+
+  const infoButton = imageCard.querySelector('.info-button');
+  infoButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    openCommentsModal(image.id, image.imageUrl, mode);
+  });
+
+  // Function to deactivate other toggle buttons
+  const deactivateOtherButtons = (activeButton) => {
+    if (activeButton !== styleButton) {
+      styleButton.classList.remove('active');
+      selectedImageState.keepStyle = false;
+    }
+    if (activeButton !== faceButton) {
+      faceButton.classList.remove('active');
+      selectedImageState.keepFace = false;
+    }
+    if (activeButton !== poseButton) {
+      poseButton.classList.remove('active');
+      selectedImageState.keepPose = false;
+    }
+  };
+
+  // Event listener for Keep Style button
+  styleButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    styleButton.classList.toggle('active');
+    selectedImageState.keepStyle = styleButton.classList.contains('active');
+    console.log('Keep Style Toggled:', selectedImageState.keepStyle); // Debug log
+  });
+
+  // Event listener for Keep Face button
+  faceButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    faceButton.classList.toggle('active');
+    selectedImageState.keepFace = faceButton.classList.contains('active');
+    console.log('Keep Face Toggled:', selectedImageState.keepFace); // Debug log
+  });
+
+  // Event listener for Keep Pose button
+  poseButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    poseButton.classList.toggle('active');
+    selectedImageState.keepPose = poseButton.classList.contains('active');
+    console.log('Keep Pose Toggled:', selectedImageState.keepPose); // Debug log
+  });
+
+  // Add a double-click event to open the comments modal
+  imgElement.addEventListener('dblclick', (event) => {
+    event.stopPropagation();
+    openCommentsModal(image.id, image.imageUrl, mode);
+  });
+
+  // Event listener for Convert Image button
+  convertImageButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    convertImageButton.classList.add('hidden');
+    toggleButtons.classList.remove('hidden');
+    updatePromptBox(image);
+  });
+
+  // Event listener for image click (selection/deselection)
+  imgElement.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const generateButton = document.getElementById('generate-button');
+
+    if (selectedImages.has(image.id)) {
+      // Deselect the image
+      selectedImages.delete(image.id);
+      imageCard.style.border = 'none';
+      imageCard.style.backgroundColor = 'transparent';
+      actionButtons.classList.add('hidden');
+      toggleButtons.classList.add('hidden');
+      convertImageButton.classList.add('hidden'); // Hide the Convert Image button
+
+      if (selectedImages.size === 0) {
+        // No image is selected, default to Flux models
+        populateModelDropdownForImageSelection("", false);
+        resetStylesToAllStyles();
+        removeThumbnail();
+        selectedImageState.dimensions = null;
+      }
+    } else {
+      // Select the image
+      const allCards = document.querySelectorAll('.image-card');
+      allCards.forEach((card) => {
+        card.style.border = 'none';
+        card.style.backgroundColor = 'transparent';
+        card.querySelector('.action-buttons')?.classList.add('hidden');
+        card.querySelector('.toggle-buttons')?.classList.add('hidden');
+        card.querySelector('.convert-image-button')?.classList.add('hidden');
+      });
+
+      selectedImages.clear();
+      selectedImages.add(image.id);
+      imageCard.style.border = '2px solid red';
+      imageCard.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
+
+      actionButtons.classList.remove('hidden');
+      convertImageButton.classList.remove('hidden'); // Show the Convert Image button
+      showCreateImage();
+
+      // Calculate aspect ratio from the thumbnail
+      const thumbnailImg = new Image();
+      thumbnailImg.src = image.thumbnailUrl;
+
+      thumbnailImg.onload = () => {
+        const thumbnailAspectRatio = thumbnailImg.width / thumbnailImg.height;
+        const defaultWidth = 800;
+        const calculatedHeight = defaultWidth / thumbnailAspectRatio;
+
+        selectedImageState.dimensions = {
+          width: defaultWidth,
+          height: calculatedHeight,
+        };
+
+        console.log('selectedImageState.dimensions.width:', selectedImageState.dimensions.width);
+        console.log('selectedImageState.dimensions.height:', selectedImageState.dimensions.height);
+      };
+
+      thumbnailImg.onerror = () => {
+        console.error('Failed to load thumbnail for aspect ratio calculation.');
+        selectedImageState.dimensions = {
+          width: 800,
+          height: 600,
+        };
+      };
+
+      // Update the selected image state with the current toggle button states
+      selectedImageState = {
+        imageId: image.id,
+        keepFace: faceButton.classList.contains('active'),
+        keepStyle: styleButton.classList.contains('active'),
+        keepPose: poseButton.classList.contains('active'),
+      };
+
+      console.log('Updated selectedImageState:', selectedImageState);
+
+      // Update the model dropdown based on the selected style
+      const styleSelect = document.getElementById('style-select');
+      if (styleSelect) {
+        // Force the model dropdown to switch to a compatible model for image-to-image
+        const selectedStyle = styleSelect.value;
+        populateModelDropdownForImageSelection(selectedStyle, true); // Image is selected
+
+        styleSelect.addEventListener('change', (event) => {
+          const selectedStyle = event.target.value;
+          const isImageSelected = selectedImages.size > 0;
+          populateModelDropdownForImageSelection(selectedStyle, isImageSelected);
+        });
+      }
+    }
+  });
+
+  const toggleVisibilityButton = imageCard.querySelector('.toggle-visibility-button');
+  toggleVisibilityButton.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    const imageId = event.target.closest('button').getAttribute('data-id');
+    try {
+      const response = await fetch(`/update-image-visibility/${imageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        showToast('Image visibility updated!', 'success');
+
+        // Update the button and marker without refreshing the entire list
+        const badge = imageCard.querySelector('.badge');
+        const toggleButton = imageCard.querySelector('.toggle-visibility-button i');
+
+        if (badge && toggleButton) {
+          // Toggle the badge text and classes
+          if (data.isPublic) {
+            badge.textContent = 'Public';
+            badge.classList.remove('badge-private', 'bg-red-500');
+            badge.classList.add('badge-public', 'bg-green-500');
+          } else {
+            badge.textContent = 'Private';
+            badge.classList.remove('badge-public', 'bg-green-500');
+            badge.classList.add('badge-private', 'bg-red-500');
+          }
+
+          // Toggle the button icon and title
+          if (data.isPublic) {
+            toggleButton.classList.remove('fa-globe');
+            toggleButton.classList.add('fa-lock');
+            toggleButton.parentElement.setAttribute('title', 'Make Private');
+          } else {
+            toggleButton.classList.remove('fa-lock');
+            toggleButton.classList.add('fa-globe');
+            toggleButton.parentElement.setAttribute('title', 'Make Public');
+          }
+        }
+      } else {
+        showToast('Failed to update visibility', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating image visibility:', error);
+      showToast('An error occurred while updating visibility', 'error');
+    }
+  });
+
+  return imageCard;
+}
+      
+/*
 function createImageCard(image, mode) {
   const imageCard = document.createElement('div');
   imageCard.classList.add('image-card', 'relative', 'rounded-lg', 'shadow-md', 'bg-gray-800', 'p-4', 'mb-4');
@@ -4553,7 +4870,9 @@ function createImageCard(image, mode) {
 
   return imageCard;
 }
- 
+ */
+      
+      
       
 /**
  * Handles the state of the toggle buttons for style, face, and pose.
@@ -4590,7 +4909,6 @@ function handleToggleState(toggleType, imageId, isActive) {
       
       
       
-
 // Function to update the prompt box with a thumbnail
 function updatePromptBox(image) {
   const promptInput = document.getElementById('prompt-input');
@@ -4614,10 +4932,59 @@ function updatePromptBox(image) {
   thumbnail.alt = 'Selected Image';
   thumbnail.classList.add('selected-thumbnail', 'rounded-lg', 'object-cover', 'ml-4', 'thumbnail-image');
 
-  thumbnailContainer.appendChild(thumbnail);
+  // Create a container for the thumbnail and delete icon
+  const thumbnailWrapper = document.createElement('div');
+  thumbnailWrapper.classList.add('relative', 'inline-block');
 
-  // Set the image path in the dataset
+  // Add the thumbnail to the wrapper
+  thumbnailWrapper.appendChild(thumbnail);
+
+  // Create the delete icon
+  const deleteIcon = document.createElement('div');
+  deleteIcon.innerHTML = `
+    <svg class="w-6 h-6 text-red-500 cursor-pointer hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  `;
+  deleteIcon.classList.add(
+    'absolute',
+    'top-1',
+    'right-1',
+    'bg-white',
+    'rounded-full',
+    'p-1',
+    'shadow-md',
+    'opacity-0', // Hidden by default
+    'transition-opacity', // Smooth transition
+    'duration-200'
+  );
+
+  // Show the delete icon on hover
+  thumbnailWrapper.addEventListener('mouseenter', () => {
+    deleteIcon.classList.remove('opacity-0');
+    deleteIcon.classList.add('opacity-100');
+  });
+
+  thumbnailWrapper.addEventListener('mouseleave', () => {
+    deleteIcon.classList.remove('opacity-100');
+    deleteIcon.classList.add('opacity-0');
+  });
+
+  // Add click event to remove the thumbnail
+  deleteIcon.addEventListener('click', (event) => {
+    event.stopPropagation(); // Prevent event bubbling
+    removeThumbnail();
+  });
+
+  // Add the delete icon to the wrapper
+  thumbnailWrapper.appendChild(deleteIcon);
+
+  // Add the wrapper to the thumbnail container
+  thumbnailContainer.appendChild(thumbnailWrapper);
+
+  // Set the image path and ID in the dataset
   thumbnailContainer.dataset.imagePath = image.imageUrl;
+  thumbnailContainer.dataset.imageId = image.id; // Add the image ID to the dataset
 
   // Change the button text to "Modify Image"
   if (generateText) {
@@ -4630,7 +4997,6 @@ function updatePromptBox(image) {
     promptStatusText.classList.add('red');
   }
 }
-
 
 
 
@@ -5235,7 +5601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     width: 800,
     height: 600,
     guidanceScale: 10,
-    inferenceSteps: 28,
+    inferenceSteps: 50,
     imageStrength: 0.75,
     lockAspectRatio: true, // Default to locked aspect ratio
     aspectRatio: '1:1', // Default aspect ratio
@@ -5511,8 +5877,8 @@ resetButton.addEventListener('click', () => {
   heightValue.textContent = 600;
   guidanceScaleInput.value = 10;
   guidanceScaleValue.textContent = 10;
-  inferenceStepsInput.value = 28;
-  inferenceStepsValue.textContent = 28;
+  inferenceStepsInput.value = 50;
+  inferenceStepsValue.textContent = 50;
   imageStrengthInput.value = 0.75;
   imageStrengthValue.textContent = 0.75;
 
@@ -5526,7 +5892,7 @@ resetButton.addEventListener('click', () => {
   options.width = 800;
   options.height = 600;
   options.guidanceScale = 10;
-  options.inferenceSteps = 28;
+  options.inferenceSteps = 50;
   options.imageStrength = 0.75;
   options.lockAspectRatio = false; // Save the unchecked state
   options.aspectRatio = '1:1';
